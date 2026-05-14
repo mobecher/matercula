@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,12 @@ export default async function LoginPage({
             >
               Einloggen
             </button>
+            <p className="text-center text-sm text-neutral-600">
+              Noch kein Konto?{" "}
+              <Link href="/register" className="underline hover:text-neutral-900">
+                Registrieren
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>
