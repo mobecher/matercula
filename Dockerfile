@@ -21,4 +21,4 @@ COPY --from=build /app/lib ./lib
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/tsconfig.json ./tsconfig.json
 EXPOSE 3000
-CMD ["sh", "-c", "for i in $(seq 1 30); do pnpm db:migrate && break; echo \"Waiting for database...\"; sleep 2; done && pnpm seed && pnpm start"]
+CMD ["pnpm", "start"]
