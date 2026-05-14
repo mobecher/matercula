@@ -1,18 +1,18 @@
-# fly.toml app configuration file generated for matercula on 2026-05-14T19:09:51Z
+# fly.toml app configuration file generated for matercula on 2026-05-14T19:32:20Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'matercula'
-primary_region = 'iad'
+primary_region = 'fra'
 
 [build]
 
 [deploy]
-  release_command = "node scripts/migrate.mjs"
+  release_command = 'node scripts/migrate.mjs'
 
 [http_service]
-  internal_port = 3000
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
