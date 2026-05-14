@@ -7,6 +7,7 @@ const connectionString =
 const sql = postgres(connectionString, { max: 1 });
 const db = drizzle(sql);
 try {
+  await sql`CREATE EXTENSION IF NOT EXISTS vector`;
   await migrate(db, { migrationsFolder: "./lib/db/migrations" });
   console.log("OK");
 } catch (e) {
