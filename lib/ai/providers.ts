@@ -1,30 +1,71 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { deepseek } from "@ai-sdk/deepseek";
-import { openai } from "@ai-sdk/openai";
+import { type AnthropicProvider, createAnthropic } from "@ai-sdk/anthropic";
+import { createDeepSeek, type DeepSeekProvider } from "@ai-sdk/deepseek";
+import { createOpenAI, type OpenAIProvider } from "@ai-sdk/openai";
 import type { EmbeddingModel, LanguageModel } from "ai";
 
 export type AiTask = "tagging" | "embedding" | "chat";
 
-type ProviderName = "openai" | "anthropic" | "deepseek";
+export type ProviderName = "openai" | "anthropic" | "deepseek";
 
-const providerFactories: Record<ProviderName, (model: string) => LanguageModel> = {
-  openai: (model) => openai(model),
-  anthropic: (model) => anthropic(model),
-  deepseek: (model) => deepseek(model),
+/**
+ * Pro-Benutzer hinterlegte API-Schlüssel (siehe `users`-Tabelle).
+ * Felder sind optional, weil Benutzer nur einen Teil der Provider
+ * konfigurieren können.
+ */
+export interface BenutzerAiSchluessel {
+  openaiApiKey?: string | null;
+  anthropicApiKey?: string | null;
+  deepseekApiKey?: string | null;
+}
+
+const getApiKeyForProvider = (
+  schluessel: BenutzerAiSchluessel | undefined,
+  provider: ProviderName,
+): string | null => {
+  switch (provider) {
+    case "openai":
+      return schluessel?.openaiApiKey?.trim() || null;
+    case "anthropic":
+      return schluessel?.anthropicApiKey?.trim() || null;
+    case "deepseek":
+      return schluessel?.deepseekApiKey?.trim() || null;
+  }
+};
+
+export class FehlenderProviderSchluessel extends Error {
+  constructor(public readonly provider: ProviderName) {
+    super(
+      `Für den Provider '${provider}' ist kein API-Schlüssel hinterlegt. Bitte in den Einstellungen ergänzen.`,
+    );
+    this.name = "FehlenderProviderSchluessel";
+  }
+}
+
+const getProviderClient = (
+  provider: ProviderName,
+  apiKey: string,
+): OpenAIProvider | AnthropicProvider | DeepSeekProvider => {
+  switch (provider) {
+    case "openai":
+      return createOpenAI({ apiKey });
+    case "anthropic":
+      return createAnthropic({ apiKey });
+    case "deepseek":
+      return createDeepSeek({ apiKey });
+  }
 };
 
 export const getLanguageModelForProvider = (
   provider: ProviderName,
   model: string,
+  schluessel?: BenutzerAiSchluessel,
 ): LanguageModel => {
-  const factory = providerFactories[provider];
-  if (!factory) {
-    throw new Error(`Provider '${provider}' is not supported.`);
-  }
-  return factory(model);
+  const apiKey = getApiKeyForProvider(schluessel, provider);
+  if (!apiKey) throw new FehlenderProviderSchluessel(provider);
+  return getProviderClient(provider, apiKey)(model);
 };
 
-const getTaskProvider = (task: AiTask) => {
+const getTaskProvider = (task: AiTask): ProviderName => {
   const provider = process.env[`AI_${task.toUpperCase()}_PROVIDER`] ?? "openai";
   return provider.toLowerCase() as ProviderName;
 };
@@ -39,25 +80,38 @@ const getTaskModel = (task: AiTask) => {
   return process.env[`AI_${task.toUpperCase()}_MODEL`] ?? fallback;
 };
 
-export const getModel = (task: AiTask): LanguageModel | EmbeddingModel => {
+/**
+ * Liefert ein konfiguriertes Modell für die gewünschte Aufgabe.
+ *
+ * `schluessel` enthält die pro-Benutzer hinterlegten API-Keys; ohne
+ * passenden Schlüssel wirft die Funktion `FehlenderProviderSchluessel`.
+ */
+export const getModel = (
+  task: AiTask,
+  schluessel?: BenutzerAiSchluessel,
+): LanguageModel | EmbeddingModel<string> => {
   const provider = getTaskProvider(task);
   const model = getTaskModel(task);
 
   if (task === "embedding") {
-    if (provider === "openai") {
-      return openai.embedding(model);
+    if (provider !== "openai") {
+      throw new Error(`Embedding provider '${provider}' is not supported in this scaffold.`);
     }
-
-    throw new Error(`Embedding provider '${provider}' is not supported in this scaffold.`);
+    const apiKey = getApiKeyForProvider(schluessel, "openai");
+    if (!apiKey) throw new FehlenderProviderSchluessel("openai");
+    return createOpenAI({ apiKey }).embedding(model);
   }
-  return getLanguageModelForProvider(provider, model);
+  return getLanguageModelForProvider(provider, model, schluessel);
 };
 
-export const getConfiguredProviders = () => {
-  const candidates: ProviderName[] = ["openai", "anthropic", "deepseek"];
-
-  return candidates.filter((provider) => {
-    const envKey = `${provider.toUpperCase()}_API_KEY`;
-    return Boolean(process.env[envKey]);
-  });
+/**
+ * Liefert die Liste der Provider, für die der Benutzer einen Schlüssel
+ * hinterlegt hat.
+ */
+export const getConfiguredProvidersForUser = (
+  schluessel: BenutzerAiSchluessel | undefined,
+): ProviderName[] => {
+  return (["openai", "anthropic", "deepseek"] as const).filter((p) =>
+    Boolean(getApiKeyForProvider(schluessel, p)),
+  );
 };

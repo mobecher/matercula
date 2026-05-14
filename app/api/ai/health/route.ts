@@ -1,6 +1,11 @@
 import { generateText } from "ai";
 import { z } from "zod";
-import { getConfiguredProviders, getLanguageModelForProvider } from "@/lib/ai";
+import {
+  type BenutzerAiSchluessel,
+  getConfiguredProvidersForUser,
+  getLanguageModelForProvider,
+} from "@/lib/ai";
+import { getRequestUser } from "@/lib/auth/request";
 
 export const runtime = "nodejs";
 
@@ -17,7 +22,15 @@ const healthSchema = z.object({
 });
 
 export async function GET() {
-  const configuredProviders = getConfiguredProviders();
+  const user = await getRequestUser();
+  if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
+
+  const schluessel: BenutzerAiSchluessel = {
+    openaiApiKey: user.openaiApiKey,
+    anthropicApiKey: user.anthropicApiKey,
+    deepseekApiKey: user.deepseekApiKey,
+  };
+  const configuredProviders = getConfiguredProvidersForUser(schluessel);
 
   if (configuredProviders.length === 0) {
     return Response.json(
@@ -25,7 +38,12 @@ export async function GET() {
         ok: false,
         configuredProviders: [],
         checkedProviders: [],
-        errors: [{ provider: "none", message: "No AI provider key configured." }],
+        errors: [
+          {
+            provider: "none",
+            message: "Kein API-Schlüssel hinterlegt. In den Einstellungen ergänzen.",
+          },
+        ],
       }),
       { status: 503 },
     );
@@ -38,7 +56,7 @@ export async function GET() {
     configuredProviders.map(async (provider) => {
       try {
         const modelName = process.env.AI_CHAT_MODEL ?? "gpt-4o-mini";
-        const model = getLanguageModelForProvider(provider, modelName);
+        const model = getLanguageModelForProvider(provider, modelName, schluessel);
         await generateText({
           model,
           maxOutputTokens: 1,

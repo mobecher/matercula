@@ -1,7 +1,11 @@
 import { generateObject, type LanguageModel } from "ai";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { getModel } from "@/lib/ai";
+import {
+  type BenutzerAiSchluessel,
+  FehlenderProviderSchluessel,
+  getModel,
+} from "@/lib/ai";
 import { db } from "@/lib/db";
 import { dokumente } from "@/lib/db/schema/dokumente";
 import {
@@ -189,8 +193,14 @@ const llmAntwortSchema = z.object({
         code: z
           .string()
           .min(1)
-          .describe("Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'."),
-        confidence: z.number().min(0).max(1).describe("Sicherheitsmaß zwischen 0 und 1."),
+          .describe(
+            "Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'.",
+          ),
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Sicherheitsmaß zwischen 0 und 1."),
         begruendung: z
           .string()
           .min(1)
@@ -220,6 +230,7 @@ export interface GenerierungsErgebnis {
 export async function generiereVorschlaegeFuerDokument(
   dokumentId: string,
   ownerId: string,
+  schluessel: BenutzerAiSchluessel,
 ): Promise<GenerierungsErgebnis | null> {
   const doc = await ladeDokumentFuerVorschlaege(dokumentId, ownerId);
   if (!doc) return null;
@@ -228,7 +239,8 @@ export async function generiereVorschlaegeFuerDokument(
     return {
       ok: false,
       grund: "nicht_unterstuetzt",
-      fehler: "Vorschläge sind aktuell nur für Text-Seiten verfügbar. PDF-Extraktion folgt.",
+      fehler:
+        "Vorschläge sind aktuell nur für Text-Seiten verfügbar. PDF-Extraktion folgt.",
       vorschlaege: [],
     };
   }
@@ -254,7 +266,22 @@ export async function generiereVorschlaegeFuerDokument(
   }
 
   const modellName = process.env.AI_TAGGING_MODEL ?? "gpt-4o-mini";
-  const model = getModel("tagging") as LanguageModel;
+  let model: LanguageModel;
+  try {
+    model = getModel("tagging", schluessel) as LanguageModel;
+  } catch (error) {
+    return {
+      ok: false,
+      grund: "ai_fehler",
+      fehler:
+        error instanceof FehlenderProviderSchluessel
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Unbekannter LLM-Fehler.",
+      vorschlaege: [],
+    };
+  }
 
   const ausschnitt = inhalt.slice(0, MAX_DOKUMENT_ZEICHEN);
   const katalogText = katalog
@@ -296,7 +323,8 @@ Aufgabe:
     return {
       ok: false,
       grund: "ai_fehler",
-      fehler: error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
+      fehler:
+        error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
       vorschlaege: [],
     };
   }
@@ -306,7 +334,9 @@ Aufgabe:
     katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.code, e]),
   );
   const awbByCode = new Map(
-    katalog.filter((e) => e.zielTyp === "anwendungsbereich").map((e) => [e.code, e]),
+    katalog
+      .filter((e) => e.zielTyp === "anwendungsbereich")
+      .map((e) => [e.code, e]),
   );
 
   type AufgeloesterVorschlag = {
@@ -376,7 +406,8 @@ Aufgabe:
         dokumentId,
         zielTyp: a.eintrag.zielTyp,
         kompetenzId: a.eintrag.zielTyp === "kompetenz" ? a.eintrag.id : null,
-        anwendungsbereichId: a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
+        anwendungsbereichId:
+          a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
         confidence: a.confidence,
         begruendung: a.begruendung,
         modell: modellName,
@@ -387,7 +418,8 @@ Aufgabe:
     }
   }
 
-  const ansichten = (await ladeVorschlaegeFuerDokument(dokumentId, ownerId)) ?? [];
+  const ansichten =
+    (await ladeVorschlaegeFuerDokument(dokumentId, ownerId)) ?? [];
   return { ok: true, vorschlaege: ansichten };
 }
 

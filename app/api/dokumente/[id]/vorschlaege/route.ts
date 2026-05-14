@@ -37,7 +37,11 @@ export async function POST(_req: Request, context: { params: Promise<{ id: strin
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
-  const ergebnis = await generiereVorschlaegeFuerDokument(parsed.data, user.id);
+  const ergebnis = await generiereVorschlaegeFuerDokument(parsed.data, user.id, {
+    openaiApiKey: user.openaiApiKey,
+    anthropicApiKey: user.anthropicApiKey,
+    deepseekApiKey: user.deepseekApiKey,
+  });
   if (ergebnis === null) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

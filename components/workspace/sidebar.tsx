@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import type { DokumentKnoten } from "@/lib/workspace/types";
+import { SettingsDialog } from "./settings-dialog";
 import {
   anwendungsbereichTabKey,
   bereichTabKey,
@@ -23,6 +24,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
   const { tree, addDocument, moveDocument, uploadPdfDocument } = useWorkspace();
   const [filter, setFilter] = useState("");
   const [pdfUploading, setPdfUploading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const rootPdfInputRef = useRef<HTMLInputElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
 
@@ -161,7 +163,16 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
             <span>Abmelden</span>
           </button>
         </form>
+        <button
+          className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-neutral-600 hover:bg-neutral-200"
+          onClick={() => setSettingsOpen(true)}
+          type="button"
+        >
+          <span aria-hidden>⚙️</span>
+          <span>Einstellungen</span>
+        </button>
       </div>
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </aside>
   );
 }
