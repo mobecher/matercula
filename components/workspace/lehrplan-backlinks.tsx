@@ -17,8 +17,15 @@ interface PickerEntry {
   kind: LinkKind;
 }
 
-export function LehrplanBacklinks({ docId }: { docId: string }) {
-  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
+export function LehrplanBacklinks({
+  docId,
+  reloadToken,
+}: {
+  docId: string;
+  reloadToken?: number;
+}) {
+  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } =
+    useWorkspace();
   const [data, setData] = useState<DokumentLehrplanLinks | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -32,9 +39,12 @@ export function LehrplanBacklinks({ docId }: { docId: string }) {
   }, [docId]);
 
   useEffect(() => {
+    // reloadToken is intentionally part of the dependency array so external
+    // changes (e.g. accepting an AI suggestion) can refresh the backlinks.
+    void reloadToken;
     setData(null);
     void reload();
-  }, [reload]);
+  }, [reload, reloadToken]);
 
   const linkedKompetenzIds = useMemo(
     () => new Set((data?.kompetenzen ?? []).map((k) => k.id)),
@@ -307,7 +317,9 @@ function collectEntries(
     for (const klasse of lp.klassen) {
       for (const bereich of klasse.bereiche) {
         const items =
-          kind === "kompetenz" ? bereich.kompetenzen : bereich.anwendungsbereiche;
+          kind === "kompetenz"
+            ? bereich.kompetenzen
+            : bereich.anwendungsbereiche;
         const pfad = `${lp.titel} › ${klasse.titel} › ${bereich.titel}`;
         for (const it of items) {
           out.push({ id: it.id, titel: it.titel, pfad, kind });

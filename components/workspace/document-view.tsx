@@ -8,6 +8,7 @@ import { BereichTabView } from "./bereich-tab-view";
 import { KlasseTabView } from "./klasse-tab-view";
 import { KompetenzTabView } from "./kompetenz-tab-view";
 import { LehrplanBacklinks } from "./lehrplan-backlinks";
+import { LinkVorschlaege } from "./link-vorschlaege";
 import { useWorkspace } from "./workspace-context";
 
 const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
@@ -75,6 +76,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
   const { renameDocument, setIcon, saveContent } = useWorkspace();
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState(doc.titel);
+  const [backlinksReload, setBacklinksReload] = useState(0);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -153,7 +155,15 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         value={titleDraft}
       />
 
-      {doc.typ !== "ordner" && <LehrplanBacklinks docId={doc.id} />}
+      {doc.typ !== "ordner" && (
+        <LehrplanBacklinks docId={doc.id} reloadToken={backlinksReload} />
+      )}
+      {doc.typ === "seite" && (
+        <LinkVorschlaege
+          docId={doc.id}
+          onLinksChanged={() => setBacklinksReload((t) => t + 1)}
+        />
+      )}
 
       {doc.typ === "ordner" ? (
         <FolderHint />

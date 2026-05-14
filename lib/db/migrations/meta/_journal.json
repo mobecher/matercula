@@ -29,6 +29,13 @@
       "when": 1778776578907,
       "tag": "0003_shocking_zeigeist",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778780681570,
+      "tag": "0004_bitter_giant_man",
+      "breakpoints": true
     }
   ]
 }

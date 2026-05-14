@@ -1,5 +1,7 @@
 import {
+  index,
   jsonb,
+  pgEnum,
   pgTable,
   real,
   text,
@@ -79,3 +81,63 @@ export const dokumentAnwendungsbereichLinks = pgTable(
     ),
   }),
 );
+
+/**
+ * AI-generierte Vorschläge für Verknüpfungen Dokument ↔ Lehrplanelement.
+ *
+ * - `zielTyp` schaltet zwischen Kompetenz und Anwendungsbereich um; das
+ *   jeweils passende Fremdschlüssel-Feld ist befüllt, das andere `null`.
+ * - `status` hält den Review-Zustand des Vorschlags (offen / akzeptiert /
+ *   abgelehnt). Akzeptierte Vorschläge erzeugen separat einen Eintrag in
+ *   `dokument_*_links`; der Vorschlag selbst bleibt für Audit-Zwecke erhalten.
+ * - `confidence` ist der Modell-Score (0..1).
+ * - `begruendung` ist der vom LLM generierte deutsche Begründungstext.
+ * - `modell` ist der ID-String des verwendeten LLMs (für Reproduzierbarkeit).
+ */
+export const linkVorschlagStatusEnum = pgEnum("link_vorschlag_status", [
+  "offen",
+  "akzeptiert",
+  "abgelehnt",
+]);
+
+export const linkVorschlagZielTypEnum = pgEnum("link_vorschlag_ziel_typ", [
+  "kompetenz",
+  "anwendungsbereich",
+]);
+
+export const dokumentLinkVorschlaege = pgTable(
+  "dokument_link_vorschlaege",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    dokumentId: uuid("dokument_id")
+      .notNull()
+      .references(() => dokumente.id, { onDelete: "cascade" }),
+    zielTyp: linkVorschlagZielTypEnum("ziel_typ").notNull(),
+    kompetenzId: uuid("kompetenz_id").references(() => kompetenzen.id, {
+      onDelete: "cascade",
+    }),
+    anwendungsbereichId: uuid("anwendungsbereich_id").references(() => anwendungsbereiche.id, {
+      onDelete: "cascade",
+    }),
+    confidence: real("confidence").notNull(),
+    begruendung: text("begruendung").notNull(),
+    modell: text("modell").notNull(),
+    status: linkVorschlagStatusEnum("status").notNull().default("offen"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => ({
+    docIdx: index("dokument_link_vorschlaege_dokument_idx").on(t.dokumentId),
+    uniqKomp: uniqueIndex("dokument_link_vorschlaege_kompetenz_unique").on(
+      t.dokumentId,
+      t.kompetenzId,
+    ),
+    uniqAwb: uniqueIndex("dokument_link_vorschlaege_anwendungsbereich_unique").on(
+      t.dokumentId,
+      t.anwendungsbereichId,
+    ),
+  }),
+);
+
+export type DokumentLinkVorschlag = typeof dokumentLinkVorschlaege.$inferSelect;
+export type NeuerDokumentLinkVorschlag = typeof dokumentLinkVorschlaege.$inferInsert;
