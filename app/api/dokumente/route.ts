@@ -1,0 +1,42 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { getRequestUser } from "@/lib/auth/request";
+import { erstelleDokument, ladeDokumentBaumFuerBenutzer } from "@/lib/workspace/repository";
+
+const erstelleSchema = z.object({
+  parentId: z.string().uuid().nullable().optional(),
+  typ: z.enum(["ordner", "seite"]),
+  titel: z.string().min(1).max(200),
+  icon: z.string().max(8).nullable().optional(),
+  inhaltMarkdown: z.string().nullable().optional(),
+});
+
+export async function GET() {
+  const user = await getRequestUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const baum = await ladeDokumentBaumFuerBenutzer(user.id);
+  return NextResponse.json({ baum });
+}
+
+export async function POST(request: Request) {
+  const user = await getRequestUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const json = await request.json().catch(() => null);
+  const ergebnis = erstelleSchema.safeParse(json);
+  if (!ergebnis.success) {
+    return NextResponse.json({ error: "invalid_input", issues: ergebnis.error.issues }, { status: 400 });
+  }
+
+  const dokument = await erstelleDokument({
+    ownerId: user.id,
+    parentId: ergebnis.data.parentId ?? null,
+    typ: ergebnis.data.typ,
+    titel: ergebnis.data.titel,
+    icon: ergebnis.data.icon ?? null,
+    inhaltMarkdown: ergebnis.data.inhaltMarkdown ?? null,
+  });
+
+  return NextResponse.json({ dokument }, { status: 201 });
+}

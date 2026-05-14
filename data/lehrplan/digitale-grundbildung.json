@@ -1,0 +1,513 @@
+{
+  "Digitale_Grundbildung": {
+    "title": "Digitale Grundbildung",
+    "years": {
+      "1": {
+        "title": "1. Klasse",
+        "competence_areas": [
+          {
+            "title": "Orientierung",
+            "description": "gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "das Prinzip der Eingabe, Verarbeitung und Ausgabe exemplarisch an den Bestandteilen und der Funktionsweise eines digitalen Endgeräts beschreiben."
+              },
+              {
+                "perspective": "G",
+                "description": "erkunden, was das Digitale im Unterschied zum Analogen ausmacht, und an interdisziplinären Beispielen aufzeigen, welche Elemente/Komponenten und Funktionen dazugehören."
+              },
+              {
+                "perspective": "I",
+                "description": "das persönliche Nutzungsverhalten vergleichend analysieren, hinterfragen und sinnvolle Möglichkeiten der Veränderung benennen sowie vergleichen, wie Menschen vor und nach der Einführung oder Übernahme der Digitalisierung leben und arbeiten."
+              }
+            ],
+            "applications": []
+          },
+          {
+            "title": "Information",
+            "description": "mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "verschiedene Suchmaschinen nennen und erklären, wie eine Suchmaschine prinzipiell funktioniert."
+              },
+              {
+                "perspective": "G",
+                "description": "Bedingungen, Vor- und Nachteile von personalisierten Suchroutinen für sich selbst erklären."
+              },
+              {
+                "perspective": "I",
+                "description": "unter Nutzung der grundlegenden Funktionen einer Suchmaschine einfache Internetrecherchen durchführen sowie die Qualität der gefundenen Informationen anhand grundlegender Kriterien einschätzen."
+              },
+              {
+                "perspective": "I",
+                "description": "mit einem digitalen Gerät Informationen speichern, kopieren, suchen, abrufen, ändern und löschen und die gespeicherten Informationen als Daten definieren."
+              }
+            ],
+            "applications": []
+          },
+          {
+            "title": "Kommunikation",
+            "description": "Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "erklären, wie personenbezogene Informationen verwendet und geteilt werden können, und Vorkehrungen treffen, um ihre personenbezogenen Daten zu schützen."
+              },
+              {
+                "perspective": "G",
+                "description": "an Beispielen der Nutzung von Software aufzeigen, wie digitale Technologien neue Formen der Zusammenarbeit ermöglichen, sowie respektvoll und verantwortungsbewusst mit anderen online zusammenarbeiten."
+              },
+              {
+                "perspective": "I",
+                "description": "verschiedene digitale Kommunikationswerkzeuge, Kollaborationswerkzeuge und Kollaborationsdienste benennen, beschreiben und sinnvolle Nutzungsszenarien aufzeigen."
+              }
+            ],
+            "applications": [
+              "Kommunikationsbedürfnisse aus dem Alltag",
+              "Anforderungen an digitale Kommunikationswerkzeuge",
+              "Erhebung und Speicherung der Daten von Nutzerinnen und Nutzern sowie deren Verwendung"
+            ]
+          },
+          {
+            "title": "Produktion",
+            "description": "Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "eindeutige Handlungsanleitungen (Algorithmen) nachvollziehen, ausführen sowie selbstständig formulieren."
+              },
+              {
+                "perspective": "G",
+                "description": "verschiedene Darstellungsformen von Inhalten und die Wirkung auf sich und andere beschreiben."
+              },
+              {
+                "perspective": "I",
+                "description": "mit Daten einfache Berechnungen durchführen sowie in verschiedenen (visuellen) Formaten sammeln und präsentieren."
+              },
+              {
+                "perspective": "I",
+                "description": "einzeln und gemeinsam Texte und Präsentationen (unter Einbeziehung von Bildern, Grafiken und anderen Objekten) strukturieren und formatieren."
+              }
+            ],
+            "applications": [
+              "Sequenzen und einfache Schleifen",
+              "Planung, Gestaltung und Auswertung von Umfragen"
+            ]
+          },
+          {
+            "title": "Handeln",
+            "description": "Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "unter Nutzung einer angemessenen Terminologie gängige physische Komponenten von Computersystemen (Hardware) identifizieren sowie beschreiben, wie interne und externe Teile von digitalen Geräten funktionieren und ein System bilden."
+              },
+              {
+                "perspective": "G",
+                "description": "Mediennutzungsformen sowie deren historische Entwicklung und gesellschaftliche Etablierung im Zuge des Medienwandels beschreiben."
+              },
+              {
+                "perspective": "I",
+                "description": "Hilfesysteme bei der Problemlösung nutzen."
+              }
+            ],
+            "applications": [
+              "Wichtigste Komponenten eines Computers",
+              "Notwendige Funktionen eines Betriebssystems im Normalbetrieb"
+            ]
+          }
+        ]
+      },
+      "2": {
+        "title": "2. Klasse",
+        "competence_areas": [
+          {
+            "title": "Orientierung",
+            "description": "gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "Möglichkeiten bewerten, wie die Zugänglichkeit und Nutzbarkeit von Technologieprodukten für unterschiedliche Bedürfnisse von Nutzerinnen und Nutzer verbessert werden kann."
+              },
+              {
+                "perspective": "G",
+                "description": "Interessen und Bedingungen der Medienproduktion und der Veröffentlichung sowie des Medienkonsums analysieren."
+              },
+              {
+                "perspective": "G",
+                "description": "geeignete Software (auch freie Software) auswählen und bedienen, um unterschiedliche Aufgaben auszuführen."
+              },
+              {
+                "perspective": "I",
+                "description": "an interdisziplinären Beispielen aufzeigen, inwieweit das Digitale im Vergleich zum Analogen das eigene Leben, die Gesellschaft oder Umwelt verändert. Sie können erkennen, dass Medien und Technologien nie „neutral“ sind."
+              }
+            ],
+            "applications": [
+              "Veränderung des Einkaufsverhaltens",
+              "Onlinespiele (pay-to-win)",
+              "Sensibilisierung für sprachliche, sensorische und motorische Einschränkungen bei der Nutzung digitaler Medien"
+            ]
+          },
+          {
+            "title": "Information",
+            "description": "mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "Daten erfassen, filtern, sortieren, interpretieren und darstellen."
+              },
+              {
+                "perspective": "T",
+                "description": "beschreiben, wie über das Internet Informationen bereitgestellt und abgerufen sowie Daten übertragen werden."
+              },
+              {
+                "perspective": "I",
+                "description": "Lizenzmodelle, insb. offene (Creative Commons, Open Educational Resources, Open Source), benennen, erklären und anwenden."
+              }
+            ],
+            "applications": [
+              "Organisation von Daten",
+              "(Visuelle) Darstellung von Daten",
+              "Beschreibung von Daten hinsichtlich ihrer Formate, Größe und binären Struktur"
+            ]
+          },
+          {
+            "title": "Kommunikation",
+            "description": "Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "darstellen, wie Informationen in kleinere Teile zerlegt, als Pakete durch mehrere Geräte über Netzwerke und das Internet übertragen und am Zielort wieder zusammengesetzt werden."
+              },
+              {
+                "perspective": "G",
+                "description": "Kommunikationsmedien nach ihrer Verwendung unterscheiden und Einflüsse auf das eigene Lebensumfeld und die Gesellschaft aufzeigen. Sie können Möglichkeiten der Meinungsbildung und Manipulation beschreiben."
+              },
+              {
+                "perspective": "I",
+                "description": "den Begriff „Social Media“ erklären und verstehen, welche Interessen das anbietende Unternehmen hat."
+              }
+            ],
+            "applications": [
+              "Geschäftsmodelle von Social Media-Diensten, Nutzung von persönlichen und personenbezogenen Informationen",
+              "Fake News, Darstellung und Realität (Manipulation) und dahinterliegende Interessen",
+              "Schutz von personenbezogenen Daten",
+              "Betrug im Internet, Phishing"
+            ]
+          },
+          {
+            "title": "Produktion",
+            "description": "Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "darstellen, wie Programme Daten speichern und verarbeiten, indem sie Zahlen oder andere Symbole zur Darstellung von Informationen verwenden."
+              },
+              {
+                "perspective": "T",
+                "description": "unter Nutzung einer geeigneten Entwicklungsumgebung einfache Programme erstellen, diese testen und debuggen (Fehler erkennen und beheben)."
+              },
+              {
+                "perspective": "G",
+                "description": "die Rechte am geistigen Eigentum beachten und bei der Erstellung oder beim Remixen von Programmen die entsprechenden Urheberrechte angeben."
+              },
+              {
+                "perspective": "I",
+                "description": "visuelle/audiovisuelle/auditive Inhalte erzeugen, adaptieren und analysieren. Sie können Möglichkeiten der Veröffentlichung benennen."
+              }
+            ],
+            "applications": []
+          },
+          {
+            "title": "Handeln",
+            "description": "Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "darstellen, wie Hardware und Software als System zusammenarbeiten, um Aufgaben zu bewältigen."
+              },
+              {
+                "perspective": "T",
+                "description": "digitale Geräte mit einem Netzwerk verbinden und Daten zwischen verschiedenen digitalen Medien austauschen."
+              },
+              {
+                "perspective": "G",
+                "description": "aufzeigen, wie digitale Kommunikation zur Beteiligung an gesellschaftlichen Diskurs- und Entscheidungsprozessen genutzt werden kann."
+              },
+              {
+                "perspective": "I",
+                "description": "zwischen digitalen Angeboten und eigenen Bedürfnissen abwägen und persönliche Handlungsmöglichkeiten unter Berücksichtigung gesundheitlicher und ökologischer Aspekte gestalten."
+              }
+            ],
+            "applications": [
+              "Digitaler Arbeitsplatz",
+              "Nachhaltiger Umgang mit digitalen Technologien",
+              "Erkennen von technischen Problemen in der Nutzung von digitalen Geräten",
+              "Konkretisierung von Fehlern im Hinblick auf Meldung an Supportstrukturen"
+            ]
+          }
+        ]
+      },
+      "3": {
+        "title": "3. Klasse",
+        "competence_areas": [
+          {
+            "title": "Orientierung",
+            "description": "gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "an interdisziplinären Beispielen Anwendungen von Technik in Umwelt und Gesellschaft beschreiben und deren Relevanz für gesellschaftliche Gruppen und kulturelle Kontexte berücksichtigen. Sie können Wechselwirkungen benennen."
+              },
+              {
+                "perspective": "T",
+                "description": "beschreiben, wie künstliche Intelligenz viele Software- und physische Systeme steuert."
+              },
+              {
+                "perspective": "G",
+                "description": "Veränderungen des Mediennutzungsverhaltens beschreiben sowie Chancen und Gefahren der personalisierten Mediennutzung analysieren."
+              },
+              {
+                "perspective": "I",
+                "description": "Kompromisse im Zusammenhang mit digitalen Technologien reflektieren, die sich auf die alltäglichen Aktivitäten und beruflichen Möglichkeiten der Menschen auswirken."
+              }
+            ],
+            "applications": [
+              "Verbesserungen für das Design von digitalen Geräten auf Basis von Nutzungsanalysen",
+              "Risiken und Vorteile für die Chancengleichheit bei der Nutzung von Informationstechnologien sowie geeignete Handlungsoptionen",
+              "digitale Barrierefreiheit",
+              "Internet-of-Things"
+            ]
+          },
+          {
+            "title": "Information",
+            "description": "mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen",
+            "competencies": [
+              {
+                "perspective": "G",
+                "description": "Bedingungen sowie Vor- und Nachteile von personalisierten Suchroutinen für das eigene Leben bzw. die Gesellschaft erklären."
+              },
+              {
+                "perspective": "I",
+                "description": "zielgerichtet und selbstständig die Suche nach Informationen und Daten mit Hilfe geeigneter Strategien und Methoden planen und durchführen, geeignete Quellen nutzen und gefundene Informationen vergleichend hinterfragen."
+              },
+              {
+                "perspective": "I",
+                "description": "Muster in Datendarstellungen wie Diagrammen oder Grafiken erkennen und beschreiben, um Vorhersagen zu treffen."
+              },
+              {
+                "perspective": "I",
+                "description": "Datenmaterial nutzen, um Ursache-Wirkung-Beziehungen aufzuzeigen oder vorzuschlagen, Ergebnisse vorherzusagen oder eine Idee zu vermitteln."
+              }
+            ],
+            "applications": [
+              "Manipulative und monoperspektivische Darstellungen von Informationen in populären Medienkulturen"
+            ]
+          },
+          {
+            "title": "Kommunikation",
+            "description": "Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "erklären, wie cloudbasierte Systeme grundsätzlich funktionieren, und auf kritische Faktoren achten (zB Standort des Servers, Datenschutz und Datensicherheit)."
+              },
+              {
+                "perspective": "G",
+                "description": "einen Kompromiss zwischen der Veröffentlichung von Informationen und der Geheimhaltung und Sicherheit von Informationen beschreiben."
+              },
+              {
+                "perspective": "I",
+                "description": "bei der Erstellung digitaler Projekte (digitaler Artefakte) mittels Strategien wie Crowdsourcing oder Umfragen mit mehreren Mitwirkenden zusammenarbeiten."
+              },
+              {
+                "perspective": "I",
+                "description": "eigene digitale Identitäten reflektiert gestalten sowie die eigene digitale Reputation verfolgen und schützen."
+              }
+            ],
+            "applications": [
+              "Verschlüsselungsmethoden für die sichere Übertragung von Informationen",
+              "(sicheres) Passwort, Zweifaktorauthentifizierung",
+              "Physischer und digitaler Schutz von elektronischen Informationen",
+              "Grundlagen der Betroffenenrechte im Datenschutz",
+              "Reale Probleme der Cybersicherheit: Cybermobbing, Cybergrooming, Identitätsdiebstahl"
+            ]
+          },
+          {
+            "title": "Produktion",
+            "description": "Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "an Beispielen Elemente des Computational Thinkings nachvollziehen und diese zur Lösung von Problemen einsetzen. Sie wissen, wie sie Lösungswege in Programmiersprache umsetzen können."
+              },
+              {
+                "perspective": "G",
+                "description": "verschiedene populäre Medienkulturen benennen sowie Möglichkeiten verschiedener Darstellungsformen von Inhalten erproben."
+              },
+              {
+                "perspective": "I",
+                "description": "ihre eigenen medialen Produktionen auf Barrierefreiheit überprüfen und ggf. Barrieren beseitigen."
+              },
+              {
+                "perspective": "I",
+                "description": "Einstellungen in Softwareapplikationen den persönlichen Bedürfnissen entsprechend anpassen."
+              }
+            ],
+            "applications": [
+              "Gezielte bzw. manipulative Darstellungen, zB in Diagrammen, durch Bildausschnitte oder Vertonung",
+              "Konfigurationsmöglichkeiten von Betriebssystemen und Kommunikationssystemen, um sie barrierefrei zugänglich machen"
+            ]
+          },
+          {
+            "title": "Handeln",
+            "description": "Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "am Beispiel erklären, wie Computersysteme in Alltagsgegenständen bestimmte Funktionen erfüllen und welche Chancen und Risiken damit verbunden sind."
+              },
+              {
+                "perspective": "G",
+                "description": "ökologische Problemkonstellation wie Energie und Rohstoffe im Zusammenhang mit Digitalisierung benennen und eigenes Handeln daraus ableiten."
+              },
+              {
+                "perspective": "I",
+                "description": "entsprechende Vorkehrungen treffen, um ihre Geräte und Inhalte vor Viren bzw. Schadsoftware/Malware zu schützen."
+              }
+            ],
+            "applications": []
+          }
+        ]
+      },
+      "4": {
+        "title": "4. Klasse",
+        "competence_areas": [
+          {
+            "title": "Orientierung",
+            "description": "gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "die Grenzen und Möglichkeiten von Künstlicher Intelligenz reflektieren."
+              },
+              {
+                "perspective": "G",
+                "description": "euphorische und kulturpessimistische Haltungen gegenüber Technologie- und Medienwandel wahrnehmen und ihnen argumentativ begegnen."
+              },
+              {
+                "perspective": "I",
+                "description": "die Normativität von digitalen Technologien (zB Filterblase) und Medieninhalten (zB Stereotype, Klischees) erkennen und diese kreativ durchbrechen."
+              }
+            ],
+            "applications": [
+              "Mobilität (zB selbstfahrende Fahrzeuge)",
+              "Gesundheit (zB vernetzte Daten, automatische Assistenzsysteme)"
+            ]
+          },
+          {
+            "title": "Information",
+            "description": "mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "Datensicherungen und -wiederherstellungen ausführen."
+              },
+              {
+                "perspective": "G",
+                "description": "Gefahren der Erhebung, Auswertung und Verknüpfung von Nutzerdaten im Sinne von Fahrlässigkeit, Missbrauch und Überwachung erklären und sich dazu verantwortungsvoll verhalten."
+              },
+              {
+                "perspective": "I",
+                "description": "Informationen und Inhalte aktualisieren, verbessern sowie zielgruppen-, medienformat- und anwendungsgerecht aufbereiten und inhaltlich, organisatorisch und sprachlich in bestehende Wissensorganisationsformate einbinden."
+              }
+            ],
+            "applications": []
+          },
+          {
+            "title": "Kommunikation",
+            "description": "Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "die Funktion von Protokollen bei der Übertragung von Daten über Netzwerke und das Internet darstellen."
+              },
+              {
+                "perspective": "G",
+                "description": "ein Verständnis für die Konstruktion von Medienwirklichkeit durch die Erhebung und Analyse von Informationen und Daten bzw. die Mechanismen der Bild-, Ton- oder Datenmanipulation entwickeln."
+              },
+              {
+                "perspective": "G",
+                "description": "bei der Auswahl von Social Media bedenken, welchen Einfluss die Interessen von Unternehmen auf das eigene Welt- und Selbstbild haben."
+              },
+              {
+                "perspective": "I",
+                "description": "verantwortungsvoll in digitalen Medien kommunizieren und unter Berücksichtigung des Urheberrechts und des Rechts am eigenen Bild Daten austauschen."
+              }
+            ],
+            "applications": [
+              "Phänomen der viralen Verbreitung von Inhalten und entsprechende Handlungsmöglichkeiten",
+              "Datenschutzrechtliche Rechtsgrundlagen (DSGVO und DSG)"
+            ]
+          },
+          {
+            "title": "Produktion",
+            "description": "Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "Programme entwerfen und iterativ entwickeln, die Kontrollstrukturen kombinieren, einschließlich verschachtelter Schleifen und zusammengesetzter Konditionale."
+              },
+              {
+                "perspective": "G",
+                "description": "Möglichkeiten verschiedener Darstellungsformen von Inhalten erproben und deren Einfluss auf die Wahrnehmung des Inhalts hinterfragen."
+              },
+              {
+                "perspective": "I",
+                "description": "mit bereitgestellten Medien und Software-Applikationen zielgerichtet und kreativ gestaltend kooperieren."
+              },
+              {
+                "perspective": "I",
+                "description": "einfache Programme oder Webanwendungen mit geeigneten Werkzeugen erstellen, um ein bestimmtes Problem zu lösen oder eine bestimmte Aufgabe zu erfüllen."
+              }
+            ],
+            "applications": [
+              "Dokumentation von Programmen",
+              "Projektplanung inklusive Aufgabenverteilung und Zeitplan",
+              "(Graphische) Notationen, Pseudocode",
+              "Ästhetische und technische Kompetenzen von Medienkulturen in Projekten"
+            ]
+          },
+          {
+            "title": "Handeln",
+            "description": "Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen",
+            "competencies": [
+              {
+                "perspective": "T",
+                "description": "Abstraktionsebenen und Interaktionen zwischen Anwendungssoftware, Systemsoftware und Hardwareschichten vergleichen."
+              },
+              {
+                "perspective": "T",
+                "description": "Software zur Verschlüsselung von Daten einsetzen."
+              },
+              {
+                "perspective": "G",
+                "description": "aufzeigen, wie digitale Kommunikation zu zivilgesellschaftlicher Partizipation und Engagement genutzt wird."
+              },
+              {
+                "perspective": "I",
+                "description": "reflektieren, inwieweit technische Konfigurationen Optionen einschränken und lenken. Sie können Vorkehrungen für ihre Eigenständigkeit und informationelle Selbstbestimmung im Kontext von digitaler Vernetzung treffen."
+              }
+            ],
+            "applications": [
+              "Wichtigste technische Mittel zum Schutz vor Betrug und Missbrauch",
+              "Wichtigste rechtliche und politische Aspekte von Konsumentenrecht"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

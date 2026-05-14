@@ -1,0 +1,263 @@
+Bildungs- und Lehraufgabe (1. bis 4. Klasse):
+Die Folgen der Digitalisierung prägen wesentlich Selbstbilder, Lebenswelt, Kommunikation, Kultur, Weltverständnis und Gesellschaft, Arbeitswelt, Wirtschaft, Produktion und
+Technik. Ziele der Digitalen Grundbildung sind die Förderung von Medienkompetenz, Anwendungskompetenzen und informatischen Kompetenzen, um Orientierung und mündiges
+Handeln im 21. Jahrhundert zu ermöglichen.
+Unsere komplexe, von Medien, Algorithmen und digitalen Technologien durchdrungene Welt lässt sich an ausgewählten Beispielen (mit entsprechenden Phänomenen,
+Strukturen, Funktionen und Problemstellungen) konkretisieren und im Unterrichtsgegenstand Digitale Grundbildung mit Aspekten aus der informatischen Bildung und Medienbildung
+erarbeiten. Solche Beispiele aus der digitalen und technisierten Welt kann man in ihrer Beschaffenheit und Funktionalität als digitale Artefakte bezeichnen. Diese weisen technologisch-
+mediale, gesellschaftlich-kulturelle und interaktionsspezifische Bezüge auf. Durch die multiperspektivische Bearbeitung von Beispielen sollen Kompetenzen entwickelt werden, um
+digitale Artefakte zu erkunden, kritisch zu hinterfragen, verantwortungsvoll zu nutzen und zu gestalten. Dabei ist eines der Ziele ein sicherer Umgang mit Medien und digitalen
+Technologien im Sinne des Kinderschutzes.
+Die Digitale Grundbildung bietet vielfache Möglichkeiten zum fächerverbindenden Unterricht, unter der besonderen Berücksichtigung der Schnittstellen von der digitalen zur
+analogen Welt. Lehrende sind angehalten, unmittelbare Konsequenzen der Digitalisierung für Wissen und Bildung zu berücksichtigen sowie aktuelle Themen und Entwicklungen kritisch
+und reflektiert aufzugreifen.
+Didaktische Grundsätze (1. bis 4. Klasse):
+Zur Umsetzung der Digitalen Grundbildung bieten sich didaktische Konzepte und Prozesse an, die einen ganzheitlichen Zugang zu digitalen Artefakten gewährleisten. Dazu
+gehören ko-konstruktive, erfahrungs-, gestaltungs- sowie reflexions- und problemlösungsorientierte Methoden wie Critical Thinking (kritisches Denken: vernünftiges reflektierendes
+Denken), Design Thinking (iterative Methode für die Lösung von komplexen Problemen und die Entwicklung neuer Ideen), forschendes Lernen und Playful Learning (spielerisches
+Lernen angelehnt an die Art und Weise, wie Kleinkinder die Welt entdecken). Digitale Grundbildung erfordert fächerverbindende und fächerübergreifende Arbeitsformen. Die folgenden
+Bereiche sind dabei in ausgewogener, kreativer und integrativer Weise miteinander zu verknüpfen:
+– Medienbildung umfasst die Beschäftigung mit der Entstehung, Entwicklung und Zukunft digitaler Medienkonstellationen. Reflexion und Kritik betreffen beispielsweise
+medienbiografische Entwicklungen bzw. Bedingungen der Mediensozialisation sowie digitaler Inklusions- und Exklusionsdynamiken. Medienbildung geht vom
+Zusammenspiel von Nutzung und Teilnahme an aktueller Medienkultur aus.
+– Informatische Bildung umfasst das Analysieren, Interagieren, Modellieren, Codieren und Testen im Umgang mit Informatiksystemen, Software, Automatisierung, Daten
+und Vernetzung. Die Entwicklung informatischer und medientechnischer Kompetenzen orientiert sich besonders an didaktischen Prinzipien der sogenannten 21st
+Century Skills, der 4 Ks (kritisches Denken, Kreativität, Kommunikation und Kollaboration) und des Computational Thinking (problemorientiertes informatisches
+Denken).
+– Gestaltungskompetenz geht von einem Zusammenspiel von informatischer Bildung und Medienbildung aus und bietet vielfältige analytische, produktive und kreative
+Zugänge zu funktionalen Medieneinsätzen und ästhetischen Medienformaten in globalisierten digitalen Kulturen.
+Bei der Erarbeitung der unterschiedlichen Kompetenzen ist jeweils von der Lebenswirklichkeit und den Vorkenntnissen der Schülerinnen und Schüler unter Berücksichtigung der
+Heterogenität individueller Medienbiographien auszugehen. In koedukativen Gruppen ist darauf zu achten, dass Buben und Mädchen gleichberechtigte Zugänge und Möglichkeiten der
+Teilhabe erhalten. Die Dynamik der digitalen Welt erfordert es, Inhalte und Methoden kontinuierlich zu evaluieren und anzupassen. Die Förderung der Chancengleichheit und der
+Abbau von stereotypen Zuschreibungen sind stets im Blick zu behalten.
+Dieser Lehrplan greift folgende übergreifende Themen auf: Bildungs-, Berufs- und Lebensorientierung1, Entrepreneurship Education2, Gesundheitsförderung3, Politische
+Bildung7, Reflexive Geschlechterpädagogik und Gleichstellung8, Sprachliche Bildung und Lesen10, Umweltbildung für nachhaltige Entwicklung11, Verkehrs- und Mobilitätsbildung12
+,
+Wirtschafts-, Finanz- und Verbraucher/innenbildung13
+Zentrale fachliche Konzepte (1. bis 4. Klasse):
+Durch die Digitalisierung, Datafizierung, Automatisierung und Medialisierung befinden wir uns in einem Veränderungsprozess mit all seinen Problemen und Chancen, welcher
+auch Grundlagen, Aufbau und Ordnung von Wissen betrifft. Die drei zentralen fachlichen Konzepte beruhen, basierend auf dem Frankfurt Dreieck, auf folgenden Perspektiven: der
+technisch-medialen (T), der gesellschaftlich-kulturellen (G) und der interaktionsbezogenen (I). Mit diesen können digitale Phänomene unserer Gesellschaft beispielhaft auf
+unterschiedlichen Ebenen und in verschiedenen Graden der Abstraktion didaktisch bearbeitet werden.
+Strukturen und Funktionen digitaler informatischer und medialer Systeme und Werkzeuge (T)
+Diese beinhalten informatische Funktions- und Wirkprinzipien sowie die Reflexion ihrer nicht unmittelbar sichtbaren Einflüsse auf Kultur, Politik, Gesellschaft und Lebenswelt,
+Technik und Produktion.
+Gesellschaftliche Wechselwirkungen durch den Einsatz digitaler Technologien (G)
+Diese betreffen etwa soziale Umgangsformen, die politische Organisation, Machtstrukturen, ökonomische Interessen oder die Kommunikation. Die historische Perspektive erlaubt
+es, Kontinuitäten und Entstehungsprozesse sowie damit verbundene Traditionen zu verstehen.
+Interaktion in Form von Nutzung, Handlung und Subjektivierung (I)
+Sie erlaubt die Analyse, Reflexion und kreative Gestaltung persönlicher und kollektiver Handlungsrepertoires. Dies beinhaltet auch die Frage, wie und mit welchen Zielen
+Menschen Medien erstellen, gestalten und Systeme nutzen.
+Kompetenzmodell und Kompetenzbereiche (1. bis 4. Klasse):
+– Orientierung: gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren
+– Information: mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen
+– Kommunikation: Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme
+– Produktion: Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren: Zerlegen von Problemen, Muster erkennen,
+Verallgemeinern/Abstrahieren und Algorithmen entwerfen
+– Handeln: Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen
+Kompetenzbeschreibungen und Anwendungsbereiche, Lehrstoff (1. bis 4. Klasse):
+1. Klasse:
+Kompetenzbereich Orientierung: gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren
+Die Schülerinnen und Schüler können
+– (T) das Prinzip der Eingabe, Verarbeitung und Ausgabe exemplarisch an den Bestandteilen und der Funktionsweise eines digitalen Endgeräts beschreiben.
+– (G) erkunden, was das Digitale im Unterschied zum Analogen ausmacht, und an interdisziplinären Beispielen aufzeigen, welche Elemente/Komponenten und Funktionen
+dazugehören.
+– (I) das persönliche Nutzungsverhalten vergleichend analysieren, hinterfragen und sinnvolle Möglichkeiten der Veränderung benennen sowie vergleichen, wie Menschen
+vor und nach der Einführung oder Übernahme der Digitalisierung leben und arbeiten.3
+Kompetenzbereich Information: mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen
+Die Schülerinnen und Schüler können
+– (T) verschiedene Suchmaschinen nennen und erklären, wie eine Suchmaschine prinzipiell funktioniert.
+– (G) Bedingungen, Vor- und Nachteile von personalisierten Suchroutinen für sich selbst erklären.
+– (I) unter Nutzung der grundlegenden Funktionen einer Suchmaschine einfache Internetrecherchen durchführen sowie die Qualität der gefundenen Informationen
+anhand grundlegender Kriterien einschätzen.
+– (I) mit einem digitalen Gerät Informationen speichern, kopieren, suchen, abrufen, ändern und löschen und die gespeicherten Informationen als Daten definieren.
+Kompetenzbereich Kommunikation: Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme
+Die Schülerinnen und Schüler können
+– (T) erklären, wie personenbezogene Informationen verwendet und geteilt werden können, und Vorkehrungen treffen, um ihre personenbezogenen Daten zu schützen.
+– (G) an Beispielen der Nutzung von Software aufzeigen, wie digitale Technologien neue Formen der Zusammenarbeit ermöglichen, sowie respektvoll und
+verantwortungsbewusst mit anderen online zusammenarbeiten.
+– (I) verschiedene digitale Kommunikationswerkzeuge, Kollaborationswerkzeuge und Kollaborationsdienste benennen, beschreiben und sinnvolle Nutzungsszenarien
+aufzeigen.
+Anwendungsbereiche
+– Kommunikationsbedürfnisse aus dem Alltag
+– Anforderungen an digitale Kommunikationswerkzeuge
+– Erhebung und Speicherung der Daten von Nutzerinnen und Nutzern sowie deren Verwendung
+Kompetenzbereich Produktion: Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren
+Die Schülerinnen und Schüler können
+– (T) eindeutige Handlungsanleitungen (Algorithmen) nachvollziehen, ausführen sowie selbstständig formulieren.
+– (G) verschiedene Darstellungsformen von Inhalten und die Wirkung auf sich und andere beschreiben.7
+– (I) mit Daten einfache Berechnungen durchführen sowie in verschiedenen (visuellen) Formaten sammeln und präsentieren.
+– (I) einzeln und gemeinsam Texte und Präsentationen (unter Einbeziehung von Bildern, Grafiken und anderen Objekten) strukturieren und formatieren.10
+Anwendungsbereiche
+– Sequenzen und einfache Schleifen
+– Planung, Gestaltung und Auswertung von Umfragen
+Kompetenzbereich Handeln: Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen
+Die Schülerinnen und Schüler können
+– (T) unter Nutzung einer angemessenen Terminologie gängige physische Komponenten von Computersystemen (Hardware) identifizieren sowie beschreiben, wie interne
+und externe Teile von digitalen Geräten funktionieren und ein System bilden.10
+– (G) Mediennutzungsformen sowie deren historische Entwicklung und gesellschaftliche Etablierung im Zuge des Medienwandels beschreiben.
+– (I) Hilfesysteme bei der Problemlösung nutzen.
+Anwendungsbereiche
+– Wichtigste Komponenten eines Computers
+– Notwendige Funktionen eines Betriebssystems im Normalbetrieb
+2. Klasse:
+Kompetenzbereich Orientierung: gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren
+Die Schülerinnen und Schüler können
+– (T) Möglichkeiten bewerten, wie die Zugänglichkeit und Nutzbarkeit von Technologieprodukten für unterschiedliche Bedürfnisse von Nutzerinnen und Nutzer verbessert
+werden kann.
+– (G) Interessen und Bedingungen der Medienproduktion und der Veröffentlichung sowie des Medienkonsums analysieren.7, 13
+– (G) geeignete Software (auch freie Software) auswählen und bedienen, um unterschiedliche Aufgaben auszuführen.
+– (I) an interdisziplinären Beispielen aufzeigen, inwieweit das Digitale im Vergleich zum Analogen das eigene Leben, die Gesellschaft oder Umwelt verändert. Sie können
+erkennen, dass Medien und Technologien nie „neutral“ sind.7
+Anwendungsbereiche
+– Veränderung des Einkaufsverhaltens13
+– Onlinespiele (pay-to-win)13
+– Sensibilisierung für sprachliche, sensorische und motorische Einschränkungen bei der Nutzung digitaler Medien
+Kompetenzbereich Information: mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen
+Die Schülerinnen und Schüler können
+– (T) Daten erfassen, filtern, sortieren, interpretieren und darstellen.
+– (T) beschreiben, wie über das Internet Informationen bereitgestellt und abgerufen sowie Daten übertragen werden.
+– (I) Lizenzmodelle, insb. offene (Creative Commons, Open Educational Resources, Open Source), benennen, erklären und anwenden.13
+Anwendungsbereiche
+– Organisation von Daten
+– (Visuelle) Darstellung von Daten
+– Beschreibung von Daten hinsichtlich ihrer Formate, Größe und binären Struktur
+Kompetenzbereich Kommunikation: Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme
+Die Schülerinnen und Schüler können
+– (T) darstellen, wie Informationen in kleinere Teile zerlegt, als Pakete durch mehrere Geräte über Netzwerke und das Internet übertragen und am Zielort wieder
+zusammengesetzt werden.
+– (G) Kommunikationsmedien nach ihrer Verwendung unterscheiden und Einflüsse auf das eigene Lebensumfeld und die Gesellschaft aufzeigen. Sie können Möglichkeiten
+der Meinungsbildung und Manipulation beschreiben.7
+– (I) den Begriff „Social Media“ erklären und verstehen, welche Interessen das anbietende Unternehmen hat.
+Anwendungsbereiche
+– Geschäftsmodelle von Social Media-Diensten, Nutzung von persönlichen und personenbezogenen Informationen13
+– Fake News, Darstellung und Realität (Manipulation) und dahinterliegende Interessen7
+– Schutz von personenbezogenen Daten
+– Betrug im Internet, Phishing13
+Kompetenzbereich Produktion: Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren
+Die Schülerinnen und Schüler können
+– (T) darstellen, wie Programme Daten speichern und verarbeiten, indem sie Zahlen oder andere Symbole zur Darstellung von Informationen verwenden.
+– (T) unter Nutzung einer geeigneten Entwicklungsumgebung einfache Programme erstellen, diese testen und debuggen (Fehler erkennen und beheben).
+– (G) die Rechte am geistigen Eigentum beachten und bei der Erstellung oder beim Remixen von Programmen die entsprechenden Urheberrechte angeben.13
+– (I) visuelle/audiovisuelle/auditive Inhalte erzeugen, adaptieren und analysieren. Sie können Möglichkeiten der Veröffentlichung benennen.
+Kompetenzbereich Handeln: Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen
+Die Schülerinnen und Schüler können
+– (T) darstellen, wie Hardware und Software als System zusammenarbeiten, um Aufgaben zu bewältigen.
+– (T) digitale Geräte mit einem Netzwerk verbinden und Daten zwischen verschiedenen digitalen Medien austauschen.
+– (G) aufzeigen, wie digitale Kommunikation zur Beteiligung an gesellschaftlichen Diskurs- und Entscheidungsprozessen genutzt werden kann.7
+– (I) zwischen digitalen Angeboten und eigenen Bedürfnissen abwägen und persönliche Handlungsmöglichkeiten unter Berücksichtigung gesundheitlicher und
+ökologischer Aspekte gestalten.3, 11
+Anwendungsbereiche
+– Digitaler Arbeitsplatz3
+– Nachhaltiger Umgang mit digitalen Technologien11
+– Erkennen von technischen Problemen in der Nutzung von digitalen Geräten
+– Konkretisierung von Fehlern im Hinblick auf Meldung an Supportstrukturen
+3. Klasse:
+Kompetenzbereich Orientierung: gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren
+Die Schülerinnen und Schüler können
+– (T) an interdisziplinären Beispielen Anwendungen von Technik in Umwelt und Gesellschaft beschreiben und deren Relevanz für gesellschaftliche Gruppen und kulturelle
+Kontexte berücksichtigen. Sie können Wechselwirkungen benennen.11
+– (T) beschreiben, wie künstliche Intelligenz viele Software- und physische Systeme steuert.
+– (G) Veränderungen des Mediennutzungsverhaltens beschreiben sowie Chancen und Gefahren der personalisierten Mediennutzung analysieren.
+– (I) Kompromisse im Zusammenhang mit digitalen Technologien reflektieren, die sich auf die alltäglichen Aktivitäten und beruflichen Möglichkeiten der Menschen
+auswirken.1
+Anwendungsbereiche
+– Verbesserungen für das Design von digitalen Geräten auf Basis von Nutzungsanalysen
+– Risiken und Vorteile für die Chancengleichheit bei der Nutzung von Informationstechnologien sowie geeignete Handlungsoptionen7, 8
+– digitale Barrierefreiheit8
+– Internet-of-Things
+Kompetenzbereich Information: mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen
+Die Schülerinnen und Schüler können
+– (G) Bedingungen sowie Vor- und Nachteile von personalisierten Suchroutinen für das eigene Leben bzw. die Gesellschaft erklären.
+– (I) zielgerichtet und selbstständig die Suche nach Informationen und Daten mit Hilfe geeigneter Strategien und Methoden planen und durchführen, geeignete Quellen
+nutzen und gefundene Informationen vergleichend hinterfragen.
+– (I) Muster in Datendarstellungen wie Diagrammen oder Grafiken erkennen und beschreiben, um Vorhersagen zu treffen.
+– (I) Datenmaterial nutzen, um Ursache-Wirkung-Beziehungen aufzuzeigen oder vorzuschlagen, Ergebnisse vorherzusagen oder eine Idee zu vermitteln.
+Anwendungsbereiche
+– Manipulative und monoperspektivische Darstellungen von Informationen in populären Medienkulturen7
+Kompetenzbereich Kommunikation: Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme
+Die Schülerinnen und Schüler können
+– (T) erklären, wie cloudbasierte Systeme grundsätzlich funktionieren, und auf kritische Faktoren achten (zB Standort des Servers, Datenschutz und Datensicherheit).
+– (G) einen Kompromiss zwischen der Veröffentlichung von Informationen und der Geheimhaltung und Sicherheit von Informationen beschreiben.7
+– (I) bei der Erstellung digitaler Projekte (digitaler Artefakte) mittels Strategien wie Crowdsourcing oder Umfragen mit mehreren Mitwirkenden zusammenarbeiten.
+– (I) eigene digitale Identitäten reflektiert gestalten sowie die eigene digitale Reputation verfolgen und schützen.
+Anwendungsbereiche
+– Verschlüsselungsmethoden für die sichere Übertragung von Informationen
+– (sicheres) Passwort, Zweifaktorauthentifizierung
+– Physischer und digitaler Schutz von elektronischen Informationen
+– Grundlagen der Betroffenenrechte im Datenschutz13
+– Reale Probleme der Cybersicherheit: Cybermobbing, Cybergrooming, Identitätsdiebstahl
+Kompetenzbereich Produktion: Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren
+Die Schülerinnen und Schüler können
+– (T) an Beispielen Elemente des Computational Thinkings nachvollziehen und diese zur Lösung von Problemen einsetzen. Sie wissen, wie sie Lösungswege in
+Programmiersprache umsetzen können.
+– (G) verschiedene populäre Medienkulturen benennen sowie Möglichkeiten verschiedener Darstellungsformen von Inhalten erproben.
+– (I) ihre eigenen medialen Produktionen auf Barrierefreiheit überprüfen und ggf. Barrieren beseitigen.8
+– (I) Einstellungen in Softwareapplikationen den persönlichen Bedürfnissen entsprechend anpassen.
+Anwendungsbereiche
+– Gezielte bzw. manipulative Darstellungen, zB in Diagrammen, durch Bildausschnitte oder Vertonung7
+– Konfigurationsmöglichkeiten von Betriebssystemen und Kommunikationssystemen, um sie barrierefrei zugänglich machen8
+Kompetenzbereich Handeln: Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen
+Die Schülerinnen und Schüler können
+– (T) am Beispiel erklären, wie Computersysteme in Alltagsgegenständen bestimmte Funktionen erfüllen und welche Chancen und Risiken damit verbunden sind.1
+– (G) ökologische Problemkonstellation wie Energie und Rohstoffe im Zusammenhang mit Digitalisierung benennen und eigenes Handeln daraus ableiten.11
+– (I) entsprechende Vorkehrungen treffen, um ihre Geräte und Inhalte vor Viren bzw. Schadsoftware/Malware zu schützen.
+4. Klasse:
+Kompetenzbereich Orientierung: gesellschaftliche Aspekte von Medienwandel und Digitalisierung analysieren und reflektieren
+Die Schülerinnen und Schüler können
+– (T) die Grenzen und Möglichkeiten von Künstlicher Intelligenz reflektieren.
+– (G) euphorische und kulturpessimistische Haltungen gegenüber Technologie- und Medienwandel wahrnehmen und ihnen argumentativ begegnen.7
+– (I) die Normativität von digitalen Technologien (zB Filterblase) und Medieninhalten (zB Stereotype, Klischees) erkennen und diese kreativ durchbrechen.
+Anwendungsbereiche
+– Mobilität (zB selbstfahrende Fahrzeuge)12
+– Gesundheit (zB vernetzte Daten, automatische Assistenzsysteme)3
+Kompetenzbereich Information: mit Daten, Informationen und Informationssystemen verantwortungsvoll umgehen
+Die Schülerinnen und Schüler können
+– (T) Datensicherungen und -wiederherstellungen ausführen.
+– (G) Gefahren der Erhebung, Auswertung und Verknüpfung von Nutzerdaten im Sinne von Fahrlässigkeit, Missbrauch und Überwachung erklären und sich dazu
+verantwortungsvoll verhalten.7
+– (I) Informationen und Inhalte aktualisieren, verbessern sowie zielgruppen-, medienformat- und anwendungsgerecht aufbereiten und inhaltlich, organisatorisch und
+sprachlich in bestehende Wissensorganisationsformate einbinden.10
+Kompetenzbereich Kommunikation: Kommunizieren und Kooperieren unter Nutzung informatischer, medialer Systeme
+Die Schülerinnen und Schüler können
+– (T) die Funktion von Protokollen bei der Übertragung von Daten über Netzwerke und das Internet darstellen.
+– (G) ein Verständnis für die Konstruktion von Medienwirklichkeit durch die Erhebung und Analyse von Informationen und Daten bzw. die Mechanismen der Bild-, Ton-
+oder Datenmanipulation entwickeln.
+– (G) bei der Auswahl von Social Media bedenken, welchen Einfluss die Interessen von Unternehmen auf das eigene Welt- und Selbstbild haben.13
+– (I) verantwortungsvoll in digitalen Medien kommunizieren und unter Berücksichtigung des Urheberrechts und des Rechts am eigenen Bild Daten austauschen.
+Anwendungsbereiche
+– Phänomen der viralen Verbreitung von Inhalten und entsprechende Handlungsmöglichkeiten7
+– Datenschutzrechtliche Rechtsgrundlagen (DSGVO und DSG)13
+Kompetenzbereich Produktion: Inhalte digital erstellen und veröffentlichen, Algorithmen entwerfen und Programmieren
+Die Schülerinnen und Schüler können
+– (T) Programme entwerfen und iterativ entwickeln, die Kontrollstrukturen kombinieren, einschließlich verschachtelter Schleifen und zusammengesetzter Konditionale.
+– (G) Möglichkeiten verschiedener Darstellungsformen von Inhalten erproben und deren Einfluss auf die Wahrnehmung des Inhalts hinterfragen.
+– (I) mit bereitgestellten Medien und Software-Applikationen zielgerichtet und kreativ gestaltend kooperieren.
+– (I) einfache Programme oder Webanwendungen mit geeigneten Werkzeugen erstellen, um ein bestimmtes Problem zu lösen oder eine bestimmte Aufgabe zu erfüllen.
+Anwendungsbereiche
+– Dokumentation von Programmen10
+– Projektplanung inklusive Aufgabenverteilung und Zeitplan1, 2
+– (Graphische) Notationen, Pseudocode
+– Ästhetische und technische Kompetenzen von Medienkulturen in Projekten
+Kompetenzbereich Handeln: Angebote und Handlungsmöglichkeiten in einer von Digitalisierung geprägten Welt einschätzen und verantwortungsvoll nutzen
+Die Schülerinnen und Schüler können
+– (T) Abstraktionsebenen und Interaktionen zwischen Anwendungssoftware, Systemsoftware und Hardwareschichten vergleichen.
+– (T) Software zur Verschlüsselung von Daten einsetzen.
+– (G) aufzeigen, wie digitale Kommunikation zu zivilgesellschaftlicher Partizipation und Engagement genutzt wird.7
+– (I) reflektieren, inwieweit technische Konfigurationen Optionen einschränken und lenken. Sie können Vorkehrungen für ihre Eigenständigkeit und informationelle
+Selbstbestimmung im Kontext von digitaler Vernetzung treffen.1
+Anwendungsbereiche
+– Wichtigste technische Mittel zum Schutz vor Betrug und Missbrauch13
+– Wichtigste rechtliche und politische Aspekte von Konsumentenrecht13
+1Bildungs-, Berufs- und
+2Entrepreneurship Education 3Gesundheitsförderung
+Lebensorientierung
+4Informatische Bildung 7Politische Bildung 6Medienbildung
+9Sexualpädagogik
+10Sprachliche Bildung und Lesen 5Interkulturelle Bildung 8Reflexive Geschlechterpädagogik
+und Gleichstellung
+11Umweltbildung für nachhaltige
+Entwicklung
+12Verkehrs- und Mobilitätsbildung
+13Wirtschafts-, Finanz- und
+Verbraucher/innenbildung

@@ -21,8 +21,17 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p>Willkommen, {user.name}.</p>
       <p className="text-sm text-neutral-600">Dieser Bereich ist geschützt.</p>
+      <a
+        className="inline-block w-fit rounded-md bg-neutral-900 px-4 py-2 text-white"
+        href="/workspace"
+      >
+        Arbeitsbereich öffnen
+      </a>
       <form action="/api/auth/logout" method="post">
-        <button className="rounded-md bg-neutral-900 px-4 py-2 text-white" type="submit">
+        <button
+          className="rounded-md bg-neutral-900 px-4 py-2 text-white"
+          type="submit"
+        >
           Abmelden
         </button>
       </form>
