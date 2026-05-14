@@ -139,11 +139,95 @@ export async function ladeKompetenzbereichDetail(
   return { lehrplan: lp, klasse, bereich, kompetenzen: komp, anwendungsbereiche: apps };
 }
 
+export interface KompetenzDetail {
+  lehrplan: Lehrplan;
+  klasse: LehrplanKlasse;
+  bereich: Kompetenzbereich;
+  kompetenz: Kompetenz;
+}
+
+export async function ladeKompetenzDetail(
+  kompetenzId: string,
+): Promise<KompetenzDetail | null> {
+  const [k] = await db
+    .select()
+    .from(kompetenzen)
+    .where(eq(kompetenzen.id, kompetenzId))
+    .limit(1);
+  if (!k) return null;
+  const [bereich] = await db
+    .select()
+    .from(kompetenzbereiche)
+    .where(eq(kompetenzbereiche.id, k.kompetenzbereichId))
+    .limit(1);
+  if (!bereich) return null;
+  const [klasse] = await db
+    .select()
+    .from(lehrplanKlassen)
+    .where(eq(lehrplanKlassen.id, bereich.klasseId))
+    .limit(1);
+  if (!klasse) return null;
+  const [lp] = await db
+    .select()
+    .from(lehrplaene)
+    .where(eq(lehrplaene.id, klasse.lehrplanId))
+    .limit(1);
+  if (!lp) return null;
+  return { lehrplan: lp, klasse, bereich, kompetenz: k };
+}
+
+export interface AnwendungsbereichDetail {
+  lehrplan: Lehrplan;
+  klasse: LehrplanKlasse;
+  bereich: Kompetenzbereich;
+  anwendungsbereich: Anwendungsbereich;
+}
+
+export async function ladeAnwendungsbereichDetail(
+  anwendungsbereichId: string,
+): Promise<AnwendungsbereichDetail | null> {
+  const [a] = await db
+    .select()
+    .from(anwendungsbereiche)
+    .where(eq(anwendungsbereiche.id, anwendungsbereichId))
+    .limit(1);
+  if (!a) return null;
+  const [bereich] = await db
+    .select()
+    .from(kompetenzbereiche)
+    .where(eq(kompetenzbereiche.id, a.kompetenzbereichId))
+    .limit(1);
+  if (!bereich) return null;
+  const [klasse] = await db
+    .select()
+    .from(lehrplanKlassen)
+    .where(eq(lehrplanKlassen.id, bereich.klasseId))
+    .limit(1);
+  if (!klasse) return null;
+  const [lp] = await db
+    .select()
+    .from(lehrplaene)
+    .where(eq(lehrplaene.id, klasse.lehrplanId))
+    .limit(1);
+  if (!lp) return null;
+  return { lehrplan: lp, klasse, bereich, anwendungsbereich: a };
+}
+
+export interface SidebarBereichItem {
+  id: string;
+  titel: string;
+}
+export interface SidebarBereich {
+  id: string;
+  titel: string;
+  kompetenzen: SidebarBereichItem[];
+  anwendungsbereiche: SidebarBereichItem[];
+}
 export interface SidebarLehrplanKlasse {
   id: string;
   klasse: number;
   titel: string;
-  bereiche: Array<{ id: string; titel: string }>;
+  bereiche: SidebarBereich[];
 }
 
 export interface SidebarLehrplan {
@@ -172,7 +256,34 @@ export async function ladeLehrplanSidebar(): Promise<SidebarLehrplan[]> {
         .where(inArray(kompetenzbereiche.klasseId, klassen.map((k) => k.id)))
         .orderBy(asc(kompetenzbereiche.sortierung))
     : [];
+  const bereichIds = bereiche.map((b) => b.id);
+  const komps = bereichIds.length
+    ? await db
+        .select()
+        .from(kompetenzen)
+        .where(inArray(kompetenzen.kompetenzbereichId, bereichIds))
+        .orderBy(asc(kompetenzen.sortierung))
+    : [];
+  const awbs = bereichIds.length
+    ? await db
+        .select()
+        .from(anwendungsbereiche)
+        .where(inArray(anwendungsbereiche.kompetenzbereichId, bereichIds))
+        .orderBy(asc(anwendungsbereiche.sortierung))
+    : [];
 
+  const kompsByBereich = new Map<string, Kompetenz[]>();
+  for (const k of komps) {
+    const arr = kompsByBereich.get(k.kompetenzbereichId) ?? [];
+    arr.push(k);
+    kompsByBereich.set(k.kompetenzbereichId, arr);
+  }
+  const awbsByBereich = new Map<string, Anwendungsbereich[]>();
+  for (const a of awbs) {
+    const arr = awbsByBereich.get(a.kompetenzbereichId) ?? [];
+    arr.push(a);
+    awbsByBereich.set(a.kompetenzbereichId, arr);
+  }
   const bereicheByKlasse = new Map<string, Kompetenzbereich[]>();
   for (const b of bereiche) {
     const arr = bereicheByKlasse.get(b.klasseId) ?? [];
@@ -194,7 +305,18 @@ export async function ladeLehrplanSidebar(): Promise<SidebarLehrplan[]> {
       id: k.id,
       klasse: k.klasse,
       titel: k.titel,
-      bereiche: (bereicheByKlasse.get(k.id) ?? []).map((b) => ({ id: b.id, titel: b.titel })),
+      bereiche: (bereicheByKlasse.get(k.id) ?? []).map((b) => ({
+        id: b.id,
+        titel: b.titel,
+        kompetenzen: (kompsByBereich.get(b.id) ?? []).map((k) => ({
+          id: k.id,
+          titel: k.titel,
+        })),
+        anwendungsbereiche: (awbsByBereich.get(b.id) ?? []).map((a) => ({
+          id: a.id,
+          titel: a.titel,
+        })),
+      })),
     })),
   }));
 }

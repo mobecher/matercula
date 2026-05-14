@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { KlasseTabView } from "./klasse-tab-view";
+import { AnwendungsbereichTabView } from "./anwendungsbereich-tab-view";
 import { BereichTabView } from "./bereich-tab-view";
+import { KlasseTabView } from "./klasse-tab-view";
+import { KompetenzTabView } from "./kompetenz-tab-view";
 import { useWorkspace } from "./workspace-context";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
@@ -54,6 +56,22 @@ export function DocumentView() {
   if (activeTab.kind === "bereich") {
     return (
       <BereichTabView key={activeTab.key} bereichId={activeTab.bereichId} />
+    );
+  }
+  if (activeTab.kind === "kompetenz") {
+    return (
+      <KompetenzTabView
+        key={activeTab.key}
+        kompetenzId={activeTab.kompetenzId}
+      />
+    );
+  }
+  if (activeTab.kind === "anwendungsbereich") {
+    return (
+      <AnwendungsbereichTabView
+        key={activeTab.key}
+        anwendungsbereichId={activeTab.anwendungsbereichId}
+      />
     );
   }
 

@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { bereichTabKey, klasseTabKey, useWorkspace } from "./workspace-context";
+import {
+  anwendungsbereichTabKey,
+  bereichTabKey,
+  klasseTabKey,
+  kompetenzTabKey,
+  useWorkspace,
+} from "./workspace-context";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
@@ -544,20 +550,99 @@ function KlasseItem({
       </div>
       {open && klasse.bereiche.length > 0 && (
         <ul className="space-y-0.5 pl-5">
-          {klasse.bereiche.map((b) => {
-            const active = activeTab?.key === bereichTabKey(b.id);
+          {klasse.bereiche.map((b) => (
+            <BereichItem key={b.id} bereich={b} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+function BereichItem({
+  bereich,
+}: {
+  bereich: SidebarLehrplan["klassen"][number]["bereiche"][number];
+}) {
+  const {
+    activeTab,
+    openBereichTab,
+    openKompetenzTab,
+    openAnwendungsbereichTab,
+  } = useWorkspace();
+  const [open, setOpen] = useState(false);
+  const active = activeTab?.key === bereichTabKey(bereich.id);
+  const hasChildren =
+    bereich.kompetenzen.length > 0 || bereich.anwendungsbereiche.length > 0;
+  return (
+    <li>
+      <div
+        className={`group flex items-center gap-1 rounded-md py-1 pr-1 text-sm ${
+          active
+            ? "bg-neutral-200 font-medium text-neutral-900"
+            : "text-neutral-700 hover:bg-neutral-200"
+        }`}
+      >
+        <button
+          aria-label={open ? "Bereich einklappen" : "Bereich ausklappen"}
+          className={`inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs text-neutral-400 ${
+            hasChildren ? "" : "opacity-0"
+          }`}
+          onClick={() => hasChildren && setOpen((v) => !v)}
+          type="button"
+        >
+          {open ? "▾" : "▸"}
+        </button>
+        <button
+          className="min-w-0 flex-1 truncate text-left"
+          onClick={() => openBereichTab(bereich.id, bereich.titel)}
+          type="button"
+        >
+          {bereich.titel}
+        </button>
+      </div>
+      {open && hasChildren && (
+        <ul className="space-y-0.5 pl-5">
+          {bereich.kompetenzen.map((k) => {
+            const kActive = activeTab?.key === kompetenzTabKey(k.id);
             return (
-              <li key={b.id}>
+              <li key={k.id}>
                 <button
-                  className={`block w-full truncate rounded-md px-2 py-1 text-left text-sm ${
-                    active
+                  className={`flex w-full min-w-0 items-center gap-1 rounded-md px-2 py-1 text-left text-sm ${
+                    kActive
                       ? "bg-neutral-200 font-medium text-neutral-900"
                       : "text-neutral-700 hover:bg-neutral-200"
                   }`}
-                  onClick={() => openBereichTab(b.id, b.titel)}
+                  onClick={() => openKompetenzTab(k.id, k.titel)}
                   type="button"
+                  title={k.titel}
                 >
-                  {b.titel}
+                  <span aria-hidden className="shrink-0 text-xs">
+                    🎯
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{k.titel}</span>
+                </button>
+              </li>
+            );
+          })}
+          {bereich.anwendungsbereiche.map((a) => {
+            const aActive = activeTab?.key === anwendungsbereichTabKey(a.id);
+            return (
+              <li key={a.id}>
+                <button
+                  className={`flex w-full min-w-0 items-center gap-1 rounded-md px-2 py-1 text-left text-sm ${
+                    aActive
+                      ? "bg-neutral-200 font-medium text-neutral-900"
+                      : "text-neutral-700 hover:bg-neutral-200"
+                  }`}
+                  onClick={() => openAnwendungsbereichTab(a.id, a.titel)}
+                  type="button"
+                  title={a.titel}
+                >
+                  <span aria-hidden className="shrink-0 text-xs">
+                    🧩
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{a.titel}</span>
                 </button>
               </li>
             );

@@ -41,7 +41,12 @@ const PERSPEKTIVE_BADGE: Record<string, string> = {
 };
 
 export function BereichTabView({ bereichId }: { bereichId: string }) {
-  const { openDocument, openKlasseTab } = useWorkspace();
+  const {
+    openDocument,
+    openKlasseTab,
+    openKompetenzTab,
+    openAnwendungsbereichTab,
+  } = useWorkspace();
   const [data, setData] = useState<BereichData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,16 +91,24 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
         <button
           className="hover:text-neutral-900 hover:underline"
           onClick={() =>
-            openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)
+            openKlasseTab(
+              data.lehrplan.slug,
+              data.klasse.klasse,
+              data.klasse.titel,
+            )
           }
           type="button"
         >
           {data.klasse.titel}
         </button>
       </nav>
-      <h1 className="text-3xl font-semibold tracking-tight">{data.bereich.titel}</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">
+        {data.bereich.titel}
+      </h1>
       {data.bereich.beschreibung && (
-        <p className="mt-2 text-sm text-neutral-600">{data.bereich.beschreibung}</p>
+        <p className="mt-2 text-sm text-neutral-600">
+          {data.bereich.beschreibung}
+        </p>
       )}
 
       <section className="mt-10">
@@ -106,7 +119,9 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               <tr>
                 <th className="w-24 px-4 py-3 font-medium">Perspektive</th>
                 <th className="px-4 py-3 font-medium">Beschreibung</th>
-                <th className="px-4 py-3 font-medium">Verknüpfte Materialien</th>
+                <th className="px-4 py-3 font-medium">
+                  Verknüpfte Materialien
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white">
@@ -126,7 +141,17 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                       <span className="text-neutral-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-neutral-800">{k.beschreibung}</td>
+                  <td className="px-4 py-3 text-neutral-800">
+                    <button
+                      className="text-left hover:underline"
+                      onClick={() =>
+                        openKompetenzTab(k.id, shortenForTab(k.beschreibung))
+                      }
+                      type="button"
+                    >
+                      {k.beschreibung}
+                    </button>
+                  </td>
                   <td className="px-4 py-3">
                     <DokumentList docs={k.dokumente} onOpen={openDocument} />
                   </td>
@@ -134,7 +159,10 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               ))}
               {data.kompetenzen.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={3}>
+                  <td
+                    className="px-4 py-6 text-center text-neutral-500"
+                    colSpan={3}
+                  >
                     Keine Kompetenzen hinterlegt.
                   </td>
                 </tr>
@@ -151,14 +179,27 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
             <thead className="bg-neutral-50 text-xs uppercase tracking-wider text-neutral-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Anwendungsbereich</th>
-                <th className="px-4 py-3 font-medium">Verknüpfte Materialien</th>
+                <th className="px-4 py-3 font-medium">
+                  Verknüpfte Materialien
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white">
               {data.anwendungsbereiche.map((a) => (
                 <tr key={a.id} className="align-top">
                   <td className="px-4 py-3 text-neutral-800">
-                    {a.beschreibung ?? a.titel}
+                    <button
+                      className="text-left hover:underline"
+                      onClick={() =>
+                        openAnwendungsbereichTab(
+                          a.id,
+                          a.titel ?? shortenForTab(a.beschreibung ?? ""),
+                        )
+                      }
+                      type="button"
+                    >
+                      {a.beschreibung ?? a.titel}
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     <DokumentList docs={a.dokumente} onOpen={openDocument} />
@@ -167,7 +208,10 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               ))}
               {data.anwendungsbereiche.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={2}>
+                  <td
+                    className="px-4 py-6 text-center text-neutral-500"
+                    colSpan={2}
+                  >
                     Keine Anwendungsbereiche hinterlegt.
                   </td>
                 </tr>
@@ -178,6 +222,14 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
       </section>
     </div>
   );
+}
+
+function shortenForTab(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= 40) return trimmed;
+  const cut = trimmed.slice(0, 40);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${lastSpace > 20 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
 function DokumentList({

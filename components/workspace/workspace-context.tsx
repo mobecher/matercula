@@ -27,7 +27,14 @@ export type WorkspaceTab =
       klasseNr: number;
       titel: string;
     }
-  | { kind: "bereich"; key: string; bereichId: string; titel: string };
+  | { kind: "bereich"; key: string; bereichId: string; titel: string }
+  | { kind: "kompetenz"; key: string; kompetenzId: string; titel: string }
+  | {
+      kind: "anwendungsbereich";
+      key: string;
+      anwendungsbereichId: string;
+      titel: string;
+    };
 
 export function dokumentTabKey(id: string): string {
   return `dok:${id}`;
@@ -37,6 +44,12 @@ export function klasseTabKey(slug: string, klasseNr: number): string {
 }
 export function bereichTabKey(bereichId: string): string {
   return `bereich:${bereichId}`;
+}
+export function kompetenzTabKey(id: string): string {
+  return `kompetenz:${id}`;
+}
+export function anwendungsbereichTabKey(id: string): string {
+  return `awb:${id}`;
 }
 
 interface WorkspaceContextValue {
@@ -52,6 +65,11 @@ interface WorkspaceContextValue {
     titel: string,
   ) => void;
   openBereichTab: (bereichId: string, titel: string) => void;
+  openKompetenzTab: (kompetenzId: string, titel: string) => void;
+  openAnwendungsbereichTab: (
+    anwendungsbereichId: string,
+    titel: string,
+  ) => void;
   closeTab: (key: string) => void;
   setActiveTab: (key: string) => void;
   renameDocument: (id: string, titel: string) => Promise<void>;
@@ -150,6 +168,30 @@ export function WorkspaceProvider({
         kind: "bereich",
         key: bereichTabKey(bereichId),
         bereichId,
+        titel,
+      });
+    },
+    [upsertTab],
+  );
+
+  const openKompetenzTab = useCallback(
+    (kompetenzId: string, titel: string) => {
+      upsertTab({
+        kind: "kompetenz",
+        key: kompetenzTabKey(kompetenzId),
+        kompetenzId,
+        titel,
+      });
+    },
+    [upsertTab],
+  );
+
+  const openAnwendungsbereichTab = useCallback(
+    (anwendungsbereichId: string, titel: string) => {
+      upsertTab({
+        kind: "anwendungsbereich",
+        key: anwendungsbereichTabKey(anwendungsbereichId),
+        anwendungsbereichId,
         titel,
       });
     },
@@ -299,6 +341,8 @@ export function WorkspaceProvider({
       openDocument,
       openKlasseTab,
       openBereichTab,
+      openKompetenzTab,
+      openAnwendungsbereichTab,
       closeTab,
       setActiveTab,
       renameDocument,
@@ -319,6 +363,8 @@ export function WorkspaceProvider({
       openDocument,
       openKlasseTab,
       openBereichTab,
+      openKompetenzTab,
+      openAnwendungsbereichTab,
       closeTab,
       setActiveTab,
       renameDocument,

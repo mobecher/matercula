@@ -96,5 +96,11 @@ function describeTab(
   if (tab.kind === "klasse") {
     return { label: tab.titel, icon: "🎓" };
   }
-  return { label: tab.titel, icon: "📚" };
+  if (tab.kind === "bereich") {
+    return { label: tab.titel, icon: "📚" };
+  }
+  if (tab.kind === "kompetenz") {
+    return { label: tab.titel, icon: "🎯" };
+  }
+  return { label: tab.titel, icon: "🧩" };
 }
