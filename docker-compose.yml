@@ -39,6 +39,21 @@ services:
       app_net:
         ipv4_address: 172.28.0.3
 
+  # Legt den Bucket beim Start an (idempotent). Beendet sich danach.
+  minio-init:
+    image: minio/mc:RELEASE.2025-02-21T16-00-46Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://172.28.0.3:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/matercula &&
+      echo 'bucket ready'
+      "
+    networks:
+      - app_net
+
   app:
     build:
       context: .
@@ -48,6 +63,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://postgres:postgres@172.28.0.2:5432/matercula
       AUTH_BASE_URL: http://localhost:3000

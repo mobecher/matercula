@@ -20,6 +20,32 @@ interface BlockEditorProps {
 
 const schema = BlockNoteSchema.create({ blockSpecs: defaultBlockSpecs });
 
+/**
+ * Lädt eine Datei in unser S3 hoch und gibt eine stabile interne URL
+ * zurück, die später auf eine frische Signed-URL umleitet. BlockNotes
+ * Default-Blöcke (Datei/Bild/Video/Audio) speichern diese URL.
+ */
+async function uploadFileToServer(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch("/api/materialien", {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    let message = `Upload fehlgeschlagen (HTTP ${response.status})`;
+    try {
+      const body = (await response.json()) as { error?: string };
+      if (body?.error) message = `Upload fehlgeschlagen: ${body.error}`;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+  const body = (await response.json()) as { url: string };
+  return body.url;
+}
+
 export function BlockEditor({ docId, initialMarkdown, onChangeMarkdown }: BlockEditorProps) {
   return (
     <BlockEditorInstance
@@ -37,7 +63,7 @@ function BlockEditorInstance({
   initialMarkdown: string;
   onChangeMarkdown: (markdown: string) => void;
 }) {
-  const editor = useCreateBlockNote({ schema });
+  const editor = useCreateBlockNote({ schema, uploadFile: uploadFileToServer });
   const onChangeRef = useRef(onChangeMarkdown);
   onChangeRef.current = onChangeMarkdown;
   const initialMarkdownRef = useRef(initialMarkdown);

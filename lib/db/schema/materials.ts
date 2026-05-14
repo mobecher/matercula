@@ -49,3 +49,6 @@ export const materialChunks = pgTable(
     index("material_chunks_embedding_hnsw_idx").using("hnsw", table.embedding.op("vector_l2_ops")),
   ],
 );
+
+export type Material = typeof materialien.$inferSelect;
+export type NeuesMaterial = typeof materialien.$inferInsert;
