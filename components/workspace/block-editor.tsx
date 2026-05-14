@@ -3,9 +3,9 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/ariakit/style.css";
 
+import { BlockNoteView } from "@blocknote/ariakit";
 import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/ariakit";
 import { useEffect, useRef } from "react";
 
 interface BlockEditorProps {
@@ -18,33 +18,14 @@ interface BlockEditorProps {
   onChangeMarkdown: (markdown: string) => void;
 }
 
-const schema = BlockNoteSchema.create({ blockSpecs: defaultBlockSpecs });
+// Datei-/Medien-Blöcke wurden bewusst entfernt: PDFs (und perspektivisch
+// weitere Dateien wie Word) werden als eigenständige Top-Level-Dokumente
+// vom Typ `pdf` modelliert, nicht innerhalb des Block-Editors eingebettet.
+const { file: _f, image: _i, video: _v, audio: _a, ...textBlockSpecs } = defaultBlockSpecs;
 
-/**
- * Lädt eine Datei in unser S3 hoch und gibt eine stabile interne URL
- * zurück, die später auf eine frische Signed-URL umleitet. BlockNotes
- * Default-Blöcke (Datei/Bild/Video/Audio) speichern diese URL.
- */
-async function uploadFileToServer(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await fetch("/api/materialien", {
-    method: "POST",
-    body: formData,
-  });
-  if (!response.ok) {
-    let message = `Upload fehlgeschlagen (HTTP ${response.status})`;
-    try {
-      const body = (await response.json()) as { error?: string };
-      if (body?.error) message = `Upload fehlgeschlagen: ${body.error}`;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
-  }
-  const body = (await response.json()) as { url: string };
-  return body.url;
-}
+const schema = BlockNoteSchema.create({
+  blockSpecs: textBlockSpecs,
+});
 
 export function BlockEditor({ docId, initialMarkdown, onChangeMarkdown }: BlockEditorProps) {
   return (
@@ -63,21 +44,32 @@ function BlockEditorInstance({
   initialMarkdown: string;
   onChangeMarkdown: (markdown: string) => void;
 }) {
-  const editor = useCreateBlockNote({ schema, uploadFile: uploadFileToServer });
+  const editor = useCreateBlockNote({ schema });
   const onChangeRef = useRef(onChangeMarkdown);
   onChangeRef.current = onChangeMarkdown;
   const initialMarkdownRef = useRef(initialMarkdown);
   const hydratedRef = useRef(false);
   const suppressNextChangeRef = useRef(false);
 
-  // Hydrate the editor with the initial markdown content once on mount.
-  // Later updates to `initialMarkdown` (e.g. our own optimistic state) are
-  // ignored on purpose – the editor is the source of truth while mounted.
+  // Hydrate the editor with the initial content once on mount. Persisted
+  // content is preferentially BlockNote-JSON (lossless – preserves Datei-/
+  // Bildblöcke); ältere Dokumente werden weiterhin als Markdown geparst.
   useEffect(() => {
     let cancelled = false;
     async function hydrate() {
-      const md = initialMarkdownRef.current;
-      const blocks = md.trim() ? await editor.tryParseMarkdownToBlocks(md) : [];
+      const raw = initialMarkdownRef.current.trim();
+      let blocks: Parameters<typeof editor.replaceBlocks>[1] = [];
+      if (raw) {
+        if (raw.startsWith("[")) {
+          try {
+            blocks = JSON.parse(raw);
+          } catch {
+            blocks = await editor.tryParseMarkdownToBlocks(raw);
+          }
+        } else {
+          blocks = await editor.tryParseMarkdownToBlocks(raw);
+        }
+      }
       if (cancelled) return;
       suppressNextChangeRef.current = true;
       editor.replaceBlocks(editor.document, blocks);
@@ -90,7 +82,7 @@ function BlockEditorInstance({
   }, [editor]);
 
   return (
-    <div className="h-full overflow-auto rounded-md border border-neutral-200 bg-white">
+    <div className="-mx-3">
       <BlockNoteView
         editor={editor}
         theme="light"
@@ -100,8 +92,11 @@ function BlockEditorInstance({
             suppressNextChangeRef.current = false;
             return;
           }
-          const markdown = await editor.blocksToMarkdownLossy(editor.document);
-          onChangeRef.current(markdown);
+          // Persistiere als BlockNote-JSON (verlustfrei – Datei-/Bildblöcke
+          // bleiben erhalten). Wird beim Laden anhand des `[`-Präfixes von
+          // legacy-Markdown unterschieden.
+          const json = JSON.stringify(editor.document);
+          onChangeRef.current(json);
         }}
       />
     </div>

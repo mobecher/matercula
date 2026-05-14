@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { SidebarLehrplan } from "@/lib/curriculum/repository";
+import type { DokumentKnoten } from "@/lib/workspace/types";
 import {
   anwendungsbereichTabKey,
   bereichTabKey,
@@ -8,8 +10,6 @@ import {
   kompetenzTabKey,
   useWorkspace,
 } from "./workspace-context";
-import type { SidebarLehrplan } from "@/lib/curriculum/repository";
-import type { DokumentKnoten } from "@/lib/workspace/types";
 
 const DRAG_MIME = "application/x-matercula-dokument-id";
 
@@ -20,13 +20,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) {
-  const { tree, addDocument, moveDocument } = useWorkspace();
+  const { tree, addDocument, moveDocument, uploadPdfDocument } = useWorkspace();
   const [filter, setFilter] = useState("");
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const rootPdfInputRef = useRef<HTMLInputElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
 
-  const filtered = filter.trim()
-    ? filterTree(tree, filter.trim().toLowerCase())
-    : tree;
+  const filtered = filter.trim() ? filterTree(tree, filter.trim().toLowerCase()) : tree;
 
   function handleRootDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -102,9 +102,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
           </ul>
 
           {tree.length === 0 && (
-            <p className="px-2 py-4 text-xs text-neutral-500">
-              Noch keine Dokumente vorhanden.
-            </p>
+            <p className="px-2 py-4 text-xs text-neutral-500">Noch keine Dokumente vorhanden.</p>
           )}
         </nav>
       </div>
@@ -128,6 +126,32 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
             <span>Ordner</span>
           </button>
         </div>
+        <input
+          accept="application/pdf"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            setPdfUploading(true);
+            try {
+              await uploadPdfDocument(null, file);
+            } finally {
+              setPdfUploading(false);
+            }
+          }}
+          ref={rootPdfInputRef}
+          type="file"
+        />
+        <button
+          className="mt-1 flex w-full items-center justify-center gap-1 rounded-md px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+          disabled={pdfUploading}
+          onClick={() => rootPdfInputRef.current?.click()}
+          type="button"
+        >
+          <span aria-hidden>📕</span>
+          <span>{pdfUploading ? "Lädt PDF hoch…" : "PDF hochladen"}</span>
+        </button>
         <form action="/api/auth/logout" method="post">
           <button
             className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-neutral-600 hover:bg-neutral-200"
@@ -152,21 +176,21 @@ function TreeNode({ node, depth }: TreeNodeProps) {
     activeTab,
     openDocument,
     addDocument,
+    uploadPdfDocument,
     removeDocument,
     renameDocument,
     moveDocument,
   } = useWorkspace();
   const isFolder = node.typ === "ordner";
+  const isPdf = node.typ === "pdf";
+  const folderPdfInputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(depth === 0);
   const [renaming, setRenaming] = useState(false);
   const [draftTitle, setDraftTitle] = useState(node.titel);
   const [dropZone, setDropZone] = useState<"before" | "into" | "after" | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const active =
-    !isFolder &&
-    activeTab?.kind === "dokument" &&
-    activeTab.dokumentId === node.id;
+  const active = !isFolder && activeTab?.kind === "dokument" && activeTab.dokumentId === node.id;
 
   useEffect(() => {
     if (renaming && inputRef.current) {
@@ -296,7 +320,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
         </button>
 
         <span aria-hidden className="text-sm">
-          {node.icon ?? (isFolder ? "📁" : "📄")}
+          {node.icon ?? (isFolder ? "📁" : isPdf ? "📕" : "📄")}
         </span>
 
         {renaming ? (
@@ -351,6 +375,22 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                 }}
               >
                 📁
+              </IconButton>
+              <input
+                accept="application/pdf"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setOpen(true);
+                  await uploadPdfDocument(node.id, file);
+                }}
+                ref={folderPdfInputRef}
+                type="file"
+              />
+              <IconButton label="PDF hochladen" onClick={() => folderPdfInputRef.current?.click()}>
+                📕
               </IconButton>
             </>
           )}
@@ -564,16 +604,10 @@ function BereichItem({
 }: {
   bereich: SidebarLehrplan["klassen"][number]["bereiche"][number];
 }) {
-  const {
-    activeTab,
-    openBereichTab,
-    openKompetenzTab,
-    openAnwendungsbereichTab,
-  } = useWorkspace();
+  const { activeTab, openBereichTab, openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
   const [open, setOpen] = useState(false);
   const active = activeTab?.key === bereichTabKey(bereich.id);
-  const hasChildren =
-    bereich.kompetenzen.length > 0 || bereich.anwendungsbereiche.length > 0;
+  const hasChildren = bereich.kompetenzen.length > 0 || bereich.anwendungsbereiche.length > 0;
   return (
     <li>
       <div

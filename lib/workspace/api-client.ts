@@ -5,6 +5,7 @@ export interface CreateDocumentPayload {
   typ: DokumentTyp;
   titel: string;
   icon?: string | null;
+  materialId?: string | null;
 }
 
 export interface UpdateDocumentPayload {

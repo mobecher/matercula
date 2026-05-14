@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { dokumente, type Dokument } from "@/lib/db/schema/dokumente";
+import { type Dokument, dokumente } from "@/lib/db/schema/dokumente";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
 export async function ladeDokumentBaumFuerBenutzer(ownerId: string): Promise<DokumentKnoten[]> {
@@ -22,6 +22,7 @@ function baueBaum(zeilen: Dokument[]): DokumentKnoten[] {
       typ: z.typ,
       icon: z.icon ?? undefined,
       inhalt: z.inhaltMarkdown ?? undefined,
+      materialId: z.materialId ?? undefined,
       children: z.typ === "ordner" ? [] : undefined,
       _parent: z.parentId,
     });
@@ -48,10 +49,11 @@ function baueBaum(zeilen: Dokument[]): DokumentKnoten[] {
 interface ErstelleDokumentEingabe {
   ownerId: string;
   parentId: string | null;
-  typ: "ordner" | "seite";
+  typ: "ordner" | "seite" | "pdf";
   titel: string;
   icon?: string | null;
   inhaltMarkdown?: string | null;
+  materialId?: string | null;
 }
 
 export async function erstelleDokument(eingabe: ErstelleDokumentEingabe): Promise<Dokument> {
@@ -65,6 +67,7 @@ export async function erstelleDokument(eingabe: ErstelleDokumentEingabe): Promis
       titel: eingabe.titel,
       icon: eingabe.icon ?? null,
       inhaltMarkdown: eingabe.inhaltMarkdown ?? null,
+      materialId: eingabe.materialId ?? null,
       sortierung,
     })
     .returning();

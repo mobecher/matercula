@@ -261,7 +261,9 @@ function PickerButton({
                   }}
                   type="button"
                 >
-                  <span aria-hidden>{s.icon ?? "📄"}</span>
+                  <span aria-hidden>
+                    {s.icon ?? (s.typ === "pdf" ? "📕" : "📄")}
+                  </span>
                   <span className="min-w-0 flex-1 truncate">{s.titel}</span>
                 </button>
               </li>
@@ -275,12 +277,27 @@ function PickerButton({
 
 function collectSeiten(
   nodes: DokumentKnoten[],
-): Array<{ id: string; titel: string; icon: string | null }> {
-  const out: Array<{ id: string; titel: string; icon: string | null }> = [];
+): Array<{
+  id: string;
+  titel: string;
+  icon: string | null;
+  typ: "seite" | "pdf";
+}> {
+  const out: Array<{
+    id: string;
+    titel: string;
+    icon: string | null;
+    typ: "seite" | "pdf";
+  }> = [];
   function walk(ns: DokumentKnoten[]) {
     for (const n of ns) {
-      if (n.typ === "seite") {
-        out.push({ id: n.id, titel: n.titel, icon: n.icon ?? null });
+      if (n.typ === "seite" || n.typ === "pdf") {
+        out.push({
+          id: n.id,
+          titel: n.titel,
+          icon: n.icon ?? null,
+          typ: n.typ,
+        });
       }
       if (n.children) walk(n.children);
     }

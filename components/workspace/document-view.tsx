@@ -2,24 +2,21 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import type { DokumentKnoten } from "@/lib/workspace/types";
 import { AnwendungsbereichTabView } from "./anwendungsbereich-tab-view";
 import { BereichTabView } from "./bereich-tab-view";
 import { KlasseTabView } from "./klasse-tab-view";
 import { KompetenzTabView } from "./kompetenz-tab-view";
 import { useWorkspace } from "./workspace-context";
-import type { DokumentKnoten } from "@/lib/workspace/types";
 
-const BlockEditor = dynamic(
-  () => import("./block-editor").then((m) => m.BlockEditor),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex flex-1 items-center justify-center text-sm text-neutral-400">
-        Editor wird geladen…
-      </div>
-    ),
-  },
-);
+const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-1 items-center justify-center text-sm text-neutral-400">
+      Editor wird geladen…
+    </div>
+  ),
+});
 
 const COMMON_ICONS = [
   "📄",
@@ -54,17 +51,10 @@ export function DocumentView() {
     );
   }
   if (activeTab.kind === "bereich") {
-    return (
-      <BereichTabView key={activeTab.key} bereichId={activeTab.bereichId} />
-    );
+    return <BereichTabView key={activeTab.key} bereichId={activeTab.bereichId} />;
   }
   if (activeTab.kind === "kompetenz") {
-    return (
-      <KompetenzTabView
-        key={activeTab.key}
-        kompetenzId={activeTab.kompetenzId}
-      />
-    );
+    return <KompetenzTabView key={activeTab.key} kompetenzId={activeTab.kompetenzId} />;
   }
   if (activeTab.kind === "anwendungsbereich") {
     return (
@@ -107,7 +97,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
   }
 
   return (
-    <article className="mx-auto flex h-full max-w-3xl flex-col px-10 py-10">
+    <article className="mx-auto max-w-3xl px-10 py-10">
       <div className="mb-4 flex items-center gap-2">
         <div className="relative">
           <button
@@ -116,7 +106,9 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
             onClick={() => setIconPickerOpen((v) => !v)}
             type="button"
           >
-            <span aria-hidden>{doc.icon ?? (doc.typ === "ordner" ? "📁" : "📄")}</span>
+            <span aria-hidden>
+              {doc.icon ?? (doc.typ === "ordner" ? "📁" : doc.typ === "pdf" ? "📕" : "📄")}
+            </span>
           </button>
           {iconPickerOpen && (
             <div className="absolute left-0 top-full z-10 mt-1 grid w-56 grid-cols-8 gap-1 rounded-md border border-neutral-200 bg-white p-2 shadow-lg">
@@ -161,16 +153,39 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
 
       {doc.typ === "ordner" ? (
         <FolderHint />
+      ) : doc.typ === "pdf" ? (
+        <PdfViewer materialId={doc.materialId} />
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <BlockEditor
-            docId={doc.id}
-            initialMarkdown={doc.inhalt ?? ""}
-            onChangeMarkdown={(markdown) => saveContent(doc.id, markdown)}
-          />
-        </div>
+        <BlockEditor
+          docId={doc.id}
+          initialMarkdown={doc.inhalt ?? ""}
+          onChangeMarkdown={(markdown) => saveContent(doc.id, markdown)}
+        />
       )}
     </article>
+  );
+}
+
+function PdfViewer({ materialId }: { materialId?: string }) {
+  if (!materialId) {
+    return <p className="text-sm text-neutral-500">Diese PDF hat keine zugeordnete Datei mehr.</p>;
+  }
+  const url = `/api/materialien/${materialId}/download`;
+  return (
+    <object
+      aria-label="PDF-Vorschau"
+      className="block h-[80vh] w-full rounded-md border border-neutral-200 bg-neutral-100"
+      data={`${url}#view=FitH`}
+      type="application/pdf"
+    >
+      <div className="px-4 py-6 text-sm text-neutral-500">
+        Inline-Vorschau in diesem Browser nicht verfügbar.{" "}
+        <a className="underline" href={url} rel="noreferrer" target="_blank">
+          PDF in neuem Tab öffnen
+        </a>
+        .
+      </div>
+    </object>
   );
 }
 
@@ -189,12 +204,9 @@ function EmptyState() {
       <div className="text-5xl" aria-hidden>
         📂
       </div>
-      <h2 className="text-xl font-semibold text-neutral-700">
-        Kein Tab geöffnet
-      </h2>
+      <h2 className="text-xl font-semibold text-neutral-700">Kein Tab geöffnet</h2>
       <p className="max-w-md text-sm text-neutral-500">
-        Wählen Sie links in der Seitenleiste eine Seite oder einen
-        Lehrplan-Eintrag aus.
+        Wählen Sie links in der Seitenleiste eine Seite oder einen Lehrplan-Eintrag aus.
       </p>
     </div>
   );

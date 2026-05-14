@@ -59,32 +59,19 @@ interface WorkspaceContextValue {
   activeTab: WorkspaceTab | null;
   saveStatus: "idle" | "saving" | "saved" | "error";
   openDocument: (id: string) => void;
-  openKlasseTab: (
-    lehrplanSlug: string,
-    klasseNr: number,
-    titel: string,
-  ) => void;
+  openKlasseTab: (lehrplanSlug: string, klasseNr: number, titel: string) => void;
   openBereichTab: (bereichId: string, titel: string) => void;
   openKompetenzTab: (kompetenzId: string, titel: string) => void;
-  openAnwendungsbereichTab: (
-    anwendungsbereichId: string,
-    titel: string,
-  ) => void;
+  openAnwendungsbereichTab: (anwendungsbereichId: string, titel: string) => void;
   closeTab: (key: string) => void;
   setActiveTab: (key: string) => void;
   renameDocument: (id: string, titel: string) => Promise<void>;
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
-  addDocument: (
-    parentId: string | null,
-    typ: DokumentTyp,
-  ) => Promise<string | null>;
+  addDocument: (parentId: string | null, typ: DokumentTyp) => Promise<string | null>;
+  uploadPdfDocument: (parentId: string | null, file: File) => Promise<string | null>;
   removeDocument: (id: string) => Promise<void>;
-  moveDocument: (
-    id: string,
-    parentId: string | null,
-    position?: number,
-  ) => Promise<void>;
+  moveDocument: (id: string, parentId: string | null, position?: number) => Promise<void>;
   findNode: (id: string) => DokumentKnoten | undefined;
   refresh: () => Promise<void>;
 }
@@ -125,10 +112,7 @@ export function WorkspaceProvider({
   const [saveStatus, setSaveStatus] = useState<WorkspaceContextValue["saveStatus"]>("idle");
   const saveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  const findNode = useCallback(
-    (id: string) => findNodeInTree(tree, id),
-    [tree],
-  );
+  const findNode = useCallback((id: string) => findNodeInTree(tree, id), [tree]);
 
   const refresh = useCallback(async () => {
     const next = await fetchTree();
@@ -136,9 +120,7 @@ export function WorkspaceProvider({
   }, []);
 
   const upsertTab = useCallback((tab: WorkspaceTab) => {
-    setOpenTabs((prev) =>
-      prev.some((t) => t.key === tab.key) ? prev : [...prev, tab],
-    );
+    setOpenTabs((prev) => (prev.some((t) => t.key === tab.key) ? prev : [...prev, tab]));
     setActiveTabKey(tab.key);
   }, []);
 
@@ -231,9 +213,7 @@ export function WorkspaceProvider({
 
   const setIcon = useCallback(
     async (id: string, icon: string | null) => {
-      setTree((prev) =>
-        mapTree(prev, id, (n) => ({ ...n, icon: icon ?? undefined })),
-      );
+      setTree((prev) => mapTree(prev, id, (n) => ({ ...n, icon: icon ?? undefined })));
       try {
         await updateDocument(id, { icon });
       } catch {
@@ -280,6 +260,40 @@ export function WorkspaceProvider({
     [refresh, openDocument],
   );
 
+  const uploadPdfDocument = useCallback(
+    async (parentId: string | null, file: File) => {
+      try {
+        // 1) Datei in den S3-Speicher laden (liefert Material-ID).
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch("/api/materialien", {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error(`upload_failed_${uploadRes.status}`);
+        const uploaded = (await uploadRes.json()) as { id: string; name: string };
+
+        // 2) Dokument vom Typ `pdf` anlegen, das auf das Material verweist.
+        const titel = file.name.replace(/\.[^.]+$/, "") || uploaded.name;
+        const result = await createDocument({
+          parentId,
+          typ: "pdf",
+          titel,
+          icon: "📕",
+          materialId: uploaded.id,
+        });
+        await refresh();
+        const newId = result?.dokument?.id as string | undefined;
+        if (newId) openDocument(newId);
+        return newId ?? null;
+      } catch {
+        await refresh();
+        return null;
+      }
+    },
+    [refresh, openDocument],
+  );
+
   const removeDocument = useCallback(
     async (id: string) => {
       const idsToClose = collectIds(findNodeInTree(tree, id));
@@ -288,14 +302,9 @@ export function WorkspaceProvider({
       } finally {
         await refresh();
         setOpenTabs((prev) => {
-          const next = prev.filter(
-            (t) => !(t.kind === "dokument" && idsToClose.has(t.dokumentId)),
-          );
+          const next = prev.filter((t) => !(t.kind === "dokument" && idsToClose.has(t.dokumentId)));
           const activeWasRemoved = prev.some(
-            (t) =>
-              t.key === activeTabKey &&
-              t.kind === "dokument" &&
-              idsToClose.has(t.dokumentId),
+            (t) => t.key === activeTabKey && t.kind === "dokument" && idsToClose.has(t.dokumentId),
           );
           if (activeWasRemoved) {
             setActiveTabKey(next[next.length - 1]?.key ?? null);
@@ -349,6 +358,7 @@ export function WorkspaceProvider({
       setIcon,
       saveContent,
       addDocument,
+      uploadPdfDocument,
       removeDocument,
       moveDocument,
       findNode,
@@ -371,6 +381,7 @@ export function WorkspaceProvider({
       setIcon,
       saveContent,
       addDocument,
+      uploadPdfDocument,
       removeDocument,
       moveDocument,
       findNode,

@@ -10,8 +10,9 @@ import {
 } from "drizzle-orm/pg-core";
 import { type AnyPgColumn } from "drizzle-orm/pg-core";
 import { users } from "./auth";
+import { materialien } from "./materials";
 
-export const dokumentTypEnum = pgEnum("dokument_typ", ["ordner", "seite"]);
+export const dokumentTypEnum = pgEnum("dokument_typ", ["ordner", "seite", "pdf"]);
 
 /**
  * Hierarchischer Dokumentbaum im Notion-/Confluence-Stil.
@@ -21,6 +22,8 @@ export const dokumentTypEnum = pgEnum("dokument_typ", ["ordner", "seite"]);
  *   (zwischen zwei Knoten kann der Mittelwert eingefügt werden).
  * - Inhalte werden als Markdown direkt in der Spalte `inhaltMarkdown` gehalten.
  *   Spätere Migration zu Block-basierten Inhalten ist additiv möglich.
+ * - Für Datei-Dokumente (Typ `pdf`) verweist `materialId` auf das hochgeladene
+ *   Material in `materialien`. Andere Typen lassen das Feld leer.
  * - Löschen eines Ordners kaskadiert auf alle Kinder; Verschieben
  *   geschieht über Update von `parentId` + `sortierung`.
  */
@@ -38,6 +41,9 @@ export const dokumente = pgTable(
     titel: text("titel").notNull(),
     icon: text("icon"),
     inhaltMarkdown: text("inhalt_markdown"),
+    materialId: uuid("material_id").references(() => materialien.id, {
+      onDelete: "set null",
+    }),
     sortierung: doublePrecision("sortierung").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

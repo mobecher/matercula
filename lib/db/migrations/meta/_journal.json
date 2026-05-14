@@ -22,6 +22,13 @@
       "when": 1778755613942,
       "tag": "0002_nifty_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778776578907,
+      "tag": "0003_shocking_zeigeist",
+      "breakpoints": true
     }
   ]
 }

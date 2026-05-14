@@ -3,13 +3,19 @@ import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
 import { erstelleDokument, ladeDokumentBaumFuerBenutzer } from "@/lib/workspace/repository";
 
-const erstelleSchema = z.object({
-  parentId: z.string().uuid().nullable().optional(),
-  typ: z.enum(["ordner", "seite"]),
-  titel: z.string().min(1).max(200),
-  icon: z.string().max(8).nullable().optional(),
-  inhaltMarkdown: z.string().nullable().optional(),
-});
+const erstelleSchema = z
+  .object({
+    parentId: z.string().uuid().nullable().optional(),
+    typ: z.enum(["ordner", "seite", "pdf"]),
+    titel: z.string().min(1).max(200),
+    icon: z.string().max(8).nullable().optional(),
+    inhaltMarkdown: z.string().nullable().optional(),
+    materialId: z.string().uuid().nullable().optional(),
+  })
+  .refine((value) => value.typ !== "pdf" || !!value.materialId, {
+    message: "materialId required for pdf documents",
+    path: ["materialId"],
+  });
 
 export async function GET() {
   const user = await getRequestUser();
@@ -36,6 +42,7 @@ export async function POST(request: Request) {
     titel: ergebnis.data.titel,
     icon: ergebnis.data.icon ?? null,
     inhaltMarkdown: ergebnis.data.inhaltMarkdown ?? null,
+    materialId: ergebnis.data.materialId ?? null,
   });
 
   return NextResponse.json({ dokument }, { status: 201 });
