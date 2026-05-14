@@ -1,14 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { MaterialLinker, type VerknuepftesDokument } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
-
-interface VerknuepftesDokument {
-  id: string;
-  titel: string;
-  icon: string | null;
-  notiz: string | null;
-}
 
 interface KompetenzDetailData {
   lehrplan: { id: string; slug: string; titel: string };
@@ -36,13 +30,14 @@ const PERSPEKTIVE_BADGE: Record<string, string> = {
 };
 
 export function KompetenzTabView({ kompetenzId }: { kompetenzId: string }) {
-  const { openDocument, openKlasseTab, openBereichTab } = useWorkspace();
+  const { openKlasseTab, openBereichTab } = useWorkspace();
   const [data, setData] = useState<KompetenzDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
-    setData(null);
     setError(null);
     fetch(`/api/kompetenzen/${kompetenzId}`)
       .then(async (r) => {
@@ -58,7 +53,7 @@ export function KompetenzTabView({ kompetenzId }: { kompetenzId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [kompetenzId]);
+  }, [kompetenzId, reloadToken]);
 
   if (error) {
     return (
@@ -128,56 +123,13 @@ export function KompetenzTabView({ kompetenzId }: { kompetenzId: string }) {
 
       <section className="mt-10">
         <h2 className="mb-3 text-lg font-semibold">Verknüpfte Materialien</h2>
-        <MaterialTable docs={data.dokumente} onOpen={openDocument} />
+        <MaterialLinker
+          docs={data.dokumente}
+          endpoint={`/api/kompetenzen/${kompetenzId}/dokumente`}
+          mode="table"
+          onChange={reload}
+        />
       </section>
-    </div>
-  );
-}
-
-function MaterialTable({
-  docs,
-  onOpen,
-}: {
-  docs: VerknuepftesDokument[];
-  onOpen: (id: string) => void;
-}) {
-  return (
-    <div className="overflow-hidden rounded-lg border border-neutral-200">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-neutral-50 text-xs uppercase tracking-wider text-neutral-500">
-          <tr>
-            <th className="w-10 px-4 py-3 font-medium" />
-            <th className="px-4 py-3 font-medium">Titel</th>
-            <th className="px-4 py-3 font-medium">Notiz</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-200 bg-white">
-          {docs.map((d) => (
-            <tr className="hover:bg-neutral-50" key={d.id}>
-              <td className="px-4 py-3 text-lg" aria-hidden>
-                {d.icon ?? "📄"}
-              </td>
-              <td className="px-4 py-3">
-                <button
-                  className="text-left font-medium text-neutral-900 hover:underline"
-                  onClick={() => onOpen(d.id)}
-                  type="button"
-                >
-                  {d.titel}
-                </button>
-              </td>
-              <td className="px-4 py-3 text-neutral-600">{d.notiz ?? "—"}</td>
-            </tr>
-          ))}
-          {docs.length === 0 && (
-            <tr>
-              <td className="px-4 py-6 text-center text-neutral-500" colSpan={3}>
-                Noch keine Materialien verknüpft.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
     </div>
   );
 }

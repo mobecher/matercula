@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { MaterialLinker } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
 
 interface VerknuepftesDokument {
@@ -42,17 +43,17 @@ const PERSPEKTIVE_BADGE: Record<string, string> = {
 
 export function BereichTabView({ bereichId }: { bereichId: string }) {
   const {
-    openDocument,
     openKlasseTab,
     openKompetenzTab,
     openAnwendungsbereichTab,
   } = useWorkspace();
   const [data, setData] = useState<BereichData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
-    setData(null);
     setError(null);
     fetch(`/api/kompetenzbereiche/${bereichId}`)
       .then(async (r) => {
@@ -68,7 +69,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [bereichId]);
+  }, [bereichId, reloadToken]);
 
   if (error) {
     return (
@@ -153,7 +154,12 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <DokumentList docs={k.dokumente} onOpen={openDocument} />
+                    <MaterialLinker
+                      docs={k.dokumente}
+                      endpoint={`/api/kompetenzen/${k.id}/dokumente`}
+                      mode="chips"
+                      onChange={reload}
+                    />
                   </td>
                 </tr>
               ))}
@@ -202,7 +208,12 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <DokumentList docs={a.dokumente} onOpen={openDocument} />
+                    <MaterialLinker
+                      docs={a.dokumente}
+                      endpoint={`/api/anwendungsbereiche/${a.id}/dokumente`}
+                      mode="chips"
+                      onChange={reload}
+                    />
                   </td>
                 </tr>
               ))}
@@ -230,33 +241,4 @@ function shortenForTab(text: string): string {
   const cut = trimmed.slice(0, 40);
   const lastSpace = cut.lastIndexOf(" ");
   return `${lastSpace > 20 ? cut.slice(0, lastSpace) : cut}…`;
-}
-
-function DokumentList({
-  docs,
-  onOpen,
-}: {
-  docs: VerknuepftesDokument[];
-  onOpen: (id: string) => void;
-}) {
-  if (docs.length === 0) {
-    return <span className="text-xs text-neutral-400">—</span>;
-  }
-  return (
-    <ul className="flex flex-wrap gap-1.5">
-      {docs.map((d) => (
-        <li key={d.id}>
-          <button
-            className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
-            onClick={() => onOpen(d.id)}
-            title={d.notiz ?? undefined}
-            type="button"
-          >
-            <span aria-hidden>{d.icon ?? "📄"}</span>
-            <span className="max-w-40 truncate">{d.titel}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
 }
