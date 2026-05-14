@@ -1,6 +1,7 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { type Dokument, dokumente } from "@/lib/db/schema/dokumente";
+import { materialien } from "@/lib/db/schema/materials";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
 export async function ladeDokumentBaumFuerBenutzer(ownerId: string): Promise<DokumentKnoten[]> {
@@ -56,7 +57,13 @@ interface ErstelleDokumentEingabe {
   materialId?: string | null;
 }
 
-export async function erstelleDokument(eingabe: ErstelleDokumentEingabe): Promise<Dokument> {
+export async function erstelleDokument(eingabe: ErstelleDokumentEingabe): Promise<Dokument | undefined> {
+  if (eingabe.parentId && !(await gehoertDokumentZuOwner(eingabe.parentId, eingabe.ownerId))) {
+    return undefined;
+  }
+  if (eingabe.materialId && !(await gehoertMaterialZuOwner(eingabe.materialId, eingabe.ownerId))) {
+    return undefined;
+  }
   const sortierung = await naechsteSortierung(eingabe.ownerId, eingabe.parentId);
   const [erstellt] = await db
     .insert(dokumente)
@@ -72,6 +79,26 @@ export async function erstelleDokument(eingabe: ErstelleDokumentEingabe): Promis
     })
     .returning();
   return erstellt;
+}
+
+/** Prüft, ob ein Dokument dem angegebenen Owner gehört. */
+async function gehoertDokumentZuOwner(id: string, ownerId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: dokumente.id })
+    .from(dokumente)
+    .where(and(eq(dokumente.id, id), eq(dokumente.ownerId, ownerId)))
+    .limit(1);
+  return !!row;
+}
+
+/** Prüft, ob ein Material dem angegebenen Owner gehört. */
+async function gehoertMaterialZuOwner(id: string, ownerId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: materialien.id })
+    .from(materialien)
+    .where(and(eq(materialien.id, id), eq(materialien.ownerId, ownerId)))
+    .limit(1);
+  return !!row;
 }
 
 async function naechsteSortierung(ownerId: string, parentId: string | null): Promise<number> {
@@ -103,6 +130,9 @@ export async function aktualisiereDokument(
 ): Promise<Dokument | undefined> {
   if (eingabe.parentId !== undefined && eingabe.parentId !== null) {
     if (eingabe.parentId === eingabe.id) return undefined;
+    if (!(await gehoertDokumentZuOwner(eingabe.parentId, eingabe.ownerId))) {
+      return undefined;
+    }
     const wuerdeZyklusErzeugen = await isDescendant({
       ownerId: eingabe.ownerId,
       ancestorId: eingabe.id,
@@ -189,6 +219,9 @@ interface MoveDocumentInput {
 export async function moveDocument(input: MoveDocumentInput): Promise<Dokument | undefined> {
   if (input.parentId !== null) {
     if (input.parentId === input.id) return undefined;
+    if (!(await gehoertDokumentZuOwner(input.parentId, input.ownerId))) {
+      return undefined;
+    }
     const wouldCycle = await isDescendant({
       ownerId: input.ownerId,
       ancestorId: input.id,

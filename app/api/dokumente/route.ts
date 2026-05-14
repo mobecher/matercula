@@ -45,5 +45,9 @@ export async function POST(request: Request) {
     materialId: ergebnis.data.materialId ?? null,
   });
 
+  if (!dokument) {
+    return NextResponse.json({ error: "invalid_reference" }, { status: 400 });
+  }
+
   return NextResponse.json({ dokument }, { status: 201 });
 }
