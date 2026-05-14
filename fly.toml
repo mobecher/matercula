@@ -9,7 +9,7 @@ primary_region = 'fra'
 [build]
 
 [deploy]
-  release_command = 'node scripts/migrate.mjs'
+  release_command = 'sh -c "node scripts/migrate.mjs && pnpm tsx scripts/seed-curriculum.ts"'
 
 [http_service]
   internal_port = 3000
