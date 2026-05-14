@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { KlasseTabView } from "./klasse-tab-view";
+import { BereichTabView } from "./bereich-tab-view";
 import { useWorkspace } from "./workspace-context";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
@@ -37,9 +39,25 @@ const COMMON_ICONS = [
 ];
 
 export function DocumentView() {
-  const { activeTabId, findNode } = useWorkspace();
-  const doc = activeTabId ? findNode(activeTabId) : undefined;
+  const { activeTab, findNode } = useWorkspace();
+  if (!activeTab) return <EmptyState />;
 
+  if (activeTab.kind === "klasse") {
+    return (
+      <KlasseTabView
+        key={activeTab.key}
+        lehrplanSlug={activeTab.lehrplanSlug}
+        klasseNr={activeTab.klasseNr}
+      />
+    );
+  }
+  if (activeTab.kind === "bereich") {
+    return (
+      <BereichTabView key={activeTab.key} bereichId={activeTab.bereichId} />
+    );
+  }
+
+  const doc = findNode(activeTab.dokumentId);
   if (!doc) return <EmptyState />;
   return <DocumentEditor key={doc.id} doc={doc} />;
 }
@@ -153,9 +171,12 @@ function EmptyState() {
       <div className="text-5xl" aria-hidden>
         📂
       </div>
-      <h2 className="text-xl font-semibold text-neutral-700">Kein Dokument geöffnet</h2>
+      <h2 className="text-xl font-semibold text-neutral-700">
+        Kein Tab geöffnet
+      </h2>
       <p className="max-w-md text-sm text-neutral-500">
-        Wählen Sie links in der Seitenleiste eine Seite aus, um sie in einem Tab zu öffnen.
+        Wählen Sie links in der Seitenleiste eine Seite oder einen
+        Lehrplan-Eintrag aus.
       </p>
     </div>
   );

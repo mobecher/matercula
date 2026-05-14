@@ -18,20 +18,55 @@ import {
 } from "@/lib/workspace/api-client";
 import type { DokumentKnoten, DokumentTyp } from "@/lib/workspace/types";
 
+export type WorkspaceTab =
+  | { kind: "dokument"; key: string; dokumentId: string }
+  | {
+      kind: "klasse";
+      key: string;
+      lehrplanSlug: string;
+      klasseNr: number;
+      titel: string;
+    }
+  | { kind: "bereich"; key: string; bereichId: string; titel: string };
+
+export function dokumentTabKey(id: string): string {
+  return `dok:${id}`;
+}
+export function klasseTabKey(slug: string, klasseNr: number): string {
+  return `klasse:${slug}:${klasseNr}`;
+}
+export function bereichTabKey(bereichId: string): string {
+  return `bereich:${bereichId}`;
+}
+
 interface WorkspaceContextValue {
   tree: DokumentKnoten[];
-  openTabs: string[];
-  activeTabId: string | null;
+  openTabs: WorkspaceTab[];
+  activeTabKey: string | null;
+  activeTab: WorkspaceTab | null;
   saveStatus: "idle" | "saving" | "saved" | "error";
   openDocument: (id: string) => void;
-  closeTab: (id: string) => void;
-  setActiveTab: (id: string) => void;
+  openKlasseTab: (
+    lehrplanSlug: string,
+    klasseNr: number,
+    titel: string,
+  ) => void;
+  openBereichTab: (bereichId: string, titel: string) => void;
+  closeTab: (key: string) => void;
+  setActiveTab: (key: string) => void;
   renameDocument: (id: string, titel: string) => Promise<void>;
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
-  addDocument: (parentId: string | null, typ: DokumentTyp) => Promise<string | null>;
+  addDocument: (
+    parentId: string | null,
+    typ: DokumentTyp,
+  ) => Promise<string | null>;
   removeDocument: (id: string) => Promise<void>;
-  moveDocument: (id: string, parentId: string | null, position?: number) => Promise<void>;
+  moveDocument: (
+    id: string,
+    parentId: string | null,
+    position?: number,
+  ) => Promise<void>;
   findNode: (id: string) => DokumentKnoten | undefined;
   refresh: () => Promise<void>;
 }
@@ -56,10 +91,19 @@ export function WorkspaceProvider({
   children,
 }: WorkspaceProviderProps) {
   const [tree, setTree] = useState<DokumentKnoten[]>(initialTree);
-  const [openTabs, setOpenTabs] = useState<string[]>(
-    initialDocumentId ? [initialDocumentId] : [],
+  const initial: WorkspaceTab[] = initialDocumentId
+    ? [
+        {
+          kind: "dokument",
+          key: dokumentTabKey(initialDocumentId),
+          dokumentId: initialDocumentId,
+        },
+      ]
+    : [];
+  const [openTabs, setOpenTabs] = useState<WorkspaceTab[]>(initial);
+  const [activeTabKey, setActiveTabKey] = useState<string | null>(
+    initialDocumentId ? dokumentTabKey(initialDocumentId) : null,
   );
-  const [activeTabId, setActiveTabId] = useState<string | null>(initialDocumentId ?? null);
   const [saveStatus, setSaveStatus] = useState<WorkspaceContextValue["saveStatus"]>("idle");
   const saveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -73,47 +117,89 @@ export function WorkspaceProvider({
     setTree(next);
   }, []);
 
-  const openDocument = useCallback((id: string) => {
-    setOpenTabs((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    setActiveTabId(id);
+  const upsertTab = useCallback((tab: WorkspaceTab) => {
+    setOpenTabs((prev) =>
+      prev.some((t) => t.key === tab.key) ? prev : [...prev, tab],
+    );
+    setActiveTabKey(tab.key);
   }, []);
 
-  const closeTab = useCallback(
+  const openDocument = useCallback(
     (id: string) => {
+      upsertTab({ kind: "dokument", key: dokumentTabKey(id), dokumentId: id });
+    },
+    [upsertTab],
+  );
+
+  const openKlasseTab = useCallback(
+    (lehrplanSlug: string, klasseNr: number, titel: string) => {
+      upsertTab({
+        kind: "klasse",
+        key: klasseTabKey(lehrplanSlug, klasseNr),
+        lehrplanSlug,
+        klasseNr,
+        titel,
+      });
+    },
+    [upsertTab],
+  );
+
+  const openBereichTab = useCallback(
+    (bereichId: string, titel: string) => {
+      upsertTab({
+        kind: "bereich",
+        key: bereichTabKey(bereichId),
+        bereichId,
+        titel,
+      });
+    },
+    [upsertTab],
+  );
+
+  const closeTab = useCallback(
+    (key: string) => {
       setOpenTabs((prev) => {
-        const next = prev.filter((tabId) => tabId !== id);
-        if (activeTabId === id) {
-          const index = prev.indexOf(id);
+        const next = prev.filter((tab) => tab.key !== key);
+        if (activeTabKey === key) {
+          const index = prev.findIndex((tab) => tab.key === key);
           const successor = next[index] ?? next[index - 1] ?? null;
-          setActiveTabId(successor);
+          setActiveTabKey(successor?.key ?? null);
         }
         return next;
       });
     },
-    [activeTabId],
+    [activeTabKey],
   );
 
-  const setActiveTab = useCallback((id: string) => setActiveTabId(id), []);
+  const setActiveTab = useCallback((key: string) => setActiveTabKey(key), []);
 
-  const renameDocument = useCallback(async (id: string, titel: string) => {
-    const trimmed = titel.trim();
-    if (!trimmed) return;
-    setTree((prev) => mapTree(prev, id, (n) => ({ ...n, titel: trimmed })));
-    try {
-      await updateDocument(id, { titel: trimmed });
-    } catch {
-      await refresh();
-    }
-  }, [refresh]);
+  const renameDocument = useCallback(
+    async (id: string, titel: string) => {
+      const trimmed = titel.trim();
+      if (!trimmed) return;
+      setTree((prev) => mapTree(prev, id, (n) => ({ ...n, titel: trimmed })));
+      try {
+        await updateDocument(id, { titel: trimmed });
+      } catch {
+        await refresh();
+      }
+    },
+    [refresh],
+  );
 
-  const setIcon = useCallback(async (id: string, icon: string | null) => {
-    setTree((prev) => mapTree(prev, id, (n) => ({ ...n, icon: icon ?? undefined })));
-    try {
-      await updateDocument(id, { icon });
-    } catch {
-      await refresh();
-    }
-  }, [refresh]);
+  const setIcon = useCallback(
+    async (id: string, icon: string | null) => {
+      setTree((prev) =>
+        mapTree(prev, id, (n) => ({ ...n, icon: icon ?? undefined })),
+      );
+      try {
+        await updateDocument(id, { icon });
+      } catch {
+        await refresh();
+      }
+    },
+    [refresh],
+  );
 
   const saveContent = useCallback((id: string, content: string) => {
     setTree((prev) => mapTree(prev, id, (n) => ({ ...n, inhalt: content })));
@@ -160,15 +246,23 @@ export function WorkspaceProvider({
       } finally {
         await refresh();
         setOpenTabs((prev) => {
-          const next = prev.filter((t) => !idsToClose.has(t));
-          if (activeTabId && idsToClose.has(activeTabId)) {
-            setActiveTabId(next[next.length - 1] ?? null);
+          const next = prev.filter(
+            (t) => !(t.kind === "dokument" && idsToClose.has(t.dokumentId)),
+          );
+          const activeWasRemoved = prev.some(
+            (t) =>
+              t.key === activeTabKey &&
+              t.kind === "dokument" &&
+              idsToClose.has(t.dokumentId),
+          );
+          if (activeWasRemoved) {
+            setActiveTabKey(next[next.length - 1]?.key ?? null);
           }
           return next;
         });
       }
     },
-    [tree, refresh, activeTabId],
+    [tree, refresh, activeTabKey],
   );
 
   const moveDocument = useCallback(
@@ -190,13 +284,21 @@ export function WorkspaceProvider({
     };
   }, []);
 
+  const activeTab = useMemo(
+    () => openTabs.find((t) => t.key === activeTabKey) ?? null,
+    [openTabs, activeTabKey],
+  );
+
   const value = useMemo<WorkspaceContextValue>(
     () => ({
       tree,
       openTabs,
-      activeTabId,
+      activeTabKey,
+      activeTab,
       saveStatus,
       openDocument,
+      openKlasseTab,
+      openBereichTab,
       closeTab,
       setActiveTab,
       renameDocument,
@@ -211,9 +313,12 @@ export function WorkspaceProvider({
     [
       tree,
       openTabs,
-      activeTabId,
+      activeTabKey,
+      activeTab,
       saveStatus,
       openDocument,
+      openKlasseTab,
+      openBereichTab,
       closeTab,
       setActiveTab,
       renameDocument,

@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useWorkspace } from "./workspace-context";
+import { bereichTabKey, klasseTabKey, useWorkspace } from "./workspace-context";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
@@ -83,15 +81,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <CurriculumSection lehrplaene={lehrplaene} />
 
-        <SectionHeader>
-          <Link
-            className="hover:text-neutral-900"
-            href="/workspace"
-            title="Zur Materialiensammlung"
-          >
-            Materialien
-          </Link>
-        </SectionHeader>
+        <SectionHeader>Materialien</SectionHeader>
 
         <nav
           className="px-2 pb-4"
@@ -153,7 +143,7 @@ interface TreeNodeProps {
 
 function TreeNode({ node, depth }: TreeNodeProps) {
   const {
-    activeTabId,
+    activeTab,
     openDocument,
     addDocument,
     removeDocument,
@@ -167,7 +157,10 @@ function TreeNode({ node, depth }: TreeNodeProps) {
   const [dropZone, setDropZone] = useState<"before" | "into" | "after" | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const active = !isFolder && activeTabId === node.id;
+  const active =
+    !isFolder &&
+    activeTab?.kind === "dokument" &&
+    activeTab.dokumentId === node.id;
 
   useEffect(() => {
     if (renaming && inputRef.current) {
@@ -466,7 +459,6 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
 function CurriculumSection({ lehrplaene }: { lehrplaene: SidebarLehrplan[] }) {
   if (lehrplaene.length === 0) {
     return (
@@ -521,15 +513,17 @@ function KlasseItem({
   slug: string;
   klasse: SidebarLehrplan["klassen"][number];
 }) {
+  const { activeTab, openKlasseTab, openBereichTab } = useWorkspace();
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const klasseHref = `/workspace/lehrplan/${slug}/${klasse.klasse}`;
-  const klasseActive = pathname === klasseHref;
+  const klasseKey = klasseTabKey(slug, klasse.klasse);
+  const klasseActive = activeTab?.key === klasseKey;
   return (
     <li>
       <div
         className={`group flex items-center gap-1 rounded-md py-1 pr-1 text-sm ${
-          klasseActive ? "bg-neutral-200 font-medium text-neutral-900" : "text-neutral-700 hover:bg-neutral-200"
+          klasseActive
+            ? "bg-neutral-200 font-medium text-neutral-900"
+            : "text-neutral-700 hover:bg-neutral-200"
         }`}
       >
         <button
@@ -540,27 +534,31 @@ function KlasseItem({
         >
           {open ? "▾" : "▸"}
         </button>
-        <Link className="min-w-0 flex-1 truncate" href={klasseHref}>
+        <button
+          className="min-w-0 flex-1 truncate text-left"
+          onClick={() => openKlasseTab(slug, klasse.klasse, klasse.titel)}
+          type="button"
+        >
           {klasse.titel}
-        </Link>
+        </button>
       </div>
       {open && klasse.bereiche.length > 0 && (
         <ul className="space-y-0.5 pl-5">
           {klasse.bereiche.map((b) => {
-            const href = `/workspace/lehrplan/${slug}/${klasse.klasse}/${b.id}`;
-            const active = pathname === href;
+            const active = activeTab?.key === bereichTabKey(b.id);
             return (
               <li key={b.id}>
-                <Link
-                  className={`block truncate rounded-md px-2 py-1 text-sm ${
+                <button
+                  className={`block w-full truncate rounded-md px-2 py-1 text-left text-sm ${
                     active
                       ? "bg-neutral-200 font-medium text-neutral-900"
                       : "text-neutral-700 hover:bg-neutral-200"
                   }`}
-                  href={href}
+                  onClick={() => openBereichTab(b.id, b.titel)}
+                  type="button"
                 >
                   {b.titel}
-                </Link>
+                </button>
               </li>
             );
           })}

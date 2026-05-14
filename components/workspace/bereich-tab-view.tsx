@@ -1,13 +1,32 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { getSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth/session";
-import {
-  ladeDokumenteFuerAnwendungsbereich,
-  ladeDokumenteFuerKompetenz,
-  type VerknuepftesDokument,
-} from "@/lib/curriculum/links";
-import { ladeKompetenzbereichDetail } from "@/lib/curriculum/repository";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useWorkspace } from "./workspace-context";
+
+interface VerknuepftesDokument {
+  id: string;
+  titel: string;
+  icon: string | null;
+  notiz: string | null;
+}
+
+interface BereichData {
+  lehrplan: { id: string; slug: string; titel: string };
+  klasse: { id: string; klasse: number; titel: string };
+  bereich: { id: string; titel: string; beschreibung: string | null };
+  kompetenzen: Array<{
+    id: string;
+    perspektive: "T" | "G" | "I" | null;
+    beschreibung: string;
+    dokumente: VerknuepftesDokument[];
+  }>;
+  anwendungsbereiche: Array<{
+    id: string;
+    titel: string;
+    beschreibung: string | null;
+    dokumente: VerknuepftesDokument[];
+  }>;
+}
 
 const PERSPEKTIVE_LABEL: Record<string, string> = {
   T: "Technik",
@@ -21,47 +40,58 @@ const PERSPEKTIVE_BADGE: Record<string, string> = {
   I: "bg-emerald-100 text-emerald-800",
 };
 
-export default async function KompetenzbereichDetailPage({
-  params,
-}: {
-  params: Promise<{ slug: string; klasse: string; bereichId: string }>;
-}) {
-  const { slug, klasse, bereichId } = await params;
-  const data = await ladeKompetenzbereichDetail(bereichId);
-  if (!data) notFound();
+export function BereichTabView({ bereichId }: { bereichId: string }) {
+  const { openDocument, openKlasseTab } = useWorkspace();
+  const [data, setData] = useState<BereichData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const cookieStore = await cookies();
-  const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const user = sessionId ? await getSessionUser(sessionId) : null;
-  if (!user) notFound();
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    setError(null);
+    fetch(`/api/kompetenzbereiche/${bereichId}`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return (await r.json()) as BereichData;
+      })
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bereichId]);
 
-  // Prefetch verknüpfte Dokumente für jede Zeile (server-side, parallel).
-  const [kompDocs, appDocs] = await Promise.all([
-    Promise.all(
-      data.kompetenzen.map((k) => ladeDokumenteFuerKompetenz(k.id, user.id)),
-    ),
-    Promise.all(
-      data.anwendungsbereiche.map((a) =>
-        ladeDokumenteFuerAnwendungsbereich(a.id, user.id),
-      ),
-    ),
-  ]);
+  if (error) {
+    return (
+      <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-red-600">
+        Konnte Kompetenzbereich nicht laden: {error}
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
       <nav className="mb-2 text-xs text-neutral-500">
-        <Link className="hover:text-neutral-900" href="/workspace">
-          {data.lehrplan.titel}
-        </Link>
+        <span>{data.lehrplan.titel}</span>
         <span className="mx-1">›</span>
-        <Link
-          className="hover:text-neutral-900"
-          href={`/workspace/lehrplan/${slug}/${klasse}`}
+        <button
+          className="hover:text-neutral-900 hover:underline"
+          onClick={() =>
+            openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)
+          }
+          type="button"
         >
           {data.klasse.titel}
-        </Link>
-        <span className="mx-1">›</span>
-        <span>{data.bereich.titel}</span>
+        </button>
       </nav>
       <h1 className="text-3xl font-semibold tracking-tight">{data.bereich.titel}</h1>
       {data.bereich.beschreibung && (
@@ -80,7 +110,7 @@ export default async function KompetenzbereichDetailPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white">
-              {data.kompetenzen.map((k, i) => (
+              {data.kompetenzen.map((k) => (
                 <tr key={k.id} className="align-top">
                   <td className="px-4 py-3">
                     {k.perspektive ? (
@@ -98,7 +128,7 @@ export default async function KompetenzbereichDetailPage({
                   </td>
                   <td className="px-4 py-3 text-neutral-800">{k.beschreibung}</td>
                   <td className="px-4 py-3">
-                    <DokumentList docs={kompDocs[i]} />
+                    <DokumentList docs={k.dokumente} onOpen={openDocument} />
                   </td>
                 </tr>
               ))}
@@ -125,11 +155,13 @@ export default async function KompetenzbereichDetailPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white">
-              {data.anwendungsbereiche.map((a, i) => (
+              {data.anwendungsbereiche.map((a) => (
                 <tr key={a.id} className="align-top">
-                  <td className="px-4 py-3 text-neutral-800">{a.beschreibung ?? a.titel}</td>
+                  <td className="px-4 py-3 text-neutral-800">
+                    {a.beschreibung ?? a.titel}
+                  </td>
                   <td className="px-4 py-3">
-                    <DokumentList docs={appDocs[i]} />
+                    <DokumentList docs={a.dokumente} onOpen={openDocument} />
                   </td>
                 </tr>
               ))}
@@ -148,20 +180,29 @@ export default async function KompetenzbereichDetailPage({
   );
 }
 
-function DokumentList({ docs }: { docs: VerknuepftesDokument[] }) {
+function DokumentList({
+  docs,
+  onOpen,
+}: {
+  docs: VerknuepftesDokument[];
+  onOpen: (id: string) => void;
+}) {
   if (docs.length === 0) {
     return <span className="text-xs text-neutral-400">—</span>;
   }
   return (
     <ul className="flex flex-wrap gap-1.5">
       {docs.map((d) => (
-        <li
-          key={d.id}
-          className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-700"
-          title={d.notiz ?? undefined}
-        >
-          <span aria-hidden>{d.icon ?? "📄"}</span>
-          <span className="max-w-40 truncate">{d.titel}</span>
+        <li key={d.id}>
+          <button
+            className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200"
+            onClick={() => onOpen(d.id)}
+            title={d.notiz ?? undefined}
+            type="button"
+          >
+            <span aria-hidden>{d.icon ?? "📄"}</span>
+            <span className="max-w-40 truncate">{d.titel}</span>
+          </button>
         </li>
       ))}
     </ul>
