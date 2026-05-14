@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import {
   createDocument,
   deleteDocument,
@@ -54,6 +55,7 @@ export function anwendungsbereichTabKey(id: string): string {
 
 interface WorkspaceContextValue {
   tree: DokumentKnoten[];
+  lehrplaene: SidebarLehrplan[];
   openTabs: WorkspaceTab[];
   activeTabKey: string | null;
   activeTab: WorkspaceTab | null;
@@ -86,12 +88,14 @@ export function useWorkspace() {
 
 interface WorkspaceProviderProps {
   initialTree: DokumentKnoten[];
+  lehrplaene: SidebarLehrplan[];
   initialDocumentId?: string;
   children: React.ReactNode;
 }
 
 export function WorkspaceProvider({
   initialTree,
+  lehrplaene,
   initialDocumentId,
   children,
 }: WorkspaceProviderProps) {
@@ -343,6 +347,7 @@ export function WorkspaceProvider({
   const value = useMemo<WorkspaceContextValue>(
     () => ({
       tree,
+      lehrplaene,
       openTabs,
       activeTabKey,
       activeTab,
@@ -366,6 +371,7 @@ export function WorkspaceProvider({
     }),
     [
       tree,
+      lehrplaene,
       openTabs,
       activeTabKey,
       activeTab,

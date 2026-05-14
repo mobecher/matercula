@@ -2,6 +2,13 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { dokumente, type Dokument } from "@/lib/db/schema/dokumente";
 import {
+  anwendungsbereiche,
+  kompetenzbereiche,
+  kompetenzen,
+  lehrplaene,
+  lehrplanKlassen,
+} from "@/lib/db/schema/lehrplan";
+import {
   dokumentAnwendungsbereichLinks,
   dokumentKompetenzLinks,
 } from "@/lib/db/schema/links";
@@ -11,6 +18,93 @@ export interface VerknuepftesDokument {
   titel: string;
   icon: string | null;
   notiz: string | null;
+}
+
+/** Reverse-Link-Eintrag: ein Lehrplan-Element, mit dem ein Dokument verknüpft ist. */
+export interface DokumentLehrplanLink {
+  id: string;
+  code: string;
+  titel: string;
+  /** Pfad-Beschriftung (Lehrplan › Klasse › Bereich) für Tooltip/Untertitel. */
+  pfad: string;
+}
+
+export interface DokumentLehrplanLinks {
+  kompetenzen: DokumentLehrplanLink[];
+  anwendungsbereiche: DokumentLehrplanLink[];
+}
+
+/** Reverse-Lookup: zu welchen Kompetenzen/Anwendungsbereichen gehört das Dokument? */
+export async function ladeLehrplanLinksFuerDokument(
+  dokumentId: string,
+  ownerId: string,
+): Promise<DokumentLehrplanLinks | null> {
+  const [doc] = await db
+    .select({ id: dokumente.id })
+    .from(dokumente)
+    .where(and(eq(dokumente.id, dokumentId), eq(dokumente.ownerId, ownerId)))
+    .limit(1);
+  if (!doc) return null;
+
+  const kompRows = await db
+    .select({
+      id: kompetenzen.id,
+      code: kompetenzen.code,
+      titel: kompetenzen.titel,
+      bereichTitel: kompetenzbereiche.titel,
+      klasseTitel: lehrplanKlassen.titel,
+      lehrplanTitel: lehrplaene.titel,
+      createdAt: dokumentKompetenzLinks.createdAt,
+    })
+    .from(dokumentKompetenzLinks)
+    .innerJoin(kompetenzen, eq(kompetenzen.id, dokumentKompetenzLinks.kompetenzId))
+    .innerJoin(
+      kompetenzbereiche,
+      eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId),
+    )
+    .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
+    .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
+    .where(eq(dokumentKompetenzLinks.dokumentId, dokumentId))
+    .orderBy(asc(dokumentKompetenzLinks.createdAt));
+
+  const awbRows = await db
+    .select({
+      id: anwendungsbereiche.id,
+      code: anwendungsbereiche.code,
+      titel: anwendungsbereiche.titel,
+      bereichTitel: kompetenzbereiche.titel,
+      klasseTitel: lehrplanKlassen.titel,
+      lehrplanTitel: lehrplaene.titel,
+      createdAt: dokumentAnwendungsbereichLinks.createdAt,
+    })
+    .from(dokumentAnwendungsbereichLinks)
+    .innerJoin(
+      anwendungsbereiche,
+      eq(anwendungsbereiche.id, dokumentAnwendungsbereichLinks.anwendungsbereichId),
+    )
+    .innerJoin(
+      kompetenzbereiche,
+      eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId),
+    )
+    .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
+    .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
+    .where(eq(dokumentAnwendungsbereichLinks.dokumentId, dokumentId))
+    .orderBy(asc(dokumentAnwendungsbereichLinks.createdAt));
+
+  return {
+    kompetenzen: kompRows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      titel: r.titel,
+      pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
+    })),
+    anwendungsbereiche: awbRows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      titel: r.titel,
+      pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
+    })),
+  };
 }
 
 export async function ladeDokumenteFuerKompetenz(

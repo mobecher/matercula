@@ -7,6 +7,7 @@ import { AnwendungsbereichTabView } from "./anwendungsbereich-tab-view";
 import { BereichTabView } from "./bereich-tab-view";
 import { KlasseTabView } from "./klasse-tab-view";
 import { KompetenzTabView } from "./kompetenz-tab-view";
+import { LehrplanBacklinks } from "./lehrplan-backlinks";
 import { useWorkspace } from "./workspace-context";
 
 const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
@@ -107,7 +108,8 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
             type="button"
           >
             <span aria-hidden>
-              {doc.icon ?? (doc.typ === "ordner" ? "📁" : doc.typ === "pdf" ? "📕" : "📄")}
+              {doc.icon ??
+                (doc.typ === "ordner" ? "📁" : doc.typ === "pdf" ? "📕" : "📄")}
             </span>
           </button>
           {iconPickerOpen && (
@@ -150,6 +152,8 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         type="text"
         value={titleDraft}
       />
+
+      {doc.typ !== "ordner" && <LehrplanBacklinks docId={doc.id} />}
 
       {doc.typ === "ordner" ? (
         <FolderHint />

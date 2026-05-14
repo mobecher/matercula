@@ -24,7 +24,11 @@ export function WorkspaceFrame({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <WorkspaceProvider initialTree={baum} initialDocumentId={initialDokumentId}>
+    <WorkspaceProvider
+      initialTree={baum}
+      lehrplaene={lehrplaene}
+      initialDocumentId={initialDokumentId}
+    >
       <div className="flex h-screen w-full overflow-hidden bg-neutral-50 text-neutral-900">
         {sidebarOpen && (
           <Sidebar
