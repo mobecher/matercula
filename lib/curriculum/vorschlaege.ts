@@ -18,6 +18,7 @@ import {
   dokumentLinkVorschlaege,
 } from "@/lib/db/schema/links";
 import { materialChunks, materialien } from "@/lib/db/schema/materials";
+import { dokumentInhaltFuerAi } from "./dokument-inhalt";
 
 export interface VorschlagAnsicht {
   id: string;
@@ -231,7 +232,11 @@ export async function generiereVorschlaegeFuerDokument(
 
   let inhalt = "";
   if (doc.typ === "seite") {
-    inhalt = (doc.inhaltMarkdown ?? "").trim();
+    // BlockNote-JSON wird zu Klartext entpackt; Link-Karten und
+    // YouTube-Einbettungen werden mit extern abgeholten Inhalten
+    // (HTML-Plain-Text bzw. oEmbed-Titel) angereichert. Externe Fetches
+    // scheitern weich, damit das Tagging trotzdem läuft.
+    inhalt = (await dokumentInhaltFuerAi(doc.inhaltMarkdown)).trim();
   } else if (doc.typ === "pdf") {
     if (!doc.materialId) {
       return {
