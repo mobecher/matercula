@@ -209,7 +209,9 @@ export function LinkVorschlaege({
                   >
                     {v.zielTitel}
                   </button>
-                  <p className="mt-0.5 text-xs text-neutral-500">{v.zielPfad}</p>
+                  <p className="mt-0.5 text-xs text-neutral-500">
+                    {v.zielPfad}
+                  </p>
                   <p className="mt-1.5 text-sm text-neutral-700">
                     {v.begruendung}
                   </p>
@@ -249,23 +251,39 @@ export function LinkVorschlaege({
                 key={v.id}
                 className="rounded border border-neutral-100 bg-neutral-50 px-2 py-1.5"
               >
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span
-                    className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${STATUS_BADGE[v.status]}`}
-                  >
-                    {STATUS_LABEL[v.status]}
-                  </span>
-                  <span className="font-mono text-[10px] text-neutral-500">
-                    {v.zielCode}
-                  </span>
-                  <ConfidenceBadge value={v.confidence} subtle />
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${STATUS_BADGE[v.status]}`}
+                      >
+                        {STATUS_LABEL[v.status]}
+                      </span>
+                      <span className="font-mono text-[10px] text-neutral-500">
+                        {v.zielCode}
+                      </span>
+                      <ConfidenceBadge value={v.confidence} subtle />
+                    </div>
+                    <p className="mt-1 font-medium text-neutral-800">
+                      {v.zielTitel}
+                    </p>
+                    {v.begruendung && (
+                      <p className="mt-1 whitespace-pre-wrap text-neutral-600">
+                        {v.begruendung}
+                      </p>
+                    )}
+                  </div>
+                  {v.status === "abgelehnt" && (
+                    <button
+                      className="shrink-0 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                      disabled={busyId === v.id}
+                      onClick={() => void decide(v, "akzeptieren")}
+                      type="button"
+                    >
+                      Annehmen
+                    </button>
+                  )}
                 </div>
-                <p className="mt-1 font-medium text-neutral-800">{v.zielTitel}</p>
-                {v.begruendung && (
-                  <p className="mt-1 whitespace-pre-wrap text-neutral-600">
-                    {v.begruendung}
-                  </p>
-                )}
               </li>
             ))}
           </ul>
