@@ -12,13 +12,49 @@ import {
 } from "@blocknote/core/extensions";
 import {
   type DefaultReactSuggestionItem,
+  FilePanel,
+  FilePanelController,
+  type FilePanelProps,
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
+  UploadTab,
   useCreateBlockNote,
 } from "@blocknote/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { linkCardBlockSpec } from "./blocks/link-card-block";
 import { youtubeEmbedBlockSpec } from "./blocks/youtube-embed-block";
+
+/**
+ * Uploads a single file to the server-side S3 bucket via `/api/assets`
+ * and returns the stable internal URL stored in the block.
+ *
+ * BlockNote calls this from its image/video/audio block file panel as well
+ * as from drag-and-drop and clipboard paste. Throws on failure so BlockNote
+ * surfaces the error in its UI.
+ */
+async function uploadAssetToServer(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/assets", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let message = `Upload failed (${response.status})`;
+    try {
+      const body = (await response.json()) as { error?: string };
+      if (body.error) message = body.error;
+    } catch {
+      // ignore parse errors – fall back to status code
+    }
+    throw new Error(message);
+  }
+
+  const body = (await response.json()) as { url: string };
+  return body.url;
+}
 
 interface BlockEditorProps {
   /**
@@ -30,12 +66,12 @@ interface BlockEditorProps {
   onChangeMarkdown: (markdown: string) => void;
 }
 
-// `file` and `audio` blocks are intentionally omitted: PDFs (and later other
-// file types like Word) are modeled as standalone top-level Dokumente of
-// `typ = "pdf"`, not embedded inside the block editor. Image and video blocks
-// remain enabled – BlockNote supports URL embeds via the default FilePanel;
-// the video block renders through the HTML5 `<video>` tag.
-const { file: _f, audio: _a, ...allowedBlockSpecs } = defaultBlockSpecs;
+// The `file` block is intentionally omitted: PDFs and other documents are
+// modeled as standalone top-level Dokumente of `typ = "pdf"`, not embedded
+// inside the block editor. Image, video and audio blocks remain enabled and
+// are uploaded to S3 via the `uploadFile` hook below; URL embedding has been
+// disabled in favour of file upload (see `uploadFile`).
+const { file: _f, ...allowedBlockSpecs } = defaultBlockSpecs;
 
 const schema = BlockNoteSchema.create({
   blockSpecs: {
@@ -92,7 +128,11 @@ function BlockEditorInstance({
   initialMarkdown: string;
   onChangeMarkdown: (markdown: string) => void;
 }) {
-  const editor = useCreateBlockNote({ schema, dictionary: de });
+  const editor = useCreateBlockNote({
+    schema,
+    dictionary: de,
+    uploadFile: uploadAssetToServer,
+  });
   const onChangeRef = useRef(onChangeMarkdown);
   onChangeRef.current = onChangeMarkdown;
   const initialMarkdownRef = useRef(initialMarkdown);
@@ -153,14 +193,41 @@ function BlockEditorInstance({
 
   return (
     <div className="-mx-3">
-      <BlockNoteView editor={editor} theme="light" slashMenu={false}>
+      <BlockNoteView
+        editor={editor}
+        theme="light"
+        slashMenu={false}
+        filePanel={false}
+      >
         <SuggestionMenuController
           triggerCharacter="/"
           getItems={async (query) =>
             filterSuggestionItems(getCustomSlashMenuItems(editor), query)
           }
         />
+        <FilePanelController filePanel={UploadOnlyFilePanel} />
       </BlockNoteView>
     </div>
+  );
+}
+
+/**
+ * File panel restricted to the upload tab. The default panel also shows an
+ * "Embed URL" tab; we deliberately remove it so inline media always lives in
+ * our own S3 bucket instead of being linked to a third-party host.
+ */
+function UploadOnlyFilePanel(props: FilePanelProps) {
+  const [, setLoading] = useState(false);
+  return (
+    <FilePanel
+      {...props}
+      defaultOpenTab="upload"
+      tabs={[
+        {
+          name: "upload",
+          tabPanel: <UploadTab {...props} setLoading={setLoading} />,
+        },
+      ]}
+    />
   );
 }
