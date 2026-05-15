@@ -31,7 +31,10 @@ Service-Adresse von ihm abhängig.
 
 ```bash
 # 1. Extractor zuerst (kein Public-IP nötig; nutzt nur 6PN).
-fly deploy -c services/extractor/fly.toml
+#    Wichtig: aus dem Service-Verzeichnis deployen, damit der
+#    Docker-Build-Context `services/extractor/` ist (Dockerfile macht
+#    `COPY pyproject.toml ./`).
+(cd services/extractor && fly deploy --remote-only)
 
 # 2. Worker (liest EXTRACTOR_URL aus fly.worker.toml).
 fly deploy -c fly.worker.toml
