@@ -46,6 +46,7 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
   const [data, setData] = useState<UebersichtAntwort | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [vorschauOffen, setVorschauOffen] = useState(false);
 
   useEffect(() => {
     let abgebrochen = false;
@@ -131,10 +132,15 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
       </dl>
 
       {data.vorschau.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-neutral-400">
+        <details
+          className="space-y-2"
+          open={vorschauOffen}
+          onToggle={(e) => setVorschauOffen((e.target as HTMLDetailsElement).open)}
+        >
+          <summary className="cursor-pointer list-none text-[11px] uppercase tracking-wider text-neutral-400 hover:text-neutral-600">
+            <span className="mr-1 inline-block w-3">{vorschauOffen ? "▾" : "▸"}</span>
             Vorschau erste Abschnitte
-          </p>
+          </summary>
           <ul className="space-y-2">
             {data.vorschau.map((c) => (
               <li
@@ -152,7 +158,7 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       )}
 
       {data.status === "ready" && data.anzahlChunks === 0 && (

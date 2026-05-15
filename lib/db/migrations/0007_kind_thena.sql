@@ -1,0 +1,1 @@
+ALTER TABLE "materialien" ADD COLUMN "zusammenfassung" text;

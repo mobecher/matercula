@@ -1,11 +1,36 @@
 # matercula extractor
 
-Internal-only PDF/DOCX text extraction service. Python 3.12 + FastAPI +
+Internal-only text extraction service. Python 3.12 + FastAPI +
 [`unstructured`](https://github.com/Unstructured-IO/unstructured).
 
 This is the **only** Python in the matercula stack. The Node worker calls
 this service over HTTP (`lib/extraction/client.ts`); never extract inline
 in the worker.
+
+## Supported formats
+
+Mirrors `unstructured`'s native format support. The authoritative MIME
+allow-list lives in `app/extraction.py` (`SUPPORTED_MIMES`) and is mirrored
+in `lib/extraction/client.ts`:
+
+| Group        | Extensions                                |
+|--------------|-------------------------------------------|
+| PDF          | `.pdf`                                    |
+| Word         | `.doc`, `.docx`                           |
+| PowerPoint   | `.ppt`, `.pptx`                           |
+| Excel        | `.xls`, `.xlsx`                           |
+| OpenDocument | `.odt`                                    |
+| E-Book       | `.epub`                                   |
+| Rich Text    | `.rtf`                                    |
+| Plain text   | `.txt`, `.md`, `.csv`, `.tsv`             |
+| Markup       | `.html`, `.xml`, `.rst`, `.org`           |
+| E-mail       | `.eml`, `.msg`, `.p7s`                    |
+| Image (OCR)  | `.png`, `.jpeg`, `.bmp`, `.tiff`, `.heic` |
+
+Legacy Office formats (`.doc`, `.ppt`, `.odt`, `.rtf`, `.epub`) require
+LibreOffice on the host; image OCR requires Tesseract. Both are installed
+in the service's Dockerfile. PDF OCR for scanned PDFs is intentionally
+**not** supported — we use `strategy="fast"` for PDFs.
 
 ## Endpoints
 
@@ -19,12 +44,20 @@ in the worker.
   "chunks": [
     { "chunkIndex": 0, "text": "...", "seitenzahl": 3, "abschnitt": "Einführung" }
   ],
-  "meta": { "pageCount": 12, "extractor": "unstructured", "mimeType": "application/pdf" }
+  "meta": {
+    "pageCount": 12,
+    "extractor": "unstructured",
+    "mimeType": "application/pdf",
+    "summary": "Kurze Inhaltsvorschau …"
+  }
 }
 ```
 
-- `seitenzahl` is **always `null` for DOCX** — Word has no fixed pagination.
-- `meta.pageCount` is `null` for DOCX for the same reason.
+- `seitenzahl` and `meta.pageCount` are **only** populated for PDFs.
+  Every other format (DOCX, PPTX, HTML, e-mail, images, …) reports `null`.
+- `meta.summary` is a heuristic content excerpt (first chunks joined and
+  truncated). It is **not** an LLM summary; it exists so the UI can show
+  a quick preview for formats the browser cannot render natively.
 
 ## Run locally (without Docker)
 

@@ -12,6 +12,8 @@ export const runtime = "nodejs";
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
 
+// Mirror of `SUPPORTED_MIME_TYPES` in lib/extraction/client.ts and
+// `SUPPORTED_MIMES` in services/extractor/app/extraction.py. Keep in sync.
 const ERLAUBTE_MIME_TYPES = new Set<string>([
   "application/pdf",
   "application/msword",
@@ -21,16 +23,29 @@ const ERLAUBTE_MIME_TYPES = new Set<string>([
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "application/vnd.oasis.opendocument.text",
-  "application/vnd.oasis.opendocument.spreadsheet",
-  "application/vnd.oasis.opendocument.presentation",
+  "application/epub+zip",
+  "application/rtf",
+  "text/rtf",
   "text/plain",
   "text/markdown",
   "text/csv",
+  "text/tab-separated-values",
+  "text/html",
+  "application/xml",
+  "text/xml",
+  "text/x-rst",
+  "text/x-org",
+  "message/rfc822",
+  "application/vnd.ms-outlook",
+  "application/pkcs7-signature",
   "image/png",
   "image/jpeg",
   "image/gif",
   "image/webp",
   "image/svg+xml",
+  "image/bmp",
+  "image/tiff",
+  "image/heic",
 ]);
 
 function bereinigeDateiname(name: string): string {

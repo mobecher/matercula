@@ -32,6 +32,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       mimeType: materialien.mimeType,
       status: materialien.status,
       statusReason: materialien.statusReason,
+      zusammenfassung: materialien.zusammenfassung,
       createdAt: materialien.createdAt,
       updatedAt: materialien.updatedAt,
     })
@@ -82,6 +83,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     mimeType: mat.mimeType,
     status: mat.status,
     statusReason: mat.statusReason,
+    zusammenfassung: mat.zusammenfassung,
     createdAt: mat.createdAt,
     updatedAt: mat.updatedAt,
     anzahlChunks: agg?.anzahlChunks ?? 0,

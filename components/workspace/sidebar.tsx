@@ -25,13 +25,50 @@ import {
 
 const DRAG_MIME = "application/x-matercula-dokument-id";
 
+// File-picker `accept` value for the upload buttons.
+// Mirrors the formats the extractor service understands
+// (services/extractor/app/extraction.py → SUPPORTED_MIMES).
+// We list extensions rather than MIME types so browsers that don't have
+// good MIME mappings (e.g. for .org / .rst / .heic) still allow the file.
+const UPLOAD_ACCEPT = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".ppt",
+  ".pptx",
+  ".xls",
+  ".xlsx",
+  ".odt",
+  ".epub",
+  ".rtf",
+  ".txt",
+  ".md",
+  ".csv",
+  ".tsv",
+  ".html",
+  ".htm",
+  ".xml",
+  ".rst",
+  ".org",
+  ".eml",
+  ".msg",
+  ".p7s",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".bmp",
+  ".tiff",
+  ".tif",
+  ".heic",
+].join(",");
+
 interface SidebarProps {
   userName: string;
   lehrplaene: SidebarLehrplan[];
 }
 
 export function Sidebar({ userName, lehrplaene }: SidebarProps) {
-  const { tree, addDocument, moveDocument, uploadPdfDocument } = useWorkspace();
+  const { tree, addDocument, moveDocument, uploadFileDocument } = useWorkspace();
   const [filter, setFilter] = useState("");
   const [pdfUploading, setPdfUploading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -139,7 +176,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           </button>
         </div>
         <input
-          accept="application/pdf"
+          accept={UPLOAD_ACCEPT}
           className="hidden"
           onChange={async (e) => {
             const file = e.target.files?.[0];
@@ -147,7 +184,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
             if (!file) return;
             setPdfUploading(true);
             try {
-              await uploadPdfDocument(null, file);
+              await uploadFileDocument(null, file);
             } finally {
               setPdfUploading(false);
             }
@@ -162,7 +199,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           type="button"
         >
           <ArrowUpTrayIcon aria-hidden className="h-4 w-4" />
-          <span>{pdfUploading ? "Lädt PDF hoch…" : "PDF hochladen"}</span>
+          <span>{pdfUploading ? "Datei wird hochgeladen…" : "Datei hochladen"}</span>
         </button>
         <form action="/api/auth/logout" method="post">
           <button
@@ -199,7 +236,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
     activeTab,
     openDocument,
     addDocument,
-    uploadPdfDocument,
+    uploadFileDocument,
     removeDocument,
     renameDocument,
     moveDocument,
@@ -416,20 +453,20 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                 <FolderPlusIcon aria-hidden className="h-4 w-4" />
               </IconButton>
               <input
-                accept="application/pdf"
+                accept={UPLOAD_ACCEPT}
                 className="hidden"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   e.target.value = "";
                   if (!file) return;
                   setOpen(true);
-                  await uploadPdfDocument(node.id, file);
+                  await uploadFileDocument(node.id, file);
                 }}
                 ref={folderPdfInputRef}
                 type="file"
               />
               <IconButton
-                label="PDF hochladen"
+                label="Datei hochladen"
                 onClick={() => folderPdfInputRef.current?.click()}
               >
                 <ArrowUpTrayIcon aria-hidden className="h-4 w-4" />

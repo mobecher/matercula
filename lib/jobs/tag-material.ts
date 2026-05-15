@@ -100,6 +100,16 @@ export async function handleTagMaterial(
     );
   }
 
+  // Persist the heuristic content excerpt for the file-preview panel.
+  // Cap defensively in case the extractor ever returns more than expected.
+  await db
+    .update(materialien)
+    .set({
+      zusammenfassung: extraction.meta.summary?.slice(0, 2000) ?? null,
+      updatedAt: new Date(),
+    })
+    .where(eq(materialien.id, material.id));
+
   // ---- Step 2: embeddings ------------------------------------------------
   try {
     await embedMaterialChunks(material.id, material.ownerId);

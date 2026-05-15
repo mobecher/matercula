@@ -56,6 +56,10 @@ class MetaOut(BaseModel):
     pageCount: int | None
     extractor: Literal["unstructured"] = "unstructured"
     mimeType: str
+    # Heuristic content excerpt (first chunks of the document, joined and
+    # truncated). Used by the UI as a quick preview for formats the browser
+    # cannot render natively (DOCX, PPTX, …). Not an LLM summary.
+    summary: str | None
 
 
 class ExtractResponse(BaseModel):
@@ -116,7 +120,7 @@ def post_extract(payload: ExtractRequest) -> JSONResponse:
         return _err(400, "empty_file")
 
     try:
-        result = extract(file_bytes, payload.mimeType)
+        result = extract(file_bytes, payload.mimeType, payload.filename)
     except CorruptFileError as exc:
         log.info(
             "extract_corrupt",
@@ -142,6 +146,7 @@ def post_extract(payload: ExtractRequest) -> JSONResponse:
         meta=MetaOut(
             pageCount=result.page_count,
             mimeType=result.mime_type,
+            summary=result.summary,
         ),
     )
 

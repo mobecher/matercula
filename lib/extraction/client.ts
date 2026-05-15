@@ -10,9 +10,47 @@
  */
 import { z } from "zod";
 
+// Mirror of `SUPPORTED_MIMES` in services/extractor/app/extraction.py.
+// Keep both lists in sync — see CLAUDE.md → "Extractor service".
 const SUPPORTED_MIME_TYPES = new Set<string>([
+  // PDF
   "application/pdf",
+  // Word
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+  // PowerPoint
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-powerpoint",
+  // Excel
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+  // OpenDocument
+  "application/vnd.oasis.opendocument.text",
+  // Plain / structured text
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "text/tab-separated-values",
+  "text/html",
+  "application/xml",
+  "text/xml",
+  "text/x-rst",
+  "text/x-org",
+  // Email
+  "message/rfc822",
+  "application/vnd.ms-outlook",
+  "application/pkcs7-signature",
+  // E-Books
+  "application/epub+zip",
+  // Rich Text
+  "application/rtf",
+  "text/rtf",
+  // Images (OCR)
+  "image/png",
+  "image/jpeg",
+  "image/bmp",
+  "image/tiff",
+  "image/heic",
 ]);
 
 export const extractionChunkSchema = z.object({
@@ -28,6 +66,10 @@ export const extractionResultSchema = z.object({
     pageCount: z.number().int().positive().nullable(),
     extractor: z.literal("unstructured"),
     mimeType: z.string(),
+    // Heuristic content excerpt produced by the extractor (first chunks
+    // joined and truncated). Surfaced in the UI as a quick preview for
+    // formats the browser can't render natively.
+    summary: z.string().nullable(),
   }),
 });
 

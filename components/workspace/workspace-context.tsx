@@ -71,7 +71,7 @@ interface WorkspaceContextValue {
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
   addDocument: (parentId: string | null, typ: DokumentTyp) => Promise<string | null>;
-  uploadPdfDocument: (parentId: string | null, file: File) => Promise<string | null>;
+  uploadFileDocument: (parentId: string | null, file: File) => Promise<string | null>;
   removeDocument: (id: string) => Promise<void>;
   moveDocument: (id: string, parentId: string | null, position?: number) => Promise<void>;
   findNode: (id: string) => DokumentKnoten | undefined;
@@ -264,7 +264,7 @@ export function WorkspaceProvider({
     [refresh, openDocument],
   );
 
-  const uploadPdfDocument = useCallback(
+  const uploadFileDocument = useCallback(
     async (parentId: string | null, file: File) => {
       try {
         // 1) Datei in den S3-Speicher laden (liefert Material-ID).
@@ -275,15 +275,23 @@ export function WorkspaceProvider({
           body: formData,
         });
         if (!uploadRes.ok) throw new Error(`upload_failed_${uploadRes.status}`);
-        const uploaded = (await uploadRes.json()) as { id: string; name: string };
+        const uploaded = (await uploadRes.json()) as {
+          id: string;
+          name: string;
+          contentType?: string;
+        };
 
-        // 2) Dokument vom Typ `pdf` anlegen, das auf das Material verweist.
+        // 2) Dokument vom Typ `pdf` (= generischer „Datei“-Knoten) anlegen,
+        //    das auf das Material verweist. Der Enum-Wert `pdf` ist aus
+        //    historischen Gründen so benannt; er steht jetzt für jede
+        //    hochgeladene Datei beliebigen Formats.
+        const mime = uploaded.contentType ?? file.type ?? "application/octet-stream";
         const titel = file.name.replace(/\.[^.]+$/, "") || uploaded.name;
         const result = await createDocument({
           parentId,
           typ: "pdf",
           titel,
-          icon: "📕",
+          icon: iconForMime(mime),
           materialId: uploaded.id,
         });
         await refresh();
@@ -363,7 +371,7 @@ export function WorkspaceProvider({
       setIcon,
       saveContent,
       addDocument,
-      uploadPdfDocument,
+      uploadFileDocument,
       removeDocument,
       moveDocument,
       findNode,
@@ -387,7 +395,7 @@ export function WorkspaceProvider({
       setIcon,
       saveContent,
       addDocument,
-      uploadPdfDocument,
+      uploadFileDocument,
       removeDocument,
       moveDocument,
       findNode,
@@ -433,4 +441,45 @@ function collectIds(node: DokumentKnoten | undefined): Set<string> {
     if (current.children) stack.push(...current.children);
   }
   return ids;
+}
+
+/**
+ * Best-effort emoji icon for an uploaded file based on its MIME type.
+ * Used to give the sidebar / document header a glanceable hint of the file
+ * format. Returns a generic document icon for anything we don't recognise.
+ */
+export function iconForMime(mime: string): string {
+  if (mime === "application/pdf") return "📕";
+  if (mime.startsWith("image/")) return "🖼️";
+  if (mime.startsWith("video/")) return "🎬";
+  if (mime.startsWith("audio/")) return "🎵";
+  if (mime === "message/rfc822" || mime === "application/vnd.ms-outlook") return "✉️";
+  if (mime === "application/epub+zip") return "📚";
+  if (
+    mime === "text/csv" ||
+    mime === "text/tab-separated-values" ||
+    mime === "application/vnd.ms-excel" ||
+    mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  ) {
+    return "📊";
+  }
+  if (
+    mime === "application/vnd.ms-powerpoint" ||
+    mime === "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  ) {
+    return "📽️";
+  }
+  if (
+    mime === "application/msword" ||
+    mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    mime === "application/vnd.oasis.opendocument.text" ||
+    mime === "application/rtf" ||
+    mime === "text/rtf"
+  ) {
+    return "📝";
+  }
+  if (mime === "text/html" || mime === "application/xml" || mime === "text/xml") return "🌐";
+  if (mime === "text/markdown") return "📝";
+  if (mime.startsWith("text/")) return "📄";
+  return "📎";
 }

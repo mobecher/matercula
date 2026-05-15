@@ -26,7 +26,12 @@ function makeFetch(impl: (req: Request) => Response | Promise<Response>): typeof
 
 const okBody = {
   chunks: [{ chunkIndex: 0, text: "hello", seitenzahl: 1, abschnitt: "Intro" }],
-  meta: { pageCount: 1, extractor: "unstructured", mimeType: PDF },
+  meta: {
+    pageCount: 1,
+    extractor: "unstructured",
+    mimeType: PDF,
+    summary: "hello",
+  },
 };
 
 describe("extractChunks", () => {
@@ -128,7 +133,7 @@ describe("extractChunks", () => {
     });
     await assert.rejects(
       () =>
-        extractChunks(Buffer.from("x"), "text/plain", "f.txt", {
+        extractChunks(Buffer.from("x"), "application/zip", "f.zip", {
           baseUrl: "http://test",
           fetchImpl,
         }),

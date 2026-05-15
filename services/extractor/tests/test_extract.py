@@ -29,6 +29,8 @@ def test_extract_pdf(client, sample_pdf_bytes):
     assert body["meta"]["extractor"] == "unstructured"
     assert isinstance(body["meta"]["pageCount"], int)
     assert body["meta"]["pageCount"] >= 1
+    assert isinstance(body["meta"]["summary"], str)
+    assert body["meta"]["summary"]
     assert len(body["chunks"]) >= 1
     # chunkIndex sequential from 0
     for i, chunk in enumerate(body["chunks"]):
@@ -45,6 +47,25 @@ def test_extract_docx(client, sample_docx_bytes):
     assert body["meta"]["mimeType"] == DOCX_MIME
     # DOCX must report null page count and null seitenzahl per contract.
     assert body["meta"]["pageCount"] is None
+    assert isinstance(body["meta"]["summary"], str)
+    assert len(body["chunks"]) >= 1
+    for chunk in body["chunks"]:
+        assert chunk["seitenzahl"] is None
+
+
+def test_extract_plain_text(client):
+    text = (
+        b"# Notizen\n\nDas hier ist ein einfacher Text mit mehreren "
+        b"Saetzen, der vom Extractor verarbeitet werden soll.\n\n"
+        b"Zweite Sektion mit weiterem Inhalt fuer die Pipeline."
+    )
+    res = _post(client, data=text, mime="text/plain", filename="notizen.txt")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["meta"]["mimeType"] == "text/plain"
+    # Non-PDF formats must report null page count.
+    assert body["meta"]["pageCount"] is None
+    assert isinstance(body["meta"]["summary"], str)
     assert len(body["chunks"]) >= 1
     for chunk in body["chunks"]:
         assert chunk["seitenzahl"] is None

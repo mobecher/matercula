@@ -10,7 +10,7 @@ import { KompetenzTabView } from "./kompetenz-tab-view";
 import { LehrplanBacklinks } from "./lehrplan-backlinks";
 import { LinkVorschlaege } from "./link-vorschlaege";
 import { MaterialUebersicht } from "./material-uebersicht";
-import { useWorkspace } from "./workspace-context";
+import { iconForMime, useWorkspace } from "./workspace-context";
 
 const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
   ssr: false,
@@ -177,7 +177,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
       {doc.typ === "ordner" ? (
         <FolderHint />
       ) : doc.typ === "pdf" ? (
-        <PdfViewer materialId={doc.materialId} />
+        <FileViewer materialId={doc.materialId} />
       ) : (
         <BlockEditor
           docId={doc.id}
@@ -189,30 +189,139 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
   );
 }
 
-function PdfViewer({ materialId }: { materialId?: string }) {
+interface MaterialMeta {
+  id: string;
+  dateiname: string;
+  mimeType: string;
+  zusammenfassung: string | null;
+  status: "uploaded" | "processing" | "ready" | "error";
+}
+
+/**
+ * Renders the right preview/download experience for an uploaded material.
+ *
+ * The DB enum `dokumente.typ === "pdf"` is the legacy name for
+ * "this document points at a Material file" — it covers any uploaded
+ * format now (PDF, DOCX, PPTX, images, …). Branching here decides:
+ *   - PDF → inline iframe preview (Safari needs iframe, not <object>)
+ *   - everything else → download panel with filename, icon, summary,
+ *     and a button. We deliberately do NOT try to render arbitrary
+ *     Office/EPUB/email formats inline — the browser has no native
+ *     viewer for them and proxying e.g. LibreOffice → HTML in the app
+ *     is well outside the current scope.
+ */
+function FileViewer({ materialId }: { materialId?: string }) {
+  const [meta, setMeta] = useState<MaterialMeta | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!materialId) {
+      setLoading(false);
+      return;
+    }
+    let aborted = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    async function tick() {
+      try {
+        const r = await fetch(`/api/materialien/${materialId}/uebersicht`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const next = (await r.json()) as MaterialMeta;
+        if (aborted) return;
+        setMeta(next);
+        setLoading(false);
+        // Poll while extraction is still in flight so the summary appears
+        // as soon as the worker finishes — same cadence as MaterialUebersicht.
+        if (next.status === "uploaded" || next.status === "processing") {
+          timer = setTimeout(tick, 2000);
+        }
+      } catch {
+        if (aborted) return;
+        setLoading(false);
+      }
+    }
+
+    void tick();
+    return () => {
+      aborted = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [materialId]);
+
   if (!materialId) {
     return (
       <p className="text-sm text-neutral-500">
-        Diese PDF hat keine zugeordnete Datei mehr.
+        Diese Datei hat keine zugeordnete Quelle mehr.
       </p>
     );
   }
+
+  if (loading || !meta) {
+    return (
+      <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">
+        Lade Datei…
+      </div>
+    );
+  }
+
   const url = `/api/materialien/${materialId}/download`;
-  // Safari rendert PDFs in <object>-Tags (vor allem bei Cross-Origin-Redirect
-  // auf eine signierte S3-URL) unzuverlässig. <iframe> funktioniert dort
-  // verlässlich; Firefox/Chrome sind ohnehin egal.
+
+  if (meta.mimeType === "application/pdf") {
+    // Safari rendert PDFs in <object>-Tags (vor allem bei Cross-Origin-Redirect
+    // auf eine signierte S3-URL) unzuverlässig. <iframe> funktioniert dort
+    // verlässlich; Firefox/Chrome sind ohnehin egal.
+    return (
+      <div className="relative h-[80vh] w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-100">
+        <iframe className="h-full w-full" src={`${url}#view=FitH`} title="PDF-Vorschau" />
+        <noscript>
+          <a className="underline" href={url} rel="noreferrer" target="_blank">
+            PDF in neuem Tab öffnen
+          </a>
+        </noscript>
+      </div>
+    );
+  }
+
+  // Non-PDF formats: filename + format icon + heuristic summary + download.
   return (
-    <div className="relative h-[80vh] w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-100">
-      <iframe
-        className="h-full w-full"
-        src={`${url}#view=FitH`}
-        title="PDF-Vorschau"
-      />
-      <noscript>
-        <a className="underline" href={url} rel="noreferrer" target="_blank">
-          PDF in neuem Tab öffnen
+    <div className="rounded-md border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="flex items-start gap-4">
+        <div
+          aria-hidden
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-3xl"
+        >
+          {iconForMime(meta.mimeType)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-neutral-900">{meta.dateiname}</p>
+          <p className="text-xs text-neutral-500">{meta.mimeType}</p>
+        </div>
+        <a
+          className="inline-flex shrink-0 items-center gap-1 rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800"
+          download={meta.dateiname}
+          href={url}
+        >
+          Herunterladen
         </a>
-      </noscript>
+      </div>
+      {meta.zusammenfassung ? (
+        <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">
+          {meta.zusammenfassung}
+        </p>
+      ) : meta.status === "uploaded" || meta.status === "processing" ? (
+        <p className="mt-4 text-sm text-neutral-500">
+          Inhaltsvorschau wird erstellt…
+        </p>
+      ) : meta.status === "error" ? (
+        <p className="mt-4 text-sm text-neutral-500">
+          Inhaltsvorschau konnte nicht erstellt werden.
+        </p>
+      ) : (
+        <p className="mt-4 text-sm text-neutral-500">
+          Keine Textvorschau verfügbar — die Datei enthält möglicherweise keinen extrahierbaren
+          Text.
+        </p>
+      )}
     </div>
   );
 }

@@ -33,13 +33,29 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000 \
     MAX_FILE_MB=32
 
-# poppler-utils:   pdfinfo / pdftotext used by unstructured for PDF layout.
-# libgl1 / libglib2.0-0: required by some of unstructured's PDF rendering paths.
-# We deliberately do NOT install tesseract — scanned-PDF OCR is out of scope.
+# System libs grouped by purpose:
+#   poppler-utils:                pdfinfo / pdftotext for PDF layout (unstructured).
+#   libgl1 / libglib2.0-0:        required by some unstructured rendering paths
+#                                  and by tesseract-ocr / pillow.
+#   libmagic1:                    file-type sniffing fallback when MIME isn't trusted.
+#   tesseract-ocr + -deu:         OCR for image inputs (.png/.jpeg/.tiff/.bmp/.heic).
+#                                  We deliberately do NOT enable OCR for PDFs
+#                                  (see services/extractor/app/extraction.py).
+#   libreoffice (headless):       converts legacy Office formats (.doc/.ppt/.odt/
+#                                  .rtf/.epub) before unstructured parses them.
+#                                  This is the heaviest dep (~600 MB) — accepted
+#                                  trade-off for full-format coverage.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
     libgl1 \
     libglib2.0-0 \
+    libmagic1 \
+    tesseract-ocr \
+    tesseract-ocr-deu \
+    libreoffice-core \
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-impress \
     curl \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --create-home --uid 10001 extractor

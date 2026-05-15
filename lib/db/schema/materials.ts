@@ -29,6 +29,11 @@ export const materialien = pgTable("materialien", {
   status: materialStatusEnum("status").notNull().default("uploaded"),
   // Optional human-readable error reason set when status === 'error'.
   statusReason: text("status_reason"),
+  // Heuristic content excerpt produced by the extractor (first chunks
+  // joined and truncated). Surfaced in the UI as a quick preview for
+  // formats the browser can't render natively (DOCX, PPTX, …).
+  // Backfilled by the `tagMaterial` worker after extraction.
+  zusammenfassung: text("zusammenfassung"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -46,15 +46,22 @@
   Sicherheitsmodell ist Netzwerk-Isolation, deshalb keine Auth.
 - **Canonical chunk shape** (Vertrag, gespiegelt in
   `lib/extraction/client.ts`):
-  `chunkIndex`, `text`, `seitenzahl`, `abschnitt`. Diese Feldnamen sind
-  Pflicht — Embedding und Tagging downstream hängen daran. Form ändern =
-  ganze Pipeline ändern.
-- DOCX hat **per Design `seitenzahl: null`** (genauso `meta.pageCount: null`)
-  — Word hat keine festen Seiten. Nicht "korrigieren".
-- Scanned-PDF-OCR ist absichtlich nicht unterstützt (kein Tesseract im
-  Image). `strategy="fast"` für PDFs, OCR ist out of scope.
+  `chunkIndex`, `text`, `seitenzahl`, `abschnitt` plus `meta.summary`.
+  Diese Feldnamen sind Pflicht — Embedding und Tagging downstream hängen
+  daran. Form ändern = ganze Pipeline ändern.
+- **Nur PDF emittiert echte Seitenzahlen.** Für alle anderen Formate
+  (DOCX, PPTX, HTML, E-Mail, Bilder, …) sind `seitenzahl` und
+  `meta.pageCount` per Design `null`. Nicht "korrigieren".
+- Scanned-PDF-OCR ist absichtlich nicht unterstützt (`strategy="fast"`
+  für PDFs). Bild-OCR (`.png`/`.jpeg`/…) ist hingegen aktiv — dort ist
+  OCR die einzige Möglichkeit, überhaupt Text zu gewinnen.
+- Unterstützte MIMEs siehe `services/extractor/app/extraction.py`
+  (`SUPPORTED_MIMES`) und Spiegel in `lib/extraction/client.ts`. Beim
+  Erweitern beide Listen plus die Allow-List in
+  `app/api/materialien/route.ts` synchron halten.
 
 ## Common pitfalls
 - Übersetze `Kompetenz` im Code nicht in `Competence`.
 - Füge keine zusätzliche ORM neben Drizzle hinzu.
 - Füge keine State-Manager ein (React Server Components + URL-State bevorzugen).
+- Code ist immer in Englisch außer bei fachlichen Begriffen (siehe Naming Convention).

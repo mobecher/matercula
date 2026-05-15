@@ -8,10 +8,13 @@ dependencies = [
   "uvicorn[standard]==0.32.1",
   "pydantic==2.10.4",
   "python-multipart==0.0.20",
-  # unstructured with PDF + DOCX extras only.
-  # Pinned: 0.16.x is the last stable line that works without onnxruntime/OCR
-  # when chunking via chunk_by_title and strategy="fast".
-  "unstructured[pdf,docx]==0.16.11",
+  # unstructured with the full "all-docs" extras set so we can natively
+  # accept every format listed in services/extractor/README.md
+  # (PDF, Office, OpenDocument, Markdown, HTML, XML, RTF, EPUB, e-mail,
+  # images via OCR, …).
+  # Pinned: 0.16.x is the last stable line that works without onnxruntime
+  # when chunking via chunk_by_title and strategy="fast" for PDFs.
+  "unstructured[all-docs]==0.16.11",
   # IMPORTANT: pin pdfminer.six explicitly. The legacy `pdfminer` package
   # (no `.six`) is sometimes pulled in transitively and *shadows* the same
   # `pdfminer` namespace, breaking `unstructured` with
