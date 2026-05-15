@@ -196,7 +196,7 @@ export function LinkVorschlaege({
                       {v.zielCode}
                     </button>
                     <button
-                      className="truncate font-medium text-neutral-900 hover:underline"
+                      className="text-left font-medium text-neutral-900 hover:underline"
                       onClick={() =>
                         v.zielTyp === "kompetenz"
                           ? openKompetenzTab(v.zielId, v.zielTitel)
