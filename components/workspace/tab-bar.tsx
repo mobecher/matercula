@@ -1,27 +1,23 @@
 "use client";
 
+import { Bars3Icon } from "@heroicons/react/24/outline";
+import { useSidebarToggle } from "./workspace-frame";
 import { useWorkspace, type WorkspaceTab } from "./workspace-context";
 
-interface TabBarProps {
-  sidebarOpen: boolean;
-  onOpenSidebar: () => void;
-}
-
-export function TabBar({ sidebarOpen, onOpenSidebar }: TabBarProps) {
+export function TabBar() {
   const { openTabs, activeTabKey, findNode, setActiveTab, closeTab, saveStatus } = useWorkspace();
+  const { sidebarOpen, toggleSidebar } = useSidebarToggle();
 
   return (
     <div className="flex h-10 shrink-0 items-stretch border-b border-neutral-200 bg-neutral-100">
-      {!sidebarOpen && (
-        <button
-          aria-label="Seitenleiste öffnen"
-          className="px-3 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900"
-          onClick={onOpenSidebar}
-          type="button"
-        >
-          »
-        </button>
-      )}
+      <button
+        aria-label={sidebarOpen ? "Seitenleiste schließen" : "Seitenleiste öffnen"}
+        className="flex items-center px-3 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900"
+        onClick={toggleSidebar}
+        type="button"
+      >
+        <Bars3Icon aria-hidden className="h-5 w-5" />
+      </button>
 
       <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
         {openTabs.length === 0 && (

@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 import { Sidebar } from "./sidebar";
 import { WorkspaceProvider } from "./workspace-context";
+
+interface SidebarToggleContextValue {
+  sidebarOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+const SidebarToggleContext = createContext<SidebarToggleContextValue | null>(null);
+
+export function useSidebarToggle(): SidebarToggleContextValue {
+  const ctx = useContext(SidebarToggleContext);
+  if (!ctx) throw new Error("useSidebarToggle must be used within a WorkspaceFrame");
+  return ctx;
+}
 
 interface WorkspaceFrameProps {
   baum: DokumentKnoten[];
@@ -22,6 +35,10 @@ export function WorkspaceFrame({
   children,
 }: WorkspaceFrameProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const toggleValue = useMemo<SidebarToggleContextValue>(
+    () => ({ sidebarOpen, toggleSidebar: () => setSidebarOpen((v) => !v) }),
+    [sidebarOpen],
+  );
 
   return (
     <WorkspaceProvider
@@ -29,41 +46,14 @@ export function WorkspaceFrame({
       lehrplaene={lehrplaene}
       initialDocumentId={initialDokumentId}
     >
-      <div className="flex h-screen w-full overflow-hidden bg-neutral-50 text-neutral-900">
-        {sidebarOpen && (
-          <Sidebar
-            userName={benutzerName}
-            lehrplaene={lehrplaene}
-            onCloseSidebar={() => setSidebarOpen(false)}
-          />
-        )}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <TopBar sidebarOpen={sidebarOpen} onOpenSidebar={() => setSidebarOpen(true)} />
-          <main className="min-h-0 flex-1 overflow-auto bg-white">{children}</main>
+      <SidebarToggleContext.Provider value={toggleValue}>
+        <div className="flex h-screen w-full overflow-hidden bg-neutral-50 text-neutral-900">
+          {sidebarOpen && <Sidebar userName={benutzerName} lehrplaene={lehrplaene} />}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <main className="min-h-0 flex-1 overflow-auto bg-white">{children}</main>
+          </div>
         </div>
-      </div>
+      </SidebarToggleContext.Provider>
     </WorkspaceProvider>
-  );
-}
-
-function TopBar({
-  sidebarOpen,
-  onOpenSidebar,
-}: {
-  sidebarOpen: boolean;
-  onOpenSidebar: () => void;
-}) {
-  if (sidebarOpen) return null;
-  return (
-    <div className="flex h-9 shrink-0 items-center border-b border-neutral-200 bg-neutral-50 px-2">
-      <button
-        aria-label="Seitenleiste öffnen"
-        className="rounded p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900"
-        onClick={onOpenSidebar}
-        type="button"
-      >
-        »
-      </button>
-    </div>
   );
 }

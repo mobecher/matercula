@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  ArrowLeftStartOnRectangleIcon,
+  ArrowUpTrayIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  Cog6ToothIcon,
+  DocumentPlusIcon,
+  FolderIcon,
+  FolderPlusIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import { useEffect, useRef, useState } from "react";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import type { DokumentKnoten } from "@/lib/workspace/types";
@@ -17,10 +28,9 @@ const DRAG_MIME = "application/x-matercula-dokument-id";
 interface SidebarProps {
   userName: string;
   lehrplaene: SidebarLehrplan[];
-  onCloseSidebar: () => void;
 }
 
-export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) {
+export function Sidebar({ userName, lehrplaene }: SidebarProps) {
   const { tree, addDocument, moveDocument, uploadPdfDocument } = useWorkspace();
   const [filter, setFilter] = useState("");
   const [pdfUploading, setPdfUploading] = useState(false);
@@ -55,7 +65,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-neutral-200 bg-neutral-100">
-      <div className="flex items-center justify-between gap-2 px-3 py-3">
+      <div className="flex items-center gap-2 px-3 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-900 text-xs font-semibold text-white">
             {userName.slice(0, 1).toUpperCase()}
@@ -65,25 +75,23 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
             <p className="truncate text-xs text-neutral-500">Matercula</p>
           </div>
         </div>
-        <button
-          aria-label="Seitenleiste schließen"
-          className="rounded p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900"
-          onClick={onCloseSidebar}
-          type="button"
-        >
-          «
-        </button>
       </div>
 
       <div className="px-3 pb-2">
-        <input
-          aria-label="Dokumente durchsuchen"
-          className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none"
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="🔍 Suchen…"
-          type="text"
-          value={filter}
-        />
+        <div className="relative">
+          <MagnifyingGlassIcon
+            aria-hidden
+            className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
+          />
+          <input
+            aria-label="Dokumente durchsuchen"
+            className="w-full rounded-md border border-neutral-300 bg-white pl-7 pr-2 py-1.5 text-sm placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none"
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Suchen…"
+            type="text"
+            value={filter}
+          />
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -104,7 +112,9 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
           </ul>
 
           {tree.length === 0 && (
-            <p className="px-2 py-4 text-xs text-neutral-500">Noch keine Dokumente vorhanden.</p>
+            <p className="px-2 py-4 text-xs text-neutral-500">
+              Noch keine Dokumente vorhanden.
+            </p>
           )}
         </nav>
       </div>
@@ -116,7 +126,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
             onClick={() => void addDocument(null, "seite")}
             type="button"
           >
-            <span aria-hidden>＋</span>
+            <DocumentPlusIcon aria-hidden className="h-4 w-4" />
             <span>Seite</span>
           </button>
           <button
@@ -124,7 +134,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
             onClick={() => void addDocument(null, "ordner")}
             type="button"
           >
-            <span aria-hidden>📁</span>
+            <FolderIcon aria-hidden className="h-4 w-4" />
             <span>Ordner</span>
           </button>
         </div>
@@ -151,7 +161,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
           onClick={() => rootPdfInputRef.current?.click()}
           type="button"
         >
-          <span aria-hidden>📕</span>
+          <ArrowUpTrayIcon aria-hidden className="h-4 w-4" />
           <span>{pdfUploading ? "Lädt PDF hoch…" : "PDF hochladen"}</span>
         </button>
         <form action="/api/auth/logout" method="post">
@@ -159,7 +169,7 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
             className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-neutral-600 hover:bg-neutral-200"
             type="submit"
           >
-            <span aria-hidden>⏻</span>
+            <ArrowLeftStartOnRectangleIcon aria-hidden className="h-4 w-4" />
             <span>Abmelden</span>
           </button>
         </form>
@@ -168,11 +178,13 @@ export function Sidebar({ userName, lehrplaene, onCloseSidebar }: SidebarProps) 
           onClick={() => setSettingsOpen(true)}
           type="button"
         >
-          <span aria-hidden>⚙️</span>
+          <Cog6ToothIcon aria-hidden className="h-4 w-4" />
           <span>Einstellungen</span>
         </button>
       </div>
-      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsDialog onClose={() => setSettingsOpen(false)} />
+      )}
     </aside>
   );
 }
@@ -294,7 +306,9 @@ function TreeNode({ node, depth }: TreeNodeProps) {
     <li>
       <div
         className={`group relative flex items-center gap-1 rounded-md py-1 pr-1 text-sm transition-colors ${
-          active ? "bg-neutral-200 font-medium text-neutral-900" : "text-neutral-700"
+          active
+            ? "bg-neutral-200 font-medium text-neutral-900"
+            : "text-neutral-700"
         } ${dropZone === "into" ? "ring-2 ring-blue-400" : "hover:bg-neutral-200"}`}
         draggable={!renaming}
         onDragLeave={handleDragLeave}
@@ -317,8 +331,14 @@ function TreeNode({ node, depth }: TreeNodeProps) {
         )}
 
         <button
-          aria-label={isFolder ? (open ? "Ordner einklappen" : "Ordner ausklappen") : undefined}
-          className={`inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs text-neutral-400 ${
+          aria-label={
+            isFolder
+              ? open
+                ? "Ordner einklappen"
+                : "Ordner ausklappen"
+              : undefined
+          }
+          className={`inline-flex h-4 w-4 shrink-0 items-center justify-center text-neutral-400 ${
             isFolder ? "" : "opacity-0"
           }`}
           onClick={(e) => {
@@ -327,7 +347,15 @@ function TreeNode({ node, depth }: TreeNodeProps) {
           }}
           type="button"
         >
-          {isFolder ? (open ? "▾" : "▸") : "•"}
+          {isFolder ? (
+            open ? (
+              <ChevronDownIcon aria-hidden className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRightIcon aria-hidden className="h-3.5 w-3.5" />
+            )
+          ) : (
+            "•"
+          )}
         </button>
 
         <span aria-hidden className="text-sm">
@@ -385,7 +413,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                   await addDocument(node.id, "ordner");
                 }}
               >
-                📁
+                <FolderPlusIcon aria-hidden className="h-4 w-4" />
               </IconButton>
               <input
                 accept="application/pdf"
@@ -400,8 +428,11 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                 ref={folderPdfInputRef}
                 type="file"
               />
-              <IconButton label="PDF hochladen" onClick={() => folderPdfInputRef.current?.click()}>
-                📕
+              <IconButton
+                label="PDF hochladen"
+                onClick={() => folderPdfInputRef.current?.click()}
+              >
+                <ArrowUpTrayIcon aria-hidden className="h-4 w-4" />
               </IconButton>
             </>
           )}
@@ -421,7 +452,11 @@ function TreeNode({ node, depth }: TreeNodeProps) {
       </div>
 
       {isFolder && open && node.children && node.children.length > 0 && (
-        <ChildList parentId={node.id} depth={depth + 1} children={node.children} />
+        <ChildList
+          parentId={node.id}
+          depth={depth + 1}
+          children={node.children}
+        />
       )}
     </li>
   );
@@ -546,8 +581,12 @@ function LehrplanItem({ lehrplan }: { lehrplan: SidebarLehrplan }) {
         onClick={() => setOpen((v) => !v)}
         type="button"
       >
-        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs text-neutral-400">
-          {open ? "▾" : "▸"}
+        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-neutral-400">
+          {open ? (
+            <ChevronDownIcon aria-hidden className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRightIcon aria-hidden className="h-3.5 w-3.5" />
+          )}
         </span>
         <span aria-hidden>📘</span>
         <span className="min-w-0 flex-1 truncate font-medium">{lehrplan.titel}</span>
@@ -585,11 +624,15 @@ function KlasseItem({
       >
         <button
           aria-label={open ? "Klasse einklappen" : "Klasse ausklappen"}
-          className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs text-neutral-400"
+          className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-neutral-400"
           onClick={() => setOpen((v) => !v)}
           type="button"
         >
-          {open ? "▾" : "▸"}
+          {open ? (
+            <ChevronDownIcon aria-hidden className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRightIcon aria-hidden className="h-3.5 w-3.5" />
+          )}
         </button>
         <button
           className="min-w-0 flex-1 truncate text-left"
@@ -630,13 +673,17 @@ function BereichItem({
       >
         <button
           aria-label={open ? "Bereich einklappen" : "Bereich ausklappen"}
-          className={`inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs text-neutral-400 ${
+          className={`inline-flex h-4 w-4 shrink-0 items-center justify-center text-neutral-400 ${
             hasChildren ? "" : "opacity-0"
           }`}
           onClick={() => hasChildren && setOpen((v) => !v)}
           type="button"
         >
-          {open ? "▾" : "▸"}
+          {open ? (
+            <ChevronDownIcon aria-hidden className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRightIcon aria-hidden className="h-3.5 w-3.5" />
+          )}
         </button>
         <button
           className="min-w-0 flex-1 truncate text-left"
