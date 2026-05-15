@@ -1,0 +1,47 @@
+# Development override for hot-reload UI work.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# What this changes vs. the base compose file:
+#   - `app` runs `next dev` instead of `next start`, so Next.js HMR
+#     picks up edits to `app/`, `components/`, `lib/`, etc. immediately.
+#   - The repo is bind-mounted into the container, so file changes on
+#     the host are visible inside the container without a rebuild.
+#   - `node_modules` and `.next` are kept inside the container (named
+#     volumes) to avoid macOS bind-mount slowness and to prevent the
+#     host's `node_modules` (built for darwin/arm64) from clobbering
+#     the Linux ones installed in the image.
+#   - `worker` mounts the source too and runs via `tsx`, which picks
+#     up code changes on next job execution (no rebuild needed).
+#
+# When you DO need to rebuild:
+#   - You changed `package.json` / `pnpm-lock.yaml` (new deps).
+#   - You changed the `Dockerfile` or anything in `services/extractor/`.
+#   Run: docker compose build app worker
+
+services:
+  app:
+    command: ["pnpm", "dev"]
+    environment:
+      NODE_ENV: development
+      # Next dev server binds to 0.0.0.0 by default in container.
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - .:/app
+      - app_node_modules:/app/node_modules
+      - app_next_cache:/app/.next
+
+  worker:
+    volumes:
+      - .:/app
+      - worker_node_modules:/app/node_modules
+    environment:
+      NODE_ENV: development
+
+volumes:
+  app_node_modules:
+  app_next_cache:
+  worker_node_modules:
