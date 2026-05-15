@@ -37,6 +37,12 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Opt-in: zwingt JS-Actions wie checkout/paths-filter, unter Node 24
+  # zu laufen, solange v4 noch ihren mitgelieferten Node-20-Runtime nutzt.
+  # Kann entfernt werden, sobald Node 24 GitHub-default ist (ab 2026-06-02).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   changes:
     runs-on: ubuntu-latest
