@@ -121,7 +121,7 @@ export async function POST(request: Request) {
   }
 
   // Stabile interne URL → leitet beim Aufruf auf eine frische Signed-URL um.
-  const url = `/api/materialien/${material.id}/download`;
+  const url = `/api/materials/${material.id}/download`;
 
   return NextResponse.json(
     {

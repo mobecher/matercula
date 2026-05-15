@@ -56,8 +56,8 @@ export interface DokumentLehrplanLink {
   id: string;
   code: string;
   title: string;
-  /** Pfad-Beschriftung (Lehrplan › Klasse › Bereich) für Tooltip/Untertitel. */
-  pfad: string;
+  /** Path label (Lehrplan › Klasse › Bereich) for tooltip/subtitle. */
+  path: string;
 }
 
 export interface DokumentLehrplanLinks {
@@ -139,13 +139,13 @@ export async function loadLehrplanLinksForDocument(
       id: r.id,
       code: r.code,
       title: r.title,
-      pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
+      path: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
     })),
     anwendungsbereiche: awbRows.map((r) => ({
       id: r.id,
       code: r.code,
       title: r.title,
-      pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
+      path: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
     })),
   };
 }

@@ -10,7 +10,7 @@ type LinkKind = "kompetenz" | "anwendungsbereich";
 interface PickerEntry {
   id: string;
   title: string;
-  pfad: string;
+  path: string;
   kind: LinkKind;
 }
 
@@ -167,7 +167,7 @@ function BacklinkRow({
           <span
             key={item.id}
             className="group inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 pl-1.5 text-xs text-neutral-700"
-            title={item.pfad}
+            title={item.path}
           >
             <button
               aria-label={`${item.title} öffnen`}
@@ -243,7 +243,7 @@ function LehrplanPickerButton({ kind, excludeIds, lehrplaene, onPick, busy }: Pi
       !excludeIds.has(e.id) &&
       (needle === "" ||
         e.title.toLowerCase().includes(needle) ||
-        e.pfad.toLowerCase().includes(needle)),
+        e.path.toLowerCase().includes(needle)),
   );
 
   return (
@@ -286,7 +286,7 @@ function LehrplanPickerButton({ kind, excludeIds, lehrplaene, onPick, busy }: Pi
                   type="button"
                 >
                   <span className="min-w-0 truncate">{e.title}</span>
-                  <span className="text-[10px] text-neutral-500">{e.pfad}</span>
+                  <span className="text-[10px] text-neutral-500">{e.path}</span>
                 </button>
               </li>
             ))}
@@ -303,9 +303,9 @@ function collectEntries(lehrplaene: SidebarLehrplan[], kind: LinkKind): PickerEn
     for (const klasse of lp.klassen) {
       for (const bereich of klasse.bereiche) {
         const items = kind === "kompetenz" ? bereich.kompetenzen : bereich.anwendungsbereiche;
-        const pfad = `${lp.title} › ${klasse.title} › ${bereich.title}`;
+        const path = `${lp.title} › ${klasse.title} › ${bereich.title}`;
         for (const it of items) {
-          out.push({ id: it.id, title: it.title, pfad, kind });
+          out.push({ id: it.id, title: it.title, path, kind });
         }
       }
     }

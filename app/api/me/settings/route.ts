@@ -12,15 +12,15 @@ export const runtime = "nodejs";
  * never sent to the client.
  */
 function mask(value: string | null | undefined): {
-  vorhanden: boolean;
-  vorschau: string | null;
+  present: boolean;
+  preview: string | null;
 } {
-  if (!value) return { vorhanden: false, vorschau: null };
+  if (!value) return { present: false, preview: null };
   const trimmed = value.trim();
-  if (!trimmed) return { vorhanden: false, vorschau: null };
+  if (!trimmed) return { present: false, preview: null };
   const visible =
     trimmed.length <= 8 ? trimmed.slice(0, 2) : trimmed.slice(0, 4);
-  return { vorhanden: true, vorschau: `${visible}…${trimmed.slice(-2)}` };
+  return { present: true, preview: `${visible}…${trimmed.slice(-2)}` };
 }
 
 export async function GET() {
@@ -29,7 +29,7 @@ export async function GET() {
   return NextResponse.json({
     name: user.name,
     email: user.email,
-    schluessel: {
+    keys: {
       openai: mask(user.openaiApiKey),
       anthropic: mask(user.anthropicApiKey),
       deepseek: mask(user.deepseekApiKey),
@@ -83,7 +83,7 @@ export async function PATCH(request: Request) {
   return NextResponse.json({
     name: updated.name,
     email: updated.email,
-    schluessel: {
+    keys: {
       openai: mask(updated.openaiApiKey),
       anthropic: mask(updated.anthropicApiKey),
       deepseek: mask(updated.deepseekApiKey),

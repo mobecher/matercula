@@ -16,10 +16,10 @@ interface OverviewResponse {
   mimeType: string;
   status: "uploaded" | "processing" | "ready" | "error";
   statusReason: string | null;
-  anzahlChunks: number;
-  anzahlSeiten: number;
-  gesamtZeichen: number;
-  vorschau: PreviewChunk[];
+  chunkCount: number;
+  pageCount: number;
+  totalChars: number;
+  preview: PreviewChunk[];
 }
 
 const STATUS_LABEL: Record<OverviewResponse["status"], string> = {
@@ -54,7 +54,7 @@ export function MaterialOverview({ materialId }: { materialId: string }) {
 
     async function tick() {
       try {
-        const r = await fetch(`/api/materialien/${materialId}/uebersicht`);
+        const r = await fetch(`/api/materials/${materialId}/overview`);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const next = (await r.json()) as OverviewResponse;
         if (aborted) return;
@@ -115,19 +115,19 @@ export function MaterialOverview({ materialId }: { materialId: string }) {
       <dl className="grid grid-cols-3 gap-2 text-xs text-neutral-700">
         <div>
           <dt className="text-neutral-500">Chunks</dt>
-          <dd className="font-medium">{data.anzahlChunks}</dd>
+          <dd className="font-medium">{data.chunkCount}</dd>
         </div>
         <div>
           <dt className="text-neutral-500">Seiten</dt>
-          <dd className="font-medium">{data.anzahlSeiten > 0 ? data.anzahlSeiten : "—"}</dd>
+          <dd className="font-medium">{data.pageCount > 0 ? data.pageCount : "—"}</dd>
         </div>
         <div>
           <dt className="text-neutral-500">Zeichen</dt>
-          <dd className="font-medium">{data.gesamtZeichen.toLocaleString("de-AT")}</dd>
+          <dd className="font-medium">{data.totalChars.toLocaleString("de-AT")}</dd>
         </div>
       </dl>
 
-      {data.vorschau.length > 0 && (
+      {data.preview.length > 0 && (
         <details
           className="space-y-2"
           open={previewOpen}
@@ -138,7 +138,7 @@ export function MaterialOverview({ materialId }: { materialId: string }) {
             Vorschau erste Abschnitte
           </summary>
           <ul className="space-y-2">
-            {data.vorschau.map((c) => (
+            {data.preview.map((c) => (
               <li
                 key={c.chunkIndex}
                 className="rounded-md border border-neutral-100 bg-neutral-50 p-2 text-xs"
@@ -157,7 +157,7 @@ export function MaterialOverview({ materialId }: { materialId: string }) {
         </details>
       )}
 
-      {data.status === "ready" && data.anzahlChunks === 0 && (
+      {data.status === "ready" && data.chunkCount === 0 && (
         <p className="text-xs text-neutral-500">
           Keine Textabschnitte gefunden. Möglicherweise enthält die Datei nur Bilder.
         </p>

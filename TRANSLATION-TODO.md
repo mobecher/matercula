@@ -23,25 +23,23 @@ change.
 - DB schema renamed from German to English (non-glossary), with rename
   migration `lib/db/migrations/0009_lying_joseph.sql` (preserves data).
   All consumers updated.
+- API route paths renamed from German to English where non-glossary
+  (`/api/documents`, `/api/documents/[id]/suggestions`,
+  `/api/materials/[id]/overview`, plus the `/documents` linker subroutes
+  on `/api/kompetenzen/[id]` and `/api/anwendungsbereiche/[id]`). Glossary
+  segments kept (`kompetenzen`, `kompetenzbereiche`, `anwendungsbereiche`,
+  `lehrplaene`).
+- JSON payload keys renamed: `vorschlaege`/`vorschlag` → `suggestions`/
+  `suggestion`, `aktion` → `action` (request body — value strings stay
+  German for now, see section 1), `ziel{Id,Code,Titel,Pfad}` →
+  `target{Id,Code,Title,Path}`, `pfad` → `path`,
+  `anzahlChunks`/`anzahlSeiten`/`gesamtZeichen` →
+  `chunkCount`/`pageCount`/`totalChars`, `vorschau` → `preview`,
+  `schluessel` → `keys`, `vorhanden` → `present`.
 
 ## Remaining work
 
-### 1. Wire JSON payloads + API route paths
-
-After (1), update every `NextResponse.json({...})` and Zod schema to use
-the new English keys, plus rename the German route segments where they
-aren't glossary:
-
-- `/api/dokumente` → `/api/documents`
-- `/api/dokumente/[id]/vorschlaege` → `/api/documents/[id]/suggestions`
-- `/api/materialien/[id]/uebersicht` → `/api/materials/[id]/overview`
-  (glossary `Material` is German, but English plural `materials` is fine
-  for the route segment — bikeshed at rename time)
-
-Keep glossary segments: `/api/kompetenzen`, `/api/kompetenzbereiche`,
-`/api/anwendungsbereiche`, `/api/lehrplaene`.
-
-### 2. Enum / status string values
+### 1. Enum / status string values
 
 Currently used over the wire and in the DB:
 
@@ -54,7 +52,7 @@ Currently used over the wire and in the DB:
 
 Each requires a data migration plus updates in API + UI.
 
-### 3. Shared workspace types and component-internal helpers
+### 2. Shared workspace types and component-internal helpers
 
 - `lib/workspace/types.ts`: `DokumentKnoten` → `DocumentNode`,
   `DokumentTyp` → `DocumentType`, `OffenerTab` → `OpenTab`.
@@ -66,9 +64,9 @@ Each requires a data migration plus updates in API + UI.
   `benutzerName` → `userName`, `initialDokumentId` → `initialDocumentId`
   (and the call site in `app/(app)/workspace/layout.tsx`).
 
-### 4. File renames
+### 3. File renames
 
-After (3), rename component files where they aren't glossary:
+After (2), rename component files where they aren't glossary:
 
 - `components/workspace/link-vorschlaege.tsx` → `link-suggestions.tsx`
 - `components/workspace/material-uebersicht.tsx` → `material-overview.tsx`
@@ -78,12 +76,12 @@ Keep the glossary-named files: `lehrplan-backlinks.tsx`,
 `anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`,
 `material-linker.tsx`.
 
-### 5. Leftover comments / minor locals
+### 4. Leftover comments / minor locals
 
 `lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
 still have stray German comments and a few German local variables.
 
-### 6. Out of scope
+### 5. Out of scope
 
 `services/extractor/` (Python) keeps the contract field names
 `seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the

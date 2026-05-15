@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 const idSchema = z.string().uuid();
 const bodySchema = z.object({
-  aktion: z.enum(["akzeptieren", "ablehnen", "zuruecksetzen"]),
+  action: z.enum(["akzeptieren", "ablehnen", "zuruecksetzen"]),
 });
 
 export async function PATCH(
@@ -18,8 +18,8 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id, vid } = await context.params;
   const dok = idSchema.safeParse(id);
-  const vorschlag = idSchema.safeParse(vid);
-  if (!dok.success || !vorschlag.success) {
+  const suggestion = idSchema.safeParse(vid);
+  if (!dok.success || !suggestion.success) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
   const json = await request.json().catch(() => null);
@@ -32,9 +32,9 @@ export async function PATCH(
   }
   const result = await decideSuggestion({
     documentId: dok.data,
-    suggestionId: vorschlag.data,
+    suggestionId: suggestion.data,
     ownerId: user.id,
-    aktion: body.data.aktion,
+    action: body.data.action,
   });
   if (!result) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });

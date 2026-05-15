@@ -18,11 +18,11 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
-  const vorschlaege = await loadSuggestionsForDocument(parsed.data, user.id);
-  if (vorschlaege === null) {
+  const suggestions = await loadSuggestionsForDocument(parsed.data, user.id);
+  if (suggestions === null) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  return NextResponse.json({ vorschlaege });
+  return NextResponse.json({ suggestions });
 }
 
 /**
@@ -50,10 +50,10 @@ export async function POST(_req: Request, context: { params: Promise<{ id: strin
       {
         error: result.reason ?? "ai_fehler",
         message: result.error,
-        vorschlaege: result.vorschlaege,
+        suggestions: result.suggestions,
       },
       { status: 422 },
     );
   }
-  return NextResponse.json({ vorschlaege: result.vorschlaege });
+  return NextResponse.json({ suggestions: result.suggestions });
 }

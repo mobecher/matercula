@@ -223,7 +223,7 @@ function FileViewer({ materialId }: { materialId?: string }) {
 
     async function tick() {
       try {
-        const r = await fetch(`/api/materialien/${materialId}/uebersicht`);
+        const r = await fetch(`/api/materials/${materialId}/overview`);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const next = (await r.json()) as MaterialMeta;
         if (aborted) return;
@@ -261,7 +261,7 @@ function FileViewer({ materialId }: { materialId?: string }) {
     );
   }
 
-  const url = `/api/materialien/${materialId}/download`;
+  const url = `/api/materials/${materialId}/download`;
 
   if (meta.mimeType === "application/pdf") {
     // Safari renders PDFs unreliably inside <object> tags (especially when

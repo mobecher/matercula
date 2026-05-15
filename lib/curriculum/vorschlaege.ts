@@ -23,10 +23,10 @@ import { documentContentForAi } from "./dokument-inhalt";
 export interface SuggestionView {
   id: string;
   targetType: "kompetenz" | "anwendungsbereich";
-  zielId: string;
-  zielCode: string;
-  zielTitel: string;
-  zielPfad: string;
+  targetId: string;
+  targetCode: string;
+  targetTitle: string;
+  targetPath: string;
   confidence: number;
   rationale: string;
   model: string;
@@ -54,7 +54,7 @@ interface CurriculumEntry {
   code: string;
   title: string;
   description: string | null;
-  pfad: string;
+  path: string;
 }
 
 async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
@@ -108,7 +108,7 @@ async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
     code: r.code,
     title: r.title,
     description: r.description,
-    pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
+    path: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
   }));
   const ausAwb: CurriculumEntry[] = awbRows.map((r) => ({
     targetType: "anwendungsbereich",
@@ -116,7 +116,7 @@ async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
     code: r.code,
     title: r.title,
     description: r.description,
-    pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
+    path: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
   }));
   return [...ausKomp, ...ausAwb];
 }
@@ -171,14 +171,14 @@ function mapRowToView(
   return {
     id: row.id,
     targetType: row.targetType,
-    zielId: eintrag.id,
-    zielCode: eintrag.code,
+    targetId: eintrag.id,
+    targetCode: eintrag.code,
     // Bevorzugt die vollständige Beschreibung – `title` ist eine gekürzte
     // Überschrift (z. B. ein einzelnes Verb), während die ganze Kompetenz/
     // der Anwendungsbereich in `description` steht. Für die Entscheidung
     // im Vorschlags-Panel ist der volle Text deutlich nützlicher.
-    zielTitel: eintrag.description?.trim() || eintrag.title,
-    zielPfad: eintrag.pfad,
+    targetTitle: eintrag.description?.trim() || eintrag.title,
+    targetPath: eintrag.path,
     confidence: row.confidence,
     rationale: row.rationale,
     model: row.model,
@@ -199,7 +199,7 @@ function mapRowToView(
  * einzelner ausgefranster Eintrag nicht die gesamte Antwort.
  */
 const llmAntwortSchema = z.object({
-  vorschlaege: z
+  suggestions: z
     .array(
       z.object({
         targetType: z
@@ -226,7 +226,7 @@ export interface GenerationResult {
   ok: boolean;
   reason?: "kein_inhalt" | "nicht_unterstuetzt" | "keine_treffer" | "ai_fehler";
   error?: string;
-  vorschlaege: SuggestionView[];
+  suggestions: SuggestionView[];
 }
 
 /**
@@ -259,7 +259,7 @@ export async function generateSuggestionsForDocument(
         ok: false,
         reason: "kein_inhalt",
         error: "Diesem PDF-Document ist keine Datei zugeordnet.",
-        vorschlaege: [],
+        suggestions: [],
       };
     }
     const [mat] = await db
@@ -280,7 +280,7 @@ export async function generateSuggestionsForDocument(
         ok: false,
         reason: "kein_inhalt",
         error: "Material nicht gefunden.",
-        vorschlaege: [],
+        suggestions: [],
       };
     }
     if (mat.status === "uploaded" || mat.status === "processing") {
@@ -289,7 +289,7 @@ export async function generateSuggestionsForDocument(
         reason: "kein_inhalt",
         error:
           "PDF wird noch verarbeitet. Bitte warten, bis die Textextraktion abgeschlossen ist.",
-        vorschlaege: [],
+        suggestions: [],
       };
     }
     if (mat.status === "error") {
@@ -297,7 +297,7 @@ export async function generateSuggestionsForDocument(
         ok: false,
         reason: "kein_inhalt",
         error: mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
-        vorschlaege: [],
+        suggestions: [],
       };
     }
     const chunks = await db
@@ -314,7 +314,7 @@ export async function generateSuggestionsForDocument(
       ok: false,
       reason: "nicht_unterstuetzt",
       error: "Vorschläge sind für diesen Dokumenttyp nicht verfügbar.",
-      vorschlaege: [],
+      suggestions: [],
     };
   }
 
@@ -323,7 +323,7 @@ export async function generateSuggestionsForDocument(
       ok: false,
       reason: "kein_inhalt",
       error: "Das Document enthält keinen Text, der analysiert werden könnte.",
-      vorschlaege: [],
+      suggestions: [],
     };
   }
 
@@ -333,7 +333,7 @@ export async function generateSuggestionsForDocument(
       ok: false,
       reason: "keine_treffer",
       error: "Es ist noch kein Lehrplan eingespielt.",
-      vorschlaege: [],
+      suggestions: [],
     };
   }
 
@@ -351,7 +351,7 @@ export async function generateSuggestionsForDocument(
           : error instanceof Error
             ? error.message
             : "Unbekannter LLM-Fehler.",
-      vorschlaege: [],
+      suggestions: [],
     };
   }
 
@@ -361,7 +361,7 @@ export async function generateSuggestionsForDocument(
       (e) =>
         `- [${e.targetType}] ${e.code} | ${e.title}${
           e.description ? ` — ${truncate(e.description, 240)}` : ""
-        } (${e.pfad})`,
+        } (${e.path})`,
     )
     .join("\n");
 
@@ -396,7 +396,7 @@ Aufgabe:
       ok: false,
       reason: "ai_fehler",
       error: error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
-      vorschlaege: [],
+      suggestions: [],
     };
   }
 
@@ -417,7 +417,7 @@ Aufgabe:
   };
   const aufgeloest: AufgeloesterVorschlag[] = [];
   const gesehen = new Set<string>();
-  for (const v of llmAntwort.vorschlaege) {
+  for (const v of llmAntwort.suggestions) {
     const typHinweis = v.targetType.trim().toLowerCase();
     // Bevorzugt den vom Modell gelieferten Typ; fällt aber auf die jeweils
     // andere Variante zurück, wenn der Code dort nachweisbar passt. Dadurch
@@ -491,18 +491,18 @@ Aufgabe:
 
   const ansichten =
     (await loadSuggestionsForDocument(documentId, ownerId)) ?? [];
-  return { ok: true, vorschlaege: ansichten };
+  return { ok: true, suggestions: ansichten };
 }
 
 interface EntscheidungsEingabe {
   suggestionId: string;
   documentId: string;
   ownerId: string;
-  aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen";
+  action: "akzeptieren" | "ablehnen" | "zuruecksetzen";
 }
 
 export interface EntscheidungsErgebnis {
-  vorschlag: SuggestionView;
+  suggestion: SuggestionView;
 }
 
 /**
@@ -519,7 +519,7 @@ export async function decideSuggestion(
   );
   if (!doc) return null;
 
-  const [vorschlag] = await db
+  const [suggestion] = await db
     .select()
     .from(documentLinkSuggestions)
     .where(
@@ -529,50 +529,50 @@ export async function decideSuggestion(
       ),
     )
     .limit(1);
-  if (!vorschlag) return null;
+  if (!suggestion) return null;
 
-  if (eingabe.aktion === "akzeptieren") {
+  if (eingabe.action === "akzeptieren") {
     // Die KI-Begründung des Vorschlags wird als Notiz an der Verknüpfung
     // gespeichert, damit nachvollziehbar bleibt, warum der Link existiert.
-    const note = vorschlag.rationale?.trim() ? vorschlag.rationale : null;
-    if (vorschlag.targetType === "kompetenz" && vorschlag.kompetenzId) {
+    const note = suggestion.rationale?.trim() ? suggestion.rationale : null;
+    if (suggestion.targetType === "kompetenz" && suggestion.kompetenzId) {
       await db
         .insert(documentKompetenzLinks)
         .values({
           documentId: eingabe.documentId,
-          kompetenzId: vorschlag.kompetenzId,
+          kompetenzId: suggestion.kompetenzId,
           note,
         })
         .onConflictDoNothing();
     } else if (
-      vorschlag.targetType === "anwendungsbereich" &&
-      vorschlag.anwendungsbereichId
+      suggestion.targetType === "anwendungsbereich" &&
+      suggestion.anwendungsbereichId
     ) {
       await db
         .insert(documentAnwendungsbereichLinks)
         .values({
           documentId: eingabe.documentId,
-          anwendungsbereichId: vorschlag.anwendungsbereichId,
+          anwendungsbereichId: suggestion.anwendungsbereichId,
           note,
         })
         .onConflictDoNothing();
     }
-  } else if (eingabe.aktion === "zuruecksetzen") {
+  } else if (eingabe.action === "zuruecksetzen") {
     // Vorschlag wird auf "offen" zurückgesetzt; falls bereits ein Link
     // (durch früheres Akzeptieren) existiert, wird dieser entfernt, damit
     // Vorschlags-Zustand und Link-Tabelle konsistent bleiben.
-    if (vorschlag.targetType === "kompetenz" && vorschlag.kompetenzId) {
+    if (suggestion.targetType === "kompetenz" && suggestion.kompetenzId) {
       await db
         .delete(documentKompetenzLinks)
         .where(
           and(
             eq(documentKompetenzLinks.documentId, eingabe.documentId),
-            eq(documentKompetenzLinks.kompetenzId, vorschlag.kompetenzId),
+            eq(documentKompetenzLinks.kompetenzId, suggestion.kompetenzId),
           ),
         );
     } else if (
-      vorschlag.targetType === "anwendungsbereich" &&
-      vorschlag.anwendungsbereichId
+      suggestion.targetType === "anwendungsbereich" &&
+      suggestion.anwendungsbereichId
     ) {
       await db
         .delete(documentAnwendungsbereichLinks)
@@ -581,7 +581,7 @@ export async function decideSuggestion(
             eq(documentAnwendungsbereichLinks.documentId, eingabe.documentId),
             eq(
               documentAnwendungsbereichLinks.anwendungsbereichId,
-              vorschlag.anwendungsbereichId,
+              suggestion.anwendungsbereichId,
             ),
           ),
         );
@@ -589,9 +589,9 @@ export async function decideSuggestion(
   }
 
   const status =
-    eingabe.aktion === "akzeptieren"
+    eingabe.action === "akzeptieren"
       ? "akzeptiert"
-      : eingabe.aktion === "ablehnen"
+      : eingabe.action === "ablehnen"
         ? "abgelehnt"
         : "offen";
   await db
@@ -605,7 +605,7 @@ export async function decideSuggestion(
   );
   const aktualisiert = liste?.find((v) => v.id === eingabe.suggestionId);
   if (!aktualisiert) return null;
-  return { vorschlag: aktualisiert };
+  return { suggestion: aktualisiert };
 }
 
 function truncate(value: string, max: number): string {

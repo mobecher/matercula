@@ -321,7 +321,7 @@ export function WorkspaceProvider({
         // 1) Upload the file to S3 storage (returns a Material id).
         const formData = new FormData();
         formData.append("file", file);
-        const uploadRes = await fetch("/api/materialien", {
+        const uploadRes = await fetch("/api/materials", {
           method: "POST",
           body: formData,
         });

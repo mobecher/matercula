@@ -51,7 +51,7 @@ export async function GET(
   // Aggregate: number of chunks.
   const [agg] = await db
     .select({
-      anzahlChunks: count(),
+      chunkCount: count(),
     })
     .from(materialChunks)
     .where(eq(materialChunks.materialId, mat.id));
@@ -61,15 +61,15 @@ export async function GET(
   const pagesAndLengths = await db
     .select({
       pageNumber: materialChunks.pageNumber,
-      laenge: materialChunks.text,
+      length: materialChunks.text,
     })
     .from(materialChunks)
     .where(eq(materialChunks.materialId, mat.id));
   const pageSet = new Set<number>();
-  let gesamtZeichen = 0;
+  let totalChars = 0;
   for (const row of pagesAndLengths) {
     if (row.pageNumber != null) pageSet.add(row.pageNumber);
-    gesamtZeichen += row.laenge.length;
+    totalChars += row.length.length;
   }
 
   const previewRows = await db
@@ -94,10 +94,10 @@ export async function GET(
     summary: mat.summary,
     createdAt: mat.createdAt,
     updatedAt: mat.updatedAt,
-    anzahlChunks: agg?.anzahlChunks ?? 0,
-    anzahlSeiten: pageSet.size,
-    gesamtZeichen,
-    vorschau: previewRows.map((r) => ({
+    chunkCount: agg?.chunkCount ?? 0,
+    pageCount: pageSet.size,
+    totalChars,
+    preview: previewRows.map((r) => ({
       chunkIndex: r.chunkIndex,
       pageNumber: r.pageNumber,
       section: r.section,

@@ -6,10 +6,10 @@ import { useWorkspace } from "./workspace-context";
 interface SuggestionView {
   id: string;
   targetType: "kompetenz" | "anwendungsbereich";
-  zielId: string;
-  zielCode: string;
-  zielTitel: string;
-  zielPfad: string;
+  targetId: string;
+  targetCode: string;
+  targetTitle: string;
+  targetPath: string;
   confidence: number;
   rationale: string;
   model: string;
@@ -69,10 +69,10 @@ export function LinkSuggestions({
     setStatus("loading");
     setError(null);
     try {
-      const r = await fetch(`/api/documents/${docId}/vorschlaege`);
+      const r = await fetch(`/api/documents/${docId}/suggestions`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = (await r.json()) as { vorschlaege: SuggestionView[] };
-      setSuggestions(data.vorschlaege);
+      const data = (await r.json()) as { suggestions: SuggestionView[] };
+      setSuggestions(data.suggestions);
       setStatus("ready");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unbekannter Fehler");
@@ -95,21 +95,21 @@ export function LinkSuggestions({
     setStatus("generating");
     setError(null);
     try {
-      const r = await fetch(`/api/documents/${docId}/vorschlaege`, {
+      const r = await fetch(`/api/documents/${docId}/suggestions`, {
         method: "POST",
       });
       const data = (await r.json().catch(() => null)) as {
-        vorschlaege?: SuggestionView[];
+        suggestions?: SuggestionView[];
         message?: string;
         error?: string;
       } | null;
       if (!r.ok) {
         setError(data?.message ?? data?.error ?? `HTTP ${r.status}`);
-        setSuggestions(data?.vorschlaege ?? []);
+        setSuggestions(data?.suggestions ?? []);
         setStatus("error");
         return;
       }
-      setSuggestions(data?.vorschlaege ?? []);
+      setSuggestions(data?.suggestions ?? []);
       setStatus("ready");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unbekannter Fehler");
@@ -119,23 +119,23 @@ export function LinkSuggestions({
 
   async function decide(
     v: SuggestionView,
-    aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen",
+    action: "akzeptieren" | "ablehnen" | "zuruecksetzen",
   ) {
     setBusyId(v.id);
     try {
-      const r = await fetch(`/api/documents/${docId}/vorschlaege/${v.id}`, {
+      const r = await fetch(`/api/documents/${docId}/suggestions/${v.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ aktion }),
+        body: JSON.stringify({ action }),
       });
       if (!r.ok) return;
-      const data = (await r.json()) as { vorschlag: SuggestionView };
+      const data = (await r.json()) as { suggestion: SuggestionView };
       setSuggestions((prev) =>
-        prev.map((p) => (p.id === v.id ? data.vorschlag : p)),
+        prev.map((p) => (p.id === v.id ? data.suggestion : p)),
       );
       // "akzeptieren" creates a link, "zuruecksetzen" removes a previously
       // created link – in both cases the backlinks must be refreshed.
-      if (aktion === "akzeptieren" || aktion === "zuruecksetzen") {
+      if (action === "akzeptieren" || action === "zuruecksetzen") {
         onLinksChanged?.();
       }
     } finally {
@@ -206,12 +206,12 @@ export function LinkSuggestions({
                       className="font-mono text-xs text-neutral-500 hover:text-neutral-900 hover:underline"
                       onClick={() =>
                         v.targetType === "kompetenz"
-                          ? openKompetenzTab(v.zielId, v.zielTitel)
-                          : openAnwendungsbereichTab(v.zielId, v.zielTitel)
+                          ? openKompetenzTab(v.targetId, v.targetTitle)
+                          : openAnwendungsbereichTab(v.targetId, v.targetTitle)
                       }
                       type="button"
                     >
-                      {v.zielCode}
+                      {v.targetCode}
                     </button>
                     <ConfidenceBadge value={v.confidence} />
                   </div>
@@ -219,16 +219,16 @@ export function LinkSuggestions({
                     className="block w-full text-left font-medium text-neutral-900 hover:underline"
                     onClick={() =>
                       v.targetType === "kompetenz"
-                        ? openKompetenzTab(v.zielId, v.zielTitel)
-                        : openAnwendungsbereichTab(v.zielId, v.zielTitel)
+                        ? openKompetenzTab(v.targetId, v.targetTitle)
+                        : openAnwendungsbereichTab(v.targetId, v.targetTitle)
                     }
                     type="button"
-                    title={v.zielPfad}
+                    title={v.targetPath}
                   >
-                    {v.zielTitel}
+                    {v.targetTitle}
                   </button>
                   <p className="mt-0.5 text-xs text-neutral-500">
-                    {v.zielPfad}
+                    {v.targetPath}
                   </p>
                   <p className="mt-1.5 text-sm text-neutral-700">
                     {v.rationale}
@@ -278,12 +278,12 @@ export function LinkSuggestions({
                         {STATUS_LABEL[v.status]}
                       </span>
                       <span className="font-mono text-[10px] text-neutral-500">
-                        {v.zielCode}
+                        {v.targetCode}
                       </span>
                       <ConfidenceBadge value={v.confidence} subtle />
                     </div>
                     <p className="mt-1 font-medium text-neutral-800">
-                      {v.zielTitel}
+                      {v.targetTitle}
                     </p>
                     {v.rationale && (
                       <p className="mt-1 whitespace-pre-wrap text-neutral-600">

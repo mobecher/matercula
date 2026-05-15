@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 
 interface KeyState {
-  vorhanden: boolean;
-  vorschau: string | null;
+  present: boolean;
+  preview: string | null;
 }
 
 interface SettingsResponse {
   name: string;
   email: string;
-  schluessel: {
+  keys: {
     openai: KeyState;
     anthropic: KeyState;
     deepseek: KeyState;
@@ -89,19 +89,19 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       field: "openaiApiKey",
       label: "OpenAI",
       hinweis: "z. B. sk-… (https://platform.openai.com/api-keys)",
-      status: data?.schluessel.openai ?? null,
+      status: data?.keys.openai ?? null,
     },
     {
       field: "anthropicApiKey",
       label: "Anthropic",
       hinweis: "z. B. sk-ant-… (https://console.anthropic.com/)",
-      status: data?.schluessel.anthropic ?? null,
+      status: data?.keys.anthropic ?? null,
     },
     {
       field: "deepseekApiKey",
       label: "DeepSeek",
       hinweis: "z. B. sk-… (https://platform.deepseek.com/)",
-      status: data?.schluessel.deepseek ?? null,
+      status: data?.keys.deepseek ?? null,
     },
   ];
 
@@ -195,13 +195,13 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                     {p.label}
                   </label>
                   <span className="text-xs text-neutral-500">
-                    {p.status?.vorhanden ? (
+                    {p.status?.present ? (
                       <span className="inline-flex items-center gap-1">
                         <span
                           aria-hidden
                           className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"
                         />
-                        Aktiv ({p.status.vorschau})
+                        Aktiv ({p.status.preview})
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1">
@@ -221,12 +221,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                   id={`field-${p.field}`}
                   onChange={(e) => setDrafts((prev) => ({ ...prev, [p.field]: e.target.value }))}
                   placeholder={
-                    p.status?.vorhanden ? "Neuen Schlüssel eingeben, um zu ersetzen…" : p.hinweis
+                    p.status?.present ? "Neuen Schlüssel eingeben, um zu ersetzen…" : p.hinweis
                   }
                   type="password"
                   value={drafts[p.field]}
                 />
-                {p.status?.vorhanden && (
+                {p.status?.present && (
                   <label className="flex items-center gap-2 text-xs text-neutral-600">
                     <input
                       checked={deleting[p.field]}
