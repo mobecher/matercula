@@ -180,24 +180,29 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
 
 function PdfViewer({ materialId }: { materialId?: string }) {
   if (!materialId) {
-    return <p className="text-sm text-neutral-500">Diese PDF hat keine zugeordnete Datei mehr.</p>;
+    return (
+      <p className="text-sm text-neutral-500">
+        Diese PDF hat keine zugeordnete Datei mehr.
+      </p>
+    );
   }
   const url = `/api/materialien/${materialId}/download`;
+  // Safari rendert PDFs in <object>-Tags (vor allem bei Cross-Origin-Redirect
+  // auf eine signierte S3-URL) unzuverlässig. <iframe> funktioniert dort
+  // verlässlich; Firefox/Chrome sind ohnehin egal.
   return (
-    <object
-      aria-label="PDF-Vorschau"
-      className="block h-[80vh] w-full rounded-md border border-neutral-200 bg-neutral-100"
-      data={`${url}#view=FitH`}
-      type="application/pdf"
-    >
-      <div className="px-4 py-6 text-sm text-neutral-500">
-        Inline-Vorschau in diesem Browser nicht verfügbar.{" "}
+    <div className="relative h-[80vh] w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-100">
+      <iframe
+        className="h-full w-full"
+        src={`${url}#view=FitH`}
+        title="PDF-Vorschau"
+      />
+      <noscript>
         <a className="underline" href={url} rel="noreferrer" target="_blank">
           PDF in neuem Tab öffnen
         </a>
-        .
-      </div>
-    </object>
+      </noscript>
+    </div>
   );
 }
 
