@@ -64,7 +64,7 @@ interface BlockEditorProps {
 }
 
 // The `file` block is intentionally omitted: PDFs and other documents are
-// modeled as standalone top-level Dokumente of `typ = "pdf"`, not embedded
+// modeled as standalone top-level Dokumente of `type = "pdf"`, not embedded
 // inside the block editor. Image, video and audio blocks remain enabled and
 // are uploaded to S3 via the `uploadFile` hook below; URL embedding has been
 // disabled in favour of file upload (see `uploadFile`).

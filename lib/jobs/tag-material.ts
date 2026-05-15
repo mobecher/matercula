@@ -61,7 +61,7 @@ export async function handleTagMaterial(
   let extraction: Awaited<ReturnType<typeof extractChunks>>;
   try {
     const bytes = await source.fetchBytes(material);
-    extraction = await extractChunks(bytes, material.mimeType, material.dateiname);
+    extraction = await extractChunks(bytes, material.mimeType, material.fileName);
   } catch (err) {
     if (err instanceof ExtractionBadFileError) {
       await db
@@ -94,8 +94,10 @@ export async function handleTagMaterial(
         materialId: material.id,
         chunkIndex: c.chunkIndex,
         text: c.text,
-        seitenzahl: c.seitenzahl,
-        abschnitt: c.abschnitt,
+        // Wire contract uses German field names (mirrored from Python);
+        // the DB columns are English.
+        pageNumber: c.seitenzahl,
+        section: c.abschnitt,
       })),
     );
   }
@@ -105,7 +107,7 @@ export async function handleTagMaterial(
   await db
     .update(materialien)
     .set({
-      zusammenfassung: extraction.meta.summary?.slice(0, 2000) ?? null,
+      summary: extraction.meta.summary?.slice(0, 2000) ?? null,
       updatedAt: new Date(),
     })
     .where(eq(materialien.id, material.id));

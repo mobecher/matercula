@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
 import { db } from "@/lib/db";
-import { dokumentAssets } from "@/lib/db/schema";
+import { documentAssets } from "@/lib/db/schema";
 import { getSignedUrl } from "@/lib/storage/s3";
 
 export const runtime = "nodejs";
@@ -21,8 +21,8 @@ export async function GET(_request: Request, ctx: RouteContext) {
 
   const [asset] = await db
     .select()
-    .from(dokumentAssets)
-    .where(and(eq(dokumentAssets.id, id), eq(dokumentAssets.ownerId, user.id)))
+    .from(documentAssets)
+    .where(and(eq(documentAssets.id, id), eq(documentAssets.ownerId, user.id)))
     .limit(1);
 
   if (!asset) return NextResponse.json({ error: "not_found" }, { status: 404 });

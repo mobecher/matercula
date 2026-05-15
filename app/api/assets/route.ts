@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
 import { db } from "@/lib/db";
-import { dokumentAssets } from "@/lib/db/schema";
+import { documentAssets } from "@/lib/db/schema";
 import { uploadFile } from "@/lib/storage/s3";
 
 // Upload endpoint for inline document assets (images, video, audio).
@@ -79,18 +79,18 @@ export async function POST(request: Request) {
   }
 
   const id = randomUUID();
-  const dateiname = sanitizeFilename(file.name);
-  const storageKey = `assets/${user.id}/${id}/${dateiname}`;
+  const fileName = sanitizeFilename(file.name);
+  const storageKey = `assets/${user.id}/${id}/${fileName}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
   await uploadFile(storageKey, buffer, mimeType);
 
   const [asset] = await db
-    .insert(dokumentAssets)
+    .insert(documentAssets)
     .values({
       id,
       ownerId: user.id,
-      dateiname,
+      fileName,
       mimeType,
       storageKey,
       size: file.size,
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     {
       id: asset.id,
       url,
-      name: asset.dateiname,
+      name: asset.fileName,
       contentType: asset.mimeType,
       size: file.size,
     },

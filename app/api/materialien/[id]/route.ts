@@ -19,8 +19,8 @@ export async function GET(_request: Request, ctx: RouteContext) {
 
   return NextResponse.json({
     id: material.id,
-    titel: material.titel,
-    dateiname: material.dateiname,
+    title: material.title,
+    fileName: material.fileName,
     mimeType: material.mimeType,
     status: material.status,
     createdAt: material.createdAt,

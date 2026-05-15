@@ -12,11 +12,15 @@ export const pages = pgTable("pages", {
   ownerId: uuid("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  titel: text("titel").notNull(),
+  title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
   contentMarkdown: text("content_markdown").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const pageReferences = pgTable("page_references", {

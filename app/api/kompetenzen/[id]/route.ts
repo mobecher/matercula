@@ -9,12 +9,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const detail = await loadKompetenzDetail(id);
   if (!detail) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const dokumente = await loadDocumentsForKompetenz(id, user.id);
+  const documents = await loadDocumentsForKompetenz(id, user.id);
   return NextResponse.json({
     lehrplan: detail.lehrplan,
     klasse: detail.klasse,
     bereich: detail.bereich,
     kompetenz: detail.kompetenz,
-    dokumente,
+    documents,
   });
 }

@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 
 interface PreviewChunk {
   chunkIndex: number;
-  seitenzahl: number | null;
-  abschnitt: string | null;
+  pageNumber: number | null;
+  section: string | null;
   text: string;
 }
 
 interface OverviewResponse {
   id: string;
-  titel: string;
-  dateiname: string;
+  title: string;
+  fileName: string;
   mimeType: string;
   status: "uploaded" | "processing" | "ready" | "error";
   statusReason: string | null;
@@ -145,9 +145,9 @@ export function MaterialOverview({ materialId }: { materialId: string }) {
               >
                 <div className="mb-1 flex items-center gap-2 text-[10px] text-neutral-500">
                   <span>#{c.chunkIndex}</span>
-                  {c.seitenzahl != null && <span>S. {c.seitenzahl}</span>}
-                  {c.abschnitt && (
-                    <span className="truncate font-medium text-neutral-700">{c.abschnitt}</span>
+                  {c.pageNumber != null && <span>S. {c.pageNumber}</span>}
+                  {c.section && (
+                    <span className="truncate font-medium text-neutral-700">{c.section}</span>
                   )}
                 </div>
                 <p className="whitespace-pre-wrap text-neutral-700">{c.text}</p>

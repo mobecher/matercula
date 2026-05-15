@@ -5,14 +5,14 @@ import { useWorkspace } from "./workspace-context";
 
 interface SuggestionView {
   id: string;
-  zielTyp: "kompetenz" | "anwendungsbereich";
+  targetType: "kompetenz" | "anwendungsbereich";
   zielId: string;
   zielCode: string;
   zielTitel: string;
   zielPfad: string;
   confidence: number;
-  begruendung: string;
-  modell: string;
+  rationale: string;
+  model: string;
   status: "offen" | "akzeptiert" | "abgelehnt";
   createdAt: string;
   decidedAt: string | null;
@@ -32,12 +32,12 @@ const STATUS_BADGE: Record<SuggestionView["status"], string> = {
   abgelehnt: "bg-neutral-200 text-neutral-600",
 };
 
-const TYP_BADGE: Record<SuggestionView["zielTyp"], string> = {
+const TYP_BADGE: Record<SuggestionView["targetType"], string> = {
   kompetenz: "bg-blue-50 text-blue-700 border-blue-200",
   anwendungsbereich: "bg-purple-50 text-purple-700 border-purple-200",
 };
 
-const TYP_LABEL: Record<SuggestionView["zielTyp"], string> = {
+const TYP_LABEL: Record<SuggestionView["targetType"], string> = {
   kompetenz: "Kompetenz",
   anwendungsbereich: "Anwendungsbereich",
 };
@@ -69,7 +69,7 @@ export function LinkSuggestions({
     setStatus("loading");
     setError(null);
     try {
-      const r = await fetch(`/api/dokumente/${docId}/vorschlaege`);
+      const r = await fetch(`/api/documents/${docId}/vorschlaege`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = (await r.json()) as { vorschlaege: SuggestionView[] };
       setSuggestions(data.vorschlaege);
@@ -95,7 +95,7 @@ export function LinkSuggestions({
     setStatus("generating");
     setError(null);
     try {
-      const r = await fetch(`/api/dokumente/${docId}/vorschlaege`, {
+      const r = await fetch(`/api/documents/${docId}/vorschlaege`, {
         method: "POST",
       });
       const data = (await r.json().catch(() => null)) as {
@@ -123,7 +123,7 @@ export function LinkSuggestions({
   ) {
     setBusyId(v.id);
     try {
-      const r = await fetch(`/api/dokumente/${docId}/vorschlaege/${v.id}`, {
+      const r = await fetch(`/api/documents/${docId}/vorschlaege/${v.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ aktion }),
@@ -198,14 +198,14 @@ export function LinkSuggestions({
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-1.5">
                     <span
-                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${TYP_BADGE[v.zielTyp]}`}
+                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${TYP_BADGE[v.targetType]}`}
                     >
-                      {TYP_LABEL[v.zielTyp]}
+                      {TYP_LABEL[v.targetType]}
                     </span>
                     <button
                       className="font-mono text-xs text-neutral-500 hover:text-neutral-900 hover:underline"
                       onClick={() =>
-                        v.zielTyp === "kompetenz"
+                        v.targetType === "kompetenz"
                           ? openKompetenzTab(v.zielId, v.zielTitel)
                           : openAnwendungsbereichTab(v.zielId, v.zielTitel)
                       }
@@ -218,7 +218,7 @@ export function LinkSuggestions({
                   <button
                     className="block w-full text-left font-medium text-neutral-900 hover:underline"
                     onClick={() =>
-                      v.zielTyp === "kompetenz"
+                      v.targetType === "kompetenz"
                         ? openKompetenzTab(v.zielId, v.zielTitel)
                         : openAnwendungsbereichTab(v.zielId, v.zielTitel)
                     }
@@ -231,7 +231,7 @@ export function LinkSuggestions({
                     {v.zielPfad}
                   </p>
                   <p className="mt-1.5 text-sm text-neutral-700">
-                    {v.begruendung}
+                    {v.rationale}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col gap-1">
@@ -285,9 +285,9 @@ export function LinkSuggestions({
                     <p className="mt-1 font-medium text-neutral-800">
                       {v.zielTitel}
                     </p>
-                    {v.begruendung && (
+                    {v.rationale && (
                       <p className="mt-1 whitespace-pre-wrap text-neutral-600">
-                        {v.begruendung}
+                        {v.rationale}
                       </p>
                     )}
                   </div>

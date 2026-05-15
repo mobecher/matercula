@@ -17,13 +17,18 @@ export const materialStatusEnum = pgEnum("material_status", [
   "error",
 ]);
 
+/**
+ * `Material` is a glossary term and stays German (see `CLAUDE.md`); the
+ * table name `materialien` is therefore intentional. The `Material`
+ * TypeScript type is also kept German.
+ */
 export const materialien = pgTable("materialien", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerId: uuid("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  titel: text("titel").notNull(),
-  dateiname: text("dateiname").notNull(),
+  title: text("title").notNull(),
+  fileName: text("file_name").notNull(),
   mimeType: text("mime_type").notNull(),
   storageKey: text("storage_key").notNull(),
   status: materialStatusEnum("status").notNull().default("uploaded"),
@@ -33,9 +38,13 @@ export const materialien = pgTable("materialien", {
   // joined and truncated). Surfaced in the UI as a quick preview for
   // formats the browser can't render natively (DOCX, PPTX, …).
   // Backfilled by the `tagMaterial` worker after extraction.
-  zusammenfassung: text("zusammenfassung"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  summary: text("summary"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const materialChunks = pgTable(
@@ -47,20 +56,25 @@ export const materialChunks = pgTable(
       .references(() => materialien.id, { onDelete: "cascade" }),
     chunkIndex: integer("chunk_index").notNull(),
     text: text("text").notNull(),
-    seitenzahl: integer("seitenzahl"),
-    abschnitt: text("abschnitt"),
+    pageNumber: integer("page_number"),
+    section: text("section"),
     // Nullable: extraction (step 1) inserts chunks without embeddings;
     // the embedding step (step 2 of `tagMaterial`, not yet implemented)
     // backfills this column.
     embedding: vector("embedding", { dimensions: 1536 }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
-    index("material_chunks_embedding_hnsw_idx").using("hnsw", table.embedding.op("vector_l2_ops")),
+    index("material_chunks_embedding_hnsw_idx").using(
+      "hnsw",
+      table.embedding.op("vector_l2_ops"),
+    ),
   ],
 );
 
 export type Material = typeof materialien.$inferSelect;
-export type NeuesMaterial = typeof materialien.$inferInsert;
+export type NewMaterial = typeof materialien.$inferInsert;
 export type MaterialChunk = typeof materialChunks.$inferSelect;
-export type NeuerMaterialChunk = typeof materialChunks.$inferInsert;
+export type NewMaterialChunk = typeof materialChunks.$inferInsert;

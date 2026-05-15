@@ -20,21 +20,21 @@ import {
 import type { DokumentKnoten, DokumentTyp } from "@/lib/workspace/types";
 
 export type WorkspaceTab = (
-  | { kind: "dokument"; key: string; dokumentId: string }
+  | { kind: "dokument"; key: string; documentId: string }
   | {
       kind: "klasse";
       key: string;
       lehrplanSlug: string;
       klasseNr: number;
-      titel: string;
+      title: string;
     }
-  | { kind: "bereich"; key: string; bereichId: string; titel: string }
-  | { kind: "kompetenz"; key: string; kompetenzId: string; titel: string }
+  | { kind: "bereich"; key: string; bereichId: string; title: string }
+  | { kind: "kompetenz"; key: string; kompetenzId: string; title: string }
   | {
       kind: "anwendungsbereich";
       key: string;
       anwendungsbereichId: string;
-      titel: string;
+      title: string;
     }
 ) & {
   /**
@@ -70,17 +70,17 @@ interface WorkspaceContextValue {
   activeTab: WorkspaceTab | null;
   saveStatus: "idle" | "saving" | "saved" | "error";
   openDocument: (id: string, options?: { preview?: boolean }) => void;
-  openKlasseTab: (lehrplanSlug: string, klasseNr: number, titel: string) => void;
-  openBereichTab: (bereichId: string, titel: string) => void;
-  openKompetenzTab: (kompetenzId: string, titel: string) => void;
-  openAnwendungsbereichTab: (anwendungsbereichId: string, titel: string) => void;
+  openKlasseTab: (lehrplanSlug: string, klasseNr: number, title: string) => void;
+  openBereichTab: (bereichId: string, title: string) => void;
+  openKompetenzTab: (kompetenzId: string, title: string) => void;
+  openAnwendungsbereichTab: (anwendungsbereichId: string, title: string) => void;
   closeTab: (key: string) => void;
   setActiveTab: (key: string) => void;
   promoteTab: (key: string) => void;
-  renameDocument: (id: string, titel: string) => Promise<void>;
+  renameDocument: (id: string, title: string) => Promise<void>;
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
-  addDocument: (parentId: string | null, typ: DokumentTyp) => Promise<string | null>;
+  addDocument: (parentId: string | null, type: DokumentTyp) => Promise<string | null>;
   uploadFileDocument: (parentId: string | null, file: File) => Promise<string | null>;
   removeDocument: (id: string) => Promise<void>;
   moveDocument: (id: string, parentId: string | null, position?: number) => Promise<void>;
@@ -115,7 +115,7 @@ export function WorkspaceProvider({
         {
           kind: "dokument",
           key: dokumentTabKey(initialDocumentId),
-          dokumentId: initialDocumentId,
+          documentId: initialDocumentId,
         },
       ]
     : [];
@@ -164,7 +164,7 @@ export function WorkspaceProvider({
   const openDocument = useCallback(
     (id: string, options?: { preview?: boolean }) => {
       upsertTab(
-        { kind: "dokument", key: dokumentTabKey(id), dokumentId: id },
+        { kind: "dokument", key: dokumentTabKey(id), documentId: id },
         { preview: options?.preview ?? true },
       );
     },
@@ -180,49 +180,49 @@ export function WorkspaceProvider({
   }, []);
 
   const openKlasseTab = useCallback(
-    (lehrplanSlug: string, klasseNr: number, titel: string) => {
+    (lehrplanSlug: string, klasseNr: number, title: string) => {
       upsertTab({
         kind: "klasse",
         key: klasseTabKey(lehrplanSlug, klasseNr),
         lehrplanSlug,
         klasseNr,
-        titel,
+        title,
       });
     },
     [upsertTab],
   );
 
   const openBereichTab = useCallback(
-    (bereichId: string, titel: string) => {
+    (bereichId: string, title: string) => {
       upsertTab({
         kind: "bereich",
         key: bereichTabKey(bereichId),
         bereichId,
-        titel,
+        title,
       });
     },
     [upsertTab],
   );
 
   const openKompetenzTab = useCallback(
-    (kompetenzId: string, titel: string) => {
+    (kompetenzId: string, title: string) => {
       upsertTab({
         kind: "kompetenz",
         key: kompetenzTabKey(kompetenzId),
         kompetenzId,
-        titel,
+        title,
       });
     },
     [upsertTab],
   );
 
   const openAnwendungsbereichTab = useCallback(
-    (anwendungsbereichId: string, titel: string) => {
+    (anwendungsbereichId: string, title: string) => {
       upsertTab({
         kind: "anwendungsbereich",
         key: anwendungsbereichTabKey(anwendungsbereichId),
         anwendungsbereichId,
-        titel,
+        title,
       });
     },
     [upsertTab],
@@ -246,12 +246,12 @@ export function WorkspaceProvider({
   const setActiveTab = useCallback((key: string) => setActiveTabKey(key), []);
 
   const renameDocument = useCallback(
-    async (id: string, titel: string) => {
-      const trimmed = titel.trim();
+    async (id: string, title: string) => {
+      const trimmed = title.trim();
       if (!trimmed) return;
-      setTree((prev) => mapTree(prev, id, (n) => ({ ...n, titel: trimmed })));
+      setTree((prev) => mapTree(prev, id, (n) => ({ ...n, title: trimmed })));
       try {
-        await updateDocument(id, { titel: trimmed });
+        await updateDocument(id, { title: trimmed });
       } catch {
         await refresh();
       }
@@ -286,7 +286,7 @@ export function WorkspaceProvider({
     setSaveStatus("saving");
     const handle = setTimeout(async () => {
       try {
-        await updateDocument(id, { inhaltMarkdown: content });
+        await updateDocument(id, { contentMarkdown: content });
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 1500);
       } catch {
@@ -297,13 +297,13 @@ export function WorkspaceProvider({
   }, []);
 
   const addDocument = useCallback(
-    async (parentId: string | null, typ: DokumentTyp) => {
-      const titel = typ === "ordner" ? "Neuer Ordner" : "Neue Seite";
+    async (parentId: string | null, type: DokumentTyp) => {
+      const title = type === "ordner" ? "Neuer Ordner" : "Neue Seite";
       try {
-        const result = await createDocument({ parentId, typ, titel });
+        const result = await createDocument({ parentId, type, title });
         await refresh();
         const newId = result?.dokument?.id as string | undefined;
-        if (newId && typ === "seite") {
+        if (newId && type === "seite") {
           openDocument(newId, { preview: false });
         }
         return newId ?? null;
@@ -332,16 +332,16 @@ export function WorkspaceProvider({
           contentType?: string;
         };
 
-        // 2) Create a document of `typ = pdf` (the generic "file" node)
+        // 2) Create a document of `type = pdf` (the generic "file" node)
         //    that points at the Material. The enum value `pdf` is named that
         //    way for historical reasons; it now stands for any uploaded file
         //    of any format.
         const mime = uploaded.contentType ?? file.type ?? "application/octet-stream";
-        const titel = file.name.replace(/\.[^.]+$/, "") || uploaded.name;
+        const title = file.name.replace(/\.[^.]+$/, "") || uploaded.name;
         const result = await createDocument({
           parentId,
-          typ: "pdf",
-          titel,
+          type: "pdf",
+          title,
           icon: iconForMime(mime),
           materialId: uploaded.id,
         });
@@ -365,9 +365,9 @@ export function WorkspaceProvider({
       } finally {
         await refresh();
         setOpenTabs((prev) => {
-          const next = prev.filter((t) => !(t.kind === "dokument" && idsToClose.has(t.dokumentId)));
+          const next = prev.filter((t) => !(t.kind === "dokument" && idsToClose.has(t.documentId)));
           const activeWasRemoved = prev.some(
-            (t) => t.key === activeTabKey && t.kind === "dokument" && idsToClose.has(t.dokumentId),
+            (t) => t.key === activeTabKey && t.kind === "dokument" && idsToClose.has(t.documentId),
           );
           if (activeWasRemoved) {
             setActiveTabKey(next[next.length - 1]?.key ?? null);

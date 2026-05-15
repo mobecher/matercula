@@ -2,16 +2,16 @@ import type { DokumentKnoten, DokumentTyp } from "./types";
 
 export interface CreateDocumentPayload {
   parentId: string | null;
-  typ: DokumentTyp;
-  titel: string;
+  type: DokumentTyp;
+  title: string;
   icon?: string | null;
   materialId?: string | null;
 }
 
 export interface UpdateDocumentPayload {
-  titel?: string;
+  title?: string;
   icon?: string | null;
-  inhaltMarkdown?: string | null;
+  contentMarkdown?: string | null;
 }
 
 export interface MovePayload {
@@ -28,13 +28,13 @@ async function jsonOrThrow(response: Response) {
 }
 
 export async function fetchTree(): Promise<DokumentKnoten[]> {
-  const res = await fetch("/api/dokumente", { cache: "no-store" });
+  const res = await fetch("/api/documents", { cache: "no-store" });
   const body = await jsonOrThrow(res);
   return body.baum as DokumentKnoten[];
 }
 
 export async function createDocument(payload: CreateDocumentPayload) {
-  const res = await fetch("/api/dokumente", {
+  const res = await fetch("/api/documents", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
@@ -43,7 +43,7 @@ export async function createDocument(payload: CreateDocumentPayload) {
 }
 
 export async function updateDocument(id: string, payload: UpdateDocumentPayload) {
-  const res = await fetch(`/api/dokumente/${id}`, {
+  const res = await fetch(`/api/documents/${id}`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
@@ -52,12 +52,12 @@ export async function updateDocument(id: string, payload: UpdateDocumentPayload)
 }
 
 export async function deleteDocument(id: string) {
-  const res = await fetch(`/api/dokumente/${id}`, { method: "DELETE" });
+  const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
   return jsonOrThrow(res);
 }
 
 export async function moveDocumentRequest(id: string, payload: MovePayload) {
-  const res = await fetch(`/api/dokumente/${id}/move`, {
+  const res = await fetch(`/api/documents/${id}/move`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),

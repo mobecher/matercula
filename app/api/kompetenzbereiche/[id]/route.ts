@@ -28,10 +28,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     lehrplan: detail.lehrplan,
     klasse: detail.klasse,
     bereich: detail.bereich,
-    kompetenzen: detail.kompetenzen.map((k, i) => ({ ...k, dokumente: kompDocs[i] })),
+    kompetenzen: detail.kompetenzen.map((k, i) => ({ ...k, documents: kompDocs[i] })),
     anwendungsbereiche: detail.anwendungsbereiche.map((a, i) => ({
       ...a,
-      dokumente: appDocs[i],
+      documents: appDocs[i],
     })),
   });
 }

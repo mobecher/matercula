@@ -3,7 +3,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { type UserAiKeys, MissingProviderKey, getModel } from "@/lib/ai";
 import { db } from "@/lib/db";
-import { dokumente } from "@/lib/db/schema/dokumente";
+import { documents } from "@/lib/db/schema/documents";
 import {
   anwendungsbereiche,
   kompetenzbereiche,
@@ -12,24 +12,24 @@ import {
   lehrplanKlassen,
 } from "@/lib/db/schema/lehrplan";
 import {
-  type DokumentLinkVorschlag,
-  dokumentAnwendungsbereichLinks,
-  dokumentKompetenzLinks,
-  dokumentLinkVorschlaege,
+  type DocumentLinkSuggestion,
+  documentAnwendungsbereichLinks,
+  documentKompetenzLinks,
+  documentLinkSuggestions,
 } from "@/lib/db/schema/links";
 import { materialChunks, materialien } from "@/lib/db/schema/materials";
 import { documentContentForAi } from "./dokument-inhalt";
 
 export interface SuggestionView {
   id: string;
-  zielTyp: "kompetenz" | "anwendungsbereich";
+  targetType: "kompetenz" | "anwendungsbereich";
   zielId: string;
   zielCode: string;
   zielTitel: string;
   zielPfad: string;
   confidence: number;
-  begruendung: string;
-  modell: string;
+  rationale: string;
+  model: string;
   status: "offen" | "akzeptiert" | "abgelehnt";
   createdAt: string;
   decidedAt: string | null;
@@ -38,22 +38,22 @@ export interface SuggestionView {
 const MAX_DOKUMENT_ZEICHEN = 20_000;
 const MAX_VORSCHLAEGE = 10;
 
-/** Liefert das Dokument inkl. Markdown-Inhalt für den angemeldeten Nutzer. */
-async function loadDocumentForSuggestions(dokumentId: string, ownerId: string) {
+/** Liefert das Document inkl. Markdown-Inhalt für den angemeldeten Nutzer. */
+async function loadDocumentForSuggestions(documentId: string, ownerId: string) {
   const [doc] = await db
     .select()
-    .from(dokumente)
-    .where(and(eq(dokumente.id, dokumentId), eq(dokumente.ownerId, ownerId)))
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.ownerId, ownerId)))
     .limit(1);
   return doc ?? null;
 }
 
 interface CurriculumEntry {
-  zielTyp: "kompetenz" | "anwendungsbereich";
+  targetType: "kompetenz" | "anwendungsbereich";
   id: string;
   code: string;
-  titel: string;
-  beschreibung: string | null;
+  title: string;
+  description: string | null;
   pfad: string;
 }
 
@@ -62,11 +62,11 @@ async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
     .select({
       id: kompetenzen.id,
       code: kompetenzen.code,
-      titel: kompetenzen.titel,
-      beschreibung: kompetenzen.beschreibung,
-      bereichTitel: kompetenzbereiche.titel,
-      klasseTitel: lehrplanKlassen.titel,
-      lehrplanTitel: lehrplaene.titel,
+      title: kompetenzen.title,
+      description: kompetenzen.description,
+      bereichTitel: kompetenzbereiche.title,
+      klasseTitel: lehrplanKlassen.title,
+      lehrplanTitel: lehrplaene.title,
     })
     .from(kompetenzen)
     .innerJoin(
@@ -84,11 +84,11 @@ async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
     .select({
       id: anwendungsbereiche.id,
       code: anwendungsbereiche.code,
-      titel: anwendungsbereiche.titel,
-      beschreibung: anwendungsbereiche.beschreibung,
-      bereichTitel: kompetenzbereiche.titel,
-      klasseTitel: lehrplanKlassen.titel,
-      lehrplanTitel: lehrplaene.titel,
+      title: anwendungsbereiche.title,
+      description: anwendungsbereiche.description,
+      bereichTitel: kompetenzbereiche.title,
+      klasseTitel: lehrplanKlassen.title,
+      lehrplanTitel: lehrplaene.title,
     })
     .from(anwendungsbereiche)
     .innerJoin(
@@ -103,49 +103,49 @@ async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
     .orderBy(asc(anwendungsbereiche.code));
 
   const ausKomp: CurriculumEntry[] = kompRows.map((r) => ({
-    zielTyp: "kompetenz",
+    targetType: "kompetenz",
     id: r.id,
     code: r.code,
-    titel: r.titel,
-    beschreibung: r.beschreibung,
+    title: r.title,
+    description: r.description,
     pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
   }));
   const ausAwb: CurriculumEntry[] = awbRows.map((r) => ({
-    zielTyp: "anwendungsbereich",
+    targetType: "anwendungsbereich",
     id: r.id,
     code: r.code,
-    titel: r.titel,
-    beschreibung: r.beschreibung,
+    title: r.title,
+    description: r.description,
     pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
   }));
   return [...ausKomp, ...ausAwb];
 }
 
 /**
- * Listet alle gespeicherten Vorschläge für ein Dokument auf, inklusive
+ * Listet alle gespeicherten Vorschläge für ein Document auf, inklusive
  * Anzeigeinformationen (Code, Titel, Pfad, Status).
  */
 export async function loadSuggestionsForDocument(
-  dokumentId: string,
+  documentId: string,
   ownerId: string,
 ): Promise<SuggestionView[] | null> {
-  const doc = await loadDocumentForSuggestions(dokumentId, ownerId);
+  const doc = await loadDocumentForSuggestions(documentId, ownerId);
   if (!doc) return null;
 
   const rows = await db
     .select()
-    .from(dokumentLinkVorschlaege)
-    .where(eq(dokumentLinkVorschlaege.dokumentId, dokumentId))
-    .orderBy(desc(dokumentLinkVorschlaege.confidence));
+    .from(documentLinkSuggestions)
+    .where(eq(documentLinkSuggestions.documentId, documentId))
+    .orderBy(desc(documentLinkSuggestions.confidence));
   if (rows.length === 0) return [];
 
   const katalog = await loadCurriculumCatalog();
   const kompById = new Map(
-    katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.id, e]),
+    katalog.filter((e) => e.targetType === "kompetenz").map((e) => [e.id, e]),
   );
   const awbById = new Map(
     katalog
-      .filter((e) => e.zielTyp === "anwendungsbereich")
+      .filter((e) => e.targetType === "anwendungsbereich")
       .map((e) => [e.id, e]),
   );
 
@@ -155,12 +155,12 @@ export async function loadSuggestionsForDocument(
 }
 
 function mapRowToView(
-  row: DokumentLinkVorschlag,
+  row: DocumentLinkSuggestion,
   kompById: Map<string, CurriculumEntry>,
   awbById: Map<string, CurriculumEntry>,
 ): SuggestionView | null {
   const eintrag =
-    row.zielTyp === "kompetenz"
+    row.targetType === "kompetenz"
       ? row.kompetenzId
         ? kompById.get(row.kompetenzId)
         : undefined
@@ -170,18 +170,18 @@ function mapRowToView(
   if (!eintrag) return null;
   return {
     id: row.id,
-    zielTyp: row.zielTyp,
+    targetType: row.targetType,
     zielId: eintrag.id,
     zielCode: eintrag.code,
-    // Bevorzugt die vollständige Beschreibung – `titel` ist eine gekürzte
+    // Bevorzugt die vollständige Beschreibung – `title` ist eine gekürzte
     // Überschrift (z. B. ein einzelnes Verb), während die ganze Kompetenz/
-    // der Anwendungsbereich in `beschreibung` steht. Für die Entscheidung
+    // der Anwendungsbereich in `description` steht. Für die Entscheidung
     // im Vorschlags-Panel ist der volle Text deutlich nützlicher.
-    zielTitel: eintrag.beschreibung?.trim() || eintrag.titel,
+    zielTitel: eintrag.description?.trim() || eintrag.title,
     zielPfad: eintrag.pfad,
     confidence: row.confidence,
-    begruendung: row.begruendung,
-    modell: row.modell,
+    rationale: row.rationale,
+    model: row.model,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     decidedAt: row.decidedAt ? row.decidedAt.toISOString() : null,
@@ -191,7 +191,7 @@ function mapRowToView(
 /**
  * Schema des LLM-Outputs.
  *
- * Wir lassen `zielTyp` bewusst als String zu (statt `z.enum([...])`), weil
+ * Wir lassen `targetType` bewusst als String zu (statt `z.enum([...])`), weil
  * Modelle gelegentlich den Code in dieses Feld schreiben oder ähnliche
  * Stringvarianten liefern. Die eigentliche Validierung erfolgt anschließend
  * gegen den Lehrplan-Katalog: nur Einträge, deren `code` zu einer Kompetenz
@@ -202,7 +202,7 @@ const llmAntwortSchema = z.object({
   vorschlaege: z
     .array(
       z.object({
-        zielTyp: z
+        targetType: z
           .string()
           .min(1)
           .describe("Genau einer der Werte 'kompetenz' oder 'anwendungsbereich'."),
@@ -211,7 +211,7 @@ const llmAntwortSchema = z.object({
           .min(1)
           .describe("Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'."),
         confidence: z.number().min(0).max(1).describe("Sicherheitsmaß zwischen 0 und 1."),
-        begruendung: z
+        rationale: z
           .string()
           .min(1)
           .describe(
@@ -230,35 +230,35 @@ export interface GenerationResult {
 }
 
 /**
- * Erzeugt mittels LLM neue Verknüpfungs-Vorschläge für das Dokument und
+ * Erzeugt mittels LLM neue Verknüpfungs-Vorschläge für das Document und
  * persistiert sie. Bestehende Vorschläge im Status `offen` werden zuvor
  * gelöscht; akzeptierte/abgelehnte bleiben als Audit-Spur erhalten.
  *
- * Unterstützt Text-Seiten (`typ === "seite"`, Quelle: `inhaltMarkdown`)
- * sowie PDF-Dokumente (`typ === "pdf"`, Quelle: extrahierte
+ * Unterstützt Text-Seiten (`type === "seite"`, Quelle: `contentMarkdown`)
+ * sowie PDF-Dokumente (`type === "pdf"`, Quelle: extrahierte
  * `material_chunks` des verknüpften Materials).
  */
 export async function generateSuggestionsForDocument(
-  dokumentId: string,
+  documentId: string,
   ownerId: string,
   schluessel: UserAiKeys,
 ): Promise<GenerationResult | null> {
-  const doc = await loadDocumentForSuggestions(dokumentId, ownerId);
+  const doc = await loadDocumentForSuggestions(documentId, ownerId);
   if (!doc) return null;
 
   let inhalt = "";
-  if (doc.typ === "seite") {
+  if (doc.type === "seite") {
     // BlockNote-JSON wird zu Klartext entpackt; Link-Karten und
     // YouTube-Einbettungen werden mit extern abgeholten Inhalten
     // (HTML-Plain-Text bzw. oEmbed-Titel) angereichert. Externe Fetches
     // scheitern weich, damit das Tagging trotzdem läuft.
-    inhalt = (await documentContentForAi(doc.inhaltMarkdown)).trim();
-  } else if (doc.typ === "pdf") {
+    inhalt = (await documentContentForAi(doc.contentMarkdown)).trim();
+  } else if (doc.type === "pdf") {
     if (!doc.materialId) {
       return {
         ok: false,
         reason: "kein_inhalt",
-        error: "Diesem PDF-Dokument ist keine Datei zugeordnet.",
+        error: "Diesem PDF-Document ist keine Datei zugeordnet.",
         vorschlaege: [],
       };
     }
@@ -322,7 +322,7 @@ export async function generateSuggestionsForDocument(
     return {
       ok: false,
       reason: "kein_inhalt",
-      error: "Das Dokument enthält keinen Text, der analysiert werden könnte.",
+      error: "Das Document enthält keinen Text, der analysiert werden könnte.",
       vorschlaege: [],
     };
   }
@@ -359,22 +359,22 @@ export async function generateSuggestionsForDocument(
   const katalogText = katalog
     .map(
       (e) =>
-        `- [${e.zielTyp}] ${e.code} | ${e.titel}${
-          e.beschreibung ? ` — ${truncate(e.beschreibung, 240)}` : ""
+        `- [${e.targetType}] ${e.code} | ${e.title}${
+          e.description ? ` — ${truncate(e.description, 240)}` : ""
         } (${e.pfad})`,
     )
     .join("\n");
 
   const systemPrompt = `Du bist ein didaktisch geschulter Assistent, der Unterrichtsmaterialien zu österreichischen Lehrplan-Kompetenzen und Anwendungsbereichen zuordnet. Antworte ausschließlich auf Deutsch. Wähle ausschließlich Codes, die exakt in der vorgegebenen Liste vorkommen. Gib nur Zuordnungen mit klarer fachlicher Passung an (max. ${MAX_VORSCHLAEGE}). Lass eher Vorschläge weg, als unsichere zu erfinden.`;
 
-  const userPrompt = `Dokumenttitel: ${doc.titel}
+  const userPrompt = `Dokumenttitel: ${doc.title}
 
 Materialinhalt (Markdown, ggf. gekürzt):
 """
 ${ausschnitt}
 """
 
-Verfügbare Lehrplan-Einträge (zielTyp + Code + Titel + Beschreibung + Pfad):
+Verfügbare Lehrplan-Einträge (targetType + Code + Titel + Beschreibung + Pfad):
 ${katalogText}
 
 Aufgabe:
@@ -402,23 +402,23 @@ Aufgabe:
 
   // Code → ID auflösen (nur Treffer im Katalog werden persistiert).
   const kompByCode = new Map(
-    katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.code, e]),
+    katalog.filter((e) => e.targetType === "kompetenz").map((e) => [e.code, e]),
   );
   const awbByCode = new Map(
     katalog
-      .filter((e) => e.zielTyp === "anwendungsbereich")
+      .filter((e) => e.targetType === "anwendungsbereich")
       .map((e) => [e.code, e]),
   );
 
   type AufgeloesterVorschlag = {
     eintrag: CurriculumEntry;
     confidence: number;
-    begruendung: string;
+    rationale: string;
   };
   const aufgeloest: AufgeloesterVorschlag[] = [];
   const gesehen = new Set<string>();
   for (const v of llmAntwort.vorschlaege) {
-    const typHinweis = v.zielTyp.trim().toLowerCase();
+    const typHinweis = v.targetType.trim().toLowerCase();
     // Bevorzugt den vom Modell gelieferten Typ; fällt aber auf die jeweils
     // andere Variante zurück, wenn der Code dort nachweisbar passt. Dadurch
     // tolerieren wir Fälle, in denen das Modell den Typ verwechselt oder
@@ -433,23 +433,23 @@ Aufgabe:
         : awbByCode.get(v.code);
     const eintrag = primaer ?? sekundaer;
     if (!eintrag) continue;
-    const dedupKey = `${eintrag.zielTyp}:${eintrag.id}`;
+    const dedupKey = `${eintrag.targetType}:${eintrag.id}`;
     if (gesehen.has(dedupKey)) continue;
     gesehen.add(dedupKey);
     aufgeloest.push({
       eintrag,
       confidence: v.confidence,
-      begruendung: v.begruendung.trim(),
+      rationale: v.rationale.trim(),
     });
   }
 
   // Bestehende offene Vorschläge ersetzen; entschiedene bleiben erhalten.
   await db
-    .delete(dokumentLinkVorschlaege)
+    .delete(documentLinkSuggestions)
     .where(
       and(
-        eq(dokumentLinkVorschlaege.dokumentId, dokumentId),
-        eq(dokumentLinkVorschlaege.status, "offen"),
+        eq(documentLinkSuggestions.documentId, documentId),
+        eq(documentLinkSuggestions.status, "offen"),
       ),
     );
 
@@ -457,46 +457,46 @@ Aufgabe:
     // Filtere Duplikate gegen bereits entschiedene Einträge.
     const vorhandene = await db
       .select({
-        zielTyp: dokumentLinkVorschlaege.zielTyp,
-        kompetenzId: dokumentLinkVorschlaege.kompetenzId,
-        anwendungsbereichId: dokumentLinkVorschlaege.anwendungsbereichId,
+        targetType: documentLinkSuggestions.targetType,
+        kompetenzId: documentLinkSuggestions.kompetenzId,
+        anwendungsbereichId: documentLinkSuggestions.anwendungsbereichId,
       })
-      .from(dokumentLinkVorschlaege)
-      .where(eq(dokumentLinkVorschlaege.dokumentId, dokumentId));
+      .from(documentLinkSuggestions)
+      .where(eq(documentLinkSuggestions.documentId, documentId));
     const vorhandeneKey = new Set(
       vorhandene.map((v) =>
-        v.zielTyp === "kompetenz"
+        v.targetType === "kompetenz"
           ? `kompetenz:${v.kompetenzId}`
           : `anwendungsbereich:${v.anwendungsbereichId}`,
       ),
     );
 
     const einzufuegen = aufgeloest
-      .filter((a) => !vorhandeneKey.has(`${a.eintrag.zielTyp}:${a.eintrag.id}`))
+      .filter((a) => !vorhandeneKey.has(`${a.eintrag.targetType}:${a.eintrag.id}`))
       .map((a) => ({
-        dokumentId,
-        zielTyp: a.eintrag.zielTyp,
-        kompetenzId: a.eintrag.zielTyp === "kompetenz" ? a.eintrag.id : null,
+        documentId,
+        targetType: a.eintrag.targetType,
+        kompetenzId: a.eintrag.targetType === "kompetenz" ? a.eintrag.id : null,
         anwendungsbereichId:
-          a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
+          a.eintrag.targetType === "anwendungsbereich" ? a.eintrag.id : null,
         confidence: a.confidence,
-        begruendung: a.begruendung,
-        modell: modellName,
+        rationale: a.rationale,
+        model: modellName,
       }));
 
     if (einzufuegen.length > 0) {
-      await db.insert(dokumentLinkVorschlaege).values(einzufuegen);
+      await db.insert(documentLinkSuggestions).values(einzufuegen);
     }
   }
 
   const ansichten =
-    (await loadSuggestionsForDocument(dokumentId, ownerId)) ?? [];
+    (await loadSuggestionsForDocument(documentId, ownerId)) ?? [];
   return { ok: true, vorschlaege: ansichten };
 }
 
 interface EntscheidungsEingabe {
-  vorschlagId: string;
-  dokumentId: string;
+  suggestionId: string;
+  documentId: string;
   ownerId: string;
   aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen";
 }
@@ -514,18 +514,18 @@ export async function decideSuggestion(
   eingabe: EntscheidungsEingabe,
 ): Promise<EntscheidungsErgebnis | null> {
   const doc = await loadDocumentForSuggestions(
-    eingabe.dokumentId,
+    eingabe.documentId,
     eingabe.ownerId,
   );
   if (!doc) return null;
 
   const [vorschlag] = await db
     .select()
-    .from(dokumentLinkVorschlaege)
+    .from(documentLinkSuggestions)
     .where(
       and(
-        eq(dokumentLinkVorschlaege.id, eingabe.vorschlagId),
-        eq(dokumentLinkVorschlaege.dokumentId, eingabe.dokumentId),
+        eq(documentLinkSuggestions.id, eingabe.suggestionId),
+        eq(documentLinkSuggestions.documentId, eingabe.documentId),
       ),
     )
     .limit(1);
@@ -534,26 +534,26 @@ export async function decideSuggestion(
   if (eingabe.aktion === "akzeptieren") {
     // Die KI-Begründung des Vorschlags wird als Notiz an der Verknüpfung
     // gespeichert, damit nachvollziehbar bleibt, warum der Link existiert.
-    const notiz = vorschlag.begruendung?.trim() ? vorschlag.begruendung : null;
-    if (vorschlag.zielTyp === "kompetenz" && vorschlag.kompetenzId) {
+    const note = vorschlag.rationale?.trim() ? vorschlag.rationale : null;
+    if (vorschlag.targetType === "kompetenz" && vorschlag.kompetenzId) {
       await db
-        .insert(dokumentKompetenzLinks)
+        .insert(documentKompetenzLinks)
         .values({
-          dokumentId: eingabe.dokumentId,
+          documentId: eingabe.documentId,
           kompetenzId: vorschlag.kompetenzId,
-          notiz,
+          note,
         })
         .onConflictDoNothing();
     } else if (
-      vorschlag.zielTyp === "anwendungsbereich" &&
+      vorschlag.targetType === "anwendungsbereich" &&
       vorschlag.anwendungsbereichId
     ) {
       await db
-        .insert(dokumentAnwendungsbereichLinks)
+        .insert(documentAnwendungsbereichLinks)
         .values({
-          dokumentId: eingabe.dokumentId,
+          documentId: eingabe.documentId,
           anwendungsbereichId: vorschlag.anwendungsbereichId,
-          notiz,
+          note,
         })
         .onConflictDoNothing();
     }
@@ -561,26 +561,26 @@ export async function decideSuggestion(
     // Vorschlag wird auf "offen" zurückgesetzt; falls bereits ein Link
     // (durch früheres Akzeptieren) existiert, wird dieser entfernt, damit
     // Vorschlags-Zustand und Link-Tabelle konsistent bleiben.
-    if (vorschlag.zielTyp === "kompetenz" && vorschlag.kompetenzId) {
+    if (vorschlag.targetType === "kompetenz" && vorschlag.kompetenzId) {
       await db
-        .delete(dokumentKompetenzLinks)
+        .delete(documentKompetenzLinks)
         .where(
           and(
-            eq(dokumentKompetenzLinks.dokumentId, eingabe.dokumentId),
-            eq(dokumentKompetenzLinks.kompetenzId, vorschlag.kompetenzId),
+            eq(documentKompetenzLinks.documentId, eingabe.documentId),
+            eq(documentKompetenzLinks.kompetenzId, vorschlag.kompetenzId),
           ),
         );
     } else if (
-      vorschlag.zielTyp === "anwendungsbereich" &&
+      vorschlag.targetType === "anwendungsbereich" &&
       vorschlag.anwendungsbereichId
     ) {
       await db
-        .delete(dokumentAnwendungsbereichLinks)
+        .delete(documentAnwendungsbereichLinks)
         .where(
           and(
-            eq(dokumentAnwendungsbereichLinks.dokumentId, eingabe.dokumentId),
+            eq(documentAnwendungsbereichLinks.documentId, eingabe.documentId),
             eq(
-              dokumentAnwendungsbereichLinks.anwendungsbereichId,
+              documentAnwendungsbereichLinks.anwendungsbereichId,
               vorschlag.anwendungsbereichId,
             ),
           ),
@@ -595,15 +595,15 @@ export async function decideSuggestion(
         ? "abgelehnt"
         : "offen";
   await db
-    .update(dokumentLinkVorschlaege)
+    .update(documentLinkSuggestions)
     .set({ status, decidedAt: status === "offen" ? null : new Date() })
-    .where(eq(dokumentLinkVorschlaege.id, eingabe.vorschlagId));
+    .where(eq(documentLinkSuggestions.id, eingabe.suggestionId));
 
   const liste = await loadSuggestionsForDocument(
-    eingabe.dokumentId,
+    eingabe.documentId,
     eingabe.ownerId,
   );
-  const aktualisiert = liste?.find((v) => v.id === eingabe.vorschlagId);
+  const aktualisiert = liste?.find((v) => v.id === eingabe.suggestionId);
   if (!aktualisiert) return null;
   return { vorschlag: aktualisiert };
 }

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db, sqlClient } from "@/lib/db";
 import { users } from "@/lib/db/schema/auth";
-import { dokumente } from "@/lib/db/schema/dokumente";
+import { documents } from "@/lib/db/schema/documents";
 import { dokumentBaum } from "@/lib/workspace/mock-data";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
@@ -17,9 +17,9 @@ async function seedForUser(email: string) {
   }
 
   const [bestehend] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
-    .where(eq(dokumente.ownerId, benutzer.id))
+    .select({ id: documents.id })
+    .from(documents)
+    .where(eq(documents.ownerId, benutzer.id))
     .limit(1);
   if (bestehend) {
     console.log(`Dokumente für ${email} existieren bereits – übersprungen.`);
@@ -29,20 +29,20 @@ async function seedForUser(email: string) {
   async function insertKnoten(
     knoten: DokumentKnoten,
     parentId: string | null,
-    sortierung: number,
+    sortOrder: number,
   ) {
     const [eingefuegt] = await db
-      .insert(dokumente)
+      .insert(documents)
       .values({
         ownerId: benutzer.id,
         parentId,
-        typ: knoten.typ,
-        titel: knoten.titel,
+        type: knoten.type,
+        title: knoten.title,
         icon: knoten.icon ?? null,
-        inhaltMarkdown: knoten.inhalt ?? null,
-        sortierung,
+        contentMarkdown: knoten.inhalt ?? null,
+        sortOrder,
       })
-      .returning({ id: dokumente.id });
+      .returning({ id: documents.id });
 
     if (knoten.children) {
       let i = 0;

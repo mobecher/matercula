@@ -2,8 +2,8 @@ export type DokumentTyp = "ordner" | "seite" | "pdf";
 
 export interface DokumentKnoten {
   id: string;
-  titel: string;
-  typ: DokumentTyp;
+  title: string;
+  type: DokumentTyp;
   icon?: string;
   children?: DokumentKnoten[];
   /** Markdown-ähnlicher Inhalt – nur für Typ `seite` relevant. */
@@ -14,5 +14,5 @@ export interface DokumentKnoten {
 
 export interface OffenerTab {
   id: string;
-  dokumentId: string;
+  documentId: string;
 }

@@ -138,9 +138,11 @@ def _partition(file_bytes: bytes, mime_type: str, filename: str | None) -> list[
         "metadata_filename": filename,
     }
     if mime_type == PDF_MIME:
-        # Skip OCR for PDFs — see module docstring.
+        # Skip OCR for PDFs — see module docstring. ``strategy="fast"``
+        # already disables table inference internally; passing
+        # ``infer_table_structure`` here would collide with the value
+        # ``partition()`` forwards to ``partition_pdf``.
         kwargs["strategy"] = "fast"
-        kwargs["infer_table_structure"] = False
     elif mime_type.startswith("image/"):
         # Images can only yield text via OCR.
         kwargs["strategy"] = "ocr_only"

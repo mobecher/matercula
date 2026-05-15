@@ -9,7 +9,7 @@ type LinkKind = "kompetenz" | "anwendungsbereich";
 
 interface PickerEntry {
   id: string;
-  titel: string;
+  title: string;
   pfad: string;
   kind: LinkKind;
 }
@@ -29,7 +29,7 @@ export function LehrplanBacklinks({
 
   const reload = useCallback(async () => {
     try {
-      const r = await fetch(`/api/dokumente/${docId}/lehrplan-links`);
+      const r = await fetch(`/api/documents/${docId}/lehrplan-links`);
       if (r.ok) setData((await r.json()) as DokumentLehrplanLinks);
     } catch {
       /* ignore */
@@ -58,12 +58,12 @@ export function LehrplanBacklinks({
     try {
       const endpoint =
         kind === "kompetenz"
-          ? `/api/kompetenzen/${targetId}/dokumente`
-          : `/api/anwendungsbereiche/${targetId}/dokumente`;
+          ? `/api/kompetenzen/${targetId}/documents`
+          : `/api/anwendungsbereiche/${targetId}/documents`;
       const r = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ dokumentId: docId }),
+        body: JSON.stringify({ documentId: docId }),
       });
       if (r.ok) {
         await reload();
@@ -79,12 +79,12 @@ export function LehrplanBacklinks({
     try {
       const endpoint =
         kind === "kompetenz"
-          ? `/api/kompetenzen/${targetId}/dokumente`
-          : `/api/anwendungsbereiche/${targetId}/dokumente`;
+          ? `/api/kompetenzen/${targetId}/documents`
+          : `/api/anwendungsbereiche/${targetId}/documents`;
       const r = await fetch(endpoint, {
         method: "DELETE",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ dokumentId: docId }),
+        body: JSON.stringify({ documentId: docId }),
       });
       if (r.ok) {
         await reload();
@@ -110,7 +110,7 @@ export function LehrplanBacklinks({
         lehrplaene={lehrplaene}
         onPick={(id) => void add("kompetenz", id)}
         onRemove={(id) => void remove("kompetenz", id)}
-        onOpen={(item) => openKompetenzTab(item.id, item.titel)}
+        onOpen={(item) => openKompetenzTab(item.id, item.title)}
       />
       <BacklinkRow
         label="Anwendungsbereiche"
@@ -122,7 +122,7 @@ export function LehrplanBacklinks({
         lehrplaene={lehrplaene}
         onPick={(id) => void add("anwendungsbereich", id)}
         onRemove={(id) => void remove("anwendungsbereich", id)}
-        onOpen={(item) => openAnwendungsbereichTab(item.id, item.titel)}
+        onOpen={(item) => openAnwendungsbereichTab(item.id, item.title)}
       />
     </div>
   );
@@ -170,13 +170,13 @@ function BacklinkRow({
             title={item.pfad}
           >
             <button
-              aria-label={`${item.titel} öffnen`}
+              aria-label={`${item.title} öffnen`}
               className="inline-flex items-center gap-1 py-0.5 hover:underline"
               onClick={() => onOpen(item)}
               type="button"
             >
               <span className="font-mono text-[10px] text-neutral-500">{item.code}</span>
-              <span className="max-w-72 truncate">{item.titel}</span>
+              <span className="max-w-72 truncate">{item.title}</span>
             </button>
             <button
               aria-label="Verknüpfung entfernen"
@@ -242,7 +242,7 @@ function LehrplanPickerButton({ kind, excludeIds, lehrplaene, onPick, busy }: Pi
     (e) =>
       !excludeIds.has(e.id) &&
       (needle === "" ||
-        e.titel.toLowerCase().includes(needle) ||
+        e.title.toLowerCase().includes(needle) ||
         e.pfad.toLowerCase().includes(needle)),
   );
 
@@ -285,7 +285,7 @@ function LehrplanPickerButton({ kind, excludeIds, lehrplaene, onPick, busy }: Pi
                   }}
                   type="button"
                 >
-                  <span className="min-w-0 truncate">{e.titel}</span>
+                  <span className="min-w-0 truncate">{e.title}</span>
                   <span className="text-[10px] text-neutral-500">{e.pfad}</span>
                 </button>
               </li>
@@ -303,9 +303,9 @@ function collectEntries(lehrplaene: SidebarLehrplan[], kind: LinkKind): PickerEn
     for (const klasse of lp.klassen) {
       for (const bereich of klasse.bereiche) {
         const items = kind === "kompetenz" ? bereich.kompetenzen : bereich.anwendungsbereiche;
-        const pfad = `${lp.titel} › ${klasse.titel} › ${bereich.titel}`;
+        const pfad = `${lp.title} › ${klasse.title} › ${bereich.title}`;
         for (const it of items) {
-          out.push({ id: it.id, titel: it.titel, pfad, kind });
+          out.push({ id: it.id, title: it.title, pfad, kind });
         }
       }
     }

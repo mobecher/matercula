@@ -6,13 +6,13 @@ import { useWorkspace } from "./workspace-context";
 
 export interface LinkedDocument {
   id: string;
-  titel: string;
+  title: string;
   icon: string | null;
-  notiz: string | null;
+  note: string | null;
 }
 
 interface MaterialLinkerProps {
-  /** REST endpoint that accepts POST { dokumentId } / DELETE { dokumentId }. */
+  /** REST endpoint that accepts POST { documentId } / DELETE { documentId }. */
   endpoint: string;
   docs: LinkedDocument[];
   onChange: () => void;
@@ -24,13 +24,13 @@ export function MaterialLinker({ endpoint, docs, onChange, mode }: MaterialLinke
   const { openDocument } = useWorkspace();
   const [busy, setBusy] = useState(false);
 
-  async function add(dokumentId: string) {
+  async function add(documentId: string) {
     setBusy(true);
     try {
       const r = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ dokumentId }),
+        body: JSON.stringify({ documentId }),
       });
       if (r.ok) onChange();
     } finally {
@@ -38,13 +38,13 @@ export function MaterialLinker({ endpoint, docs, onChange, mode }: MaterialLinke
     }
   }
 
-  async function remove(dokumentId: string) {
+  async function remove(documentId: string) {
     setBusy(true);
     try {
       const r = await fetch(endpoint, {
         method: "DELETE",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ dokumentId }),
+        body: JSON.stringify({ documentId }),
       });
       if (r.ok) onChange();
     } finally {
@@ -63,13 +63,13 @@ export function MaterialLinker({ endpoint, docs, onChange, mode }: MaterialLinke
             className="group inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 pl-1.5 text-xs text-neutral-700"
           >
             <button
-              aria-label={`${d.titel} öffnen`}
+              aria-label={`${d.title} öffnen`}
               className="inline-flex items-center gap-1 py-0.5 hover:underline"
               onClick={() => openDocument(d.id)}
               type="button"
             >
               <span aria-hidden>{d.icon ?? "📄"}</span>
-              <span className="max-w-48 truncate">{d.titel}</span>
+              <span className="max-w-48 truncate">{d.title}</span>
             </button>
             <button
               aria-label="Verknüpfung entfernen"
@@ -121,10 +121,10 @@ export function MaterialLinker({ endpoint, docs, onChange, mode }: MaterialLinke
                     onClick={() => openDocument(d.id)}
                     type="button"
                   >
-                    {d.titel}
+                    {d.title}
                   </button>
                 </td>
-                <td className="px-4 py-3 text-neutral-600">{d.notiz ?? "—"}</td>
+                <td className="px-4 py-3 text-neutral-600">{d.note ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
                   <button
                     aria-label="Verknüpfung entfernen"
@@ -155,7 +155,7 @@ export function MaterialLinker({ endpoint, docs, onChange, mode }: MaterialLinke
 
 interface PickerButtonProps {
   excludeIds: Set<string>;
-  onPick: (dokumentId: string) => void;
+  onPick: (documentId: string) => void;
   label: string;
   busy: boolean;
   variant?: "default" | "primary";
@@ -191,7 +191,7 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
   const pages = useMemo(() => collectPages(tree), [tree]);
   const needle = filter.trim().toLowerCase();
   const filtered = pages.filter(
-    (s) => !excludeIds.has(s.id) && (needle === "" || s.titel.toLowerCase().includes(needle)),
+    (s) => !excludeIds.has(s.id) && (needle === "" || s.title.toLowerCase().includes(needle)),
   );
 
   const triggerCls =
@@ -240,8 +240,8 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
                   }}
                   type="button"
                 >
-                  <span aria-hidden>{s.icon ?? (s.typ === "pdf" ? "📕" : "📄")}</span>
-                  <span className="min-w-0 flex-1 truncate">{s.titel}</span>
+                  <span aria-hidden>{s.icon ?? (s.type === "pdf" ? "📕" : "📄")}</span>
+                  <span className="min-w-0 flex-1 truncate">{s.title}</span>
                 </button>
               </li>
             ))}
@@ -254,30 +254,30 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
 
 function collectPages(nodes: DokumentKnoten[]): Array<{
   id: string;
-  titel: string;
+  title: string;
   icon: string | null;
-  typ: "seite" | "pdf";
+  type: "seite" | "pdf";
 }> {
   const out: Array<{
     id: string;
-    titel: string;
+    title: string;
     icon: string | null;
-    typ: "seite" | "pdf";
+    type: "seite" | "pdf";
   }> = [];
   function walk(ns: DokumentKnoten[]) {
     for (const n of ns) {
-      if (n.typ === "seite" || n.typ === "pdf") {
+      if (n.type === "seite" || n.type === "pdf") {
         out.push({
           id: n.id,
-          titel: n.titel,
+          title: n.title,
           icon: n.icon ?? null,
-          typ: n.typ,
+          type: n.type,
         });
       }
       if (n.children) walk(n.children);
     }
   }
   walk(nodes);
-  out.sort((a, b) => a.titel.localeCompare(b.titel, "de"));
+  out.sort((a, b) => a.title.localeCompare(b.title, "de"));
   return out;
 }

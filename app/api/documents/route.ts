@@ -9,13 +9,13 @@ import {
 const createSchema = z
   .object({
     parentId: z.string().uuid().nullable().optional(),
-    typ: z.enum(["ordner", "seite", "pdf"]),
-    titel: z.string().min(1).max(200),
+    type: z.enum(["ordner", "seite", "pdf"]),
+    title: z.string().min(1).max(200),
     icon: z.string().max(8).nullable().optional(),
-    inhaltMarkdown: z.string().nullable().optional(),
+    contentMarkdown: z.string().nullable().optional(),
     materialId: z.string().uuid().nullable().optional(),
   })
-  .refine((value) => value.typ !== "pdf" || !!value.materialId, {
+  .refine((value) => value.type !== "pdf" || !!value.materialId, {
     message: "materialId required for pdf documents",
     path: ["materialId"],
   });
@@ -44,10 +44,10 @@ export async function POST(request: Request) {
   const dokument = await createDocument({
     ownerId: user.id,
     parentId: result.data.parentId ?? null,
-    typ: result.data.typ,
-    titel: result.data.titel,
+    type: result.data.type,
+    title: result.data.title,
     icon: result.data.icon ?? null,
-    inhaltMarkdown: result.data.inhaltMarkdown ?? null,
+    contentMarkdown: result.data.contentMarkdown ?? null,
     materialId: result.data.materialId ?? null,
   });
 

@@ -4,11 +4,11 @@ import { getRequestUser } from "@/lib/auth/request";
 import { updateDocument, deleteDocument } from "@/lib/workspace/repository";
 
 const patchSchema = z.object({
-  titel: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(200).optional(),
   icon: z.string().max(8).nullable().optional(),
-  inhaltMarkdown: z.string().nullable().optional(),
+  contentMarkdown: z.string().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
-  sortierung: z.number().finite().optional(),
+  sortOrder: z.number().finite().optional(),
 });
 
 const idSchema = z.string().uuid();

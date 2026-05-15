@@ -237,16 +237,16 @@ function TreeNode({ node, depth }: TreeNodeProps) {
     renameDocument,
     moveDocument,
   } = useWorkspace();
-  const isFolder = node.typ === "ordner";
-  const isPdf = node.typ === "pdf";
+  const isFolder = node.type === "ordner";
+  const isPdf = node.type === "pdf";
   const folderPdfInputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(depth === 0);
   const [renaming, setRenaming] = useState(false);
-  const [draftTitle, setDraftTitle] = useState(node.titel);
+  const [draftTitle, setDraftTitle] = useState(node.title);
   const [dropZone, setDropZone] = useState<"before" | "into" | "after" | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const active = !isFolder && activeTab?.kind === "dokument" && activeTab.dokumentId === node.id;
+  const active = !isFolder && activeTab?.kind === "dokument" && activeTab.documentId === node.id;
 
   useEffect(() => {
     if (renaming && inputRef.current) {
@@ -266,18 +266,18 @@ function TreeNode({ node, depth }: TreeNodeProps) {
 
   function commitRename() {
     setRenaming(false);
-    if (draftTitle.trim() && draftTitle.trim() !== node.titel) {
+    if (draftTitle.trim() && draftTitle.trim() !== node.title) {
       void renameDocument(node.id, draftTitle.trim());
     } else {
-      setDraftTitle(node.titel);
+      setDraftTitle(node.title);
     }
   }
 
   async function handleDelete() {
     const label =
-      node.typ === "ordner"
-        ? `Ordner „${node.titel}“ und alle enthaltenen Seiten löschen?`
-        : `Seite „${node.titel}“ löschen?`;
+      node.type === "ordner"
+        ? `Ordner „${node.title}“ und alle enthaltenen Seiten löschen?`
+        : `Seite „${node.title}“ löschen?`;
     if (!confirm(label)) return;
     await removeDocument(node.id);
   }
@@ -398,7 +398,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                 e.preventDefault();
                 commitRename();
               } else if (e.key === "Escape") {
-                setDraftTitle(node.titel);
+                setDraftTitle(node.title);
                 setRenaming(false);
               }
             }}
@@ -411,12 +411,12 @@ function TreeNode({ node, depth }: TreeNodeProps) {
             onClick={primaryAction}
             onDoubleClick={(e) => {
               e.stopPropagation();
-              setDraftTitle(node.titel);
+              setDraftTitle(node.title);
               setRenaming(true);
             }}
             type="button"
           >
-            {node.titel}
+            {node.title}
           </button>
         )}
 
@@ -465,7 +465,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
           <IconButton
             label="Umbenennen"
             onClick={() => {
-              setDraftTitle(node.titel);
+              setDraftTitle(node.title);
               setRenaming(true);
             }}
           >
@@ -555,7 +555,7 @@ function filterTree(nodes: DokumentKnoten[], needle: string): DokumentKnoten[] {
   const result: DokumentKnoten[] = [];
   for (const node of nodes) {
     const childMatches = node.children ? filterTree(node.children, needle) : [];
-    const selfMatches = node.titel.toLowerCase().includes(needle);
+    const selfMatches = node.title.toLowerCase().includes(needle);
     if (selfMatches || childMatches.length > 0) {
       result.push({
         ...node,
@@ -611,7 +611,7 @@ function LehrplanItem({ lehrplan }: { lehrplan: SidebarLehrplan }) {
           )}
         </span>
         <span aria-hidden>📘</span>
-        <span className="min-w-0 flex-1 truncate font-medium">{lehrplan.titel}</span>
+        <span className="min-w-0 flex-1 truncate font-medium">{lehrplan.title}</span>
       </button>
       {open && (
         <ul className="space-y-0.5 pl-3">
@@ -658,10 +658,10 @@ function KlasseItem({
         </button>
         <button
           className="min-w-0 flex-1 truncate text-left"
-          onClick={() => openKlasseTab(slug, klasse.klasse, klasse.titel)}
+          onClick={() => openKlasseTab(slug, klasse.klasse, klasse.title)}
           type="button"
         >
-          {klasse.titel}
+          {klasse.title}
         </button>
       </div>
       {open && klasse.bereiche.length > 0 && (
@@ -709,10 +709,10 @@ function BereichItem({
         </button>
         <button
           className="min-w-0 flex-1 truncate text-left"
-          onClick={() => openBereichTab(bereich.id, bereich.titel)}
+          onClick={() => openBereichTab(bereich.id, bereich.title)}
           type="button"
         >
-          {bereich.titel}
+          {bereich.title}
         </button>
       </div>
       {open && hasChildren && (
@@ -727,14 +727,14 @@ function BereichItem({
                       ? "bg-neutral-200 font-medium text-neutral-900"
                       : "text-neutral-700 hover:bg-neutral-200"
                   }`}
-                  onClick={() => openKompetenzTab(k.id, k.titel)}
+                  onClick={() => openKompetenzTab(k.id, k.title)}
                   type="button"
-                  title={k.titel}
+                  title={k.title}
                 >
                   <span aria-hidden className="shrink-0 text-xs">
                     🎯
                   </span>
-                  <span className="min-w-0 flex-1 truncate">{k.titel}</span>
+                  <span className="min-w-0 flex-1 truncate">{k.title}</span>
                 </button>
               </li>
             );
@@ -749,14 +749,14 @@ function BereichItem({
                       ? "bg-neutral-200 font-medium text-neutral-900"
                       : "text-neutral-700 hover:bg-neutral-200"
                   }`}
-                  onClick={() => openAnwendungsbereichTab(a.id, a.titel)}
+                  onClick={() => openAnwendungsbereichTab(a.id, a.title)}
                   type="button"
-                  title={a.titel}
+                  title={a.title}
                 >
                   <span aria-hidden className="shrink-0 text-xs">
                     🧩
                   </span>
-                  <span className="min-w-0 flex-1 truncate">{a.titel}</span>
+                  <span className="min-w-0 flex-1 truncate">{a.title}</span>
                 </button>
               </li>
             );

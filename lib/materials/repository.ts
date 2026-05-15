@@ -4,8 +4,8 @@ import { type Material, materialien } from "@/lib/db/schema/materials";
 
 interface CreateMaterialInput {
   ownerId: string;
-  titel: string;
-  dateiname: string;
+  title: string;
+  fileName: string;
   mimeType: string;
   storageKey: string;
 }
@@ -17,8 +17,8 @@ export async function createMaterial(
     .insert(materialien)
     .values({
       ownerId: input.ownerId,
-      titel: input.titel,
-      dateiname: input.dateiname,
+      title: input.title,
+      fileName: input.fileName,
       mimeType: input.mimeType,
       storageKey: input.storageKey,
       // Newly-uploaded materials enter the tagging pipeline immediately;

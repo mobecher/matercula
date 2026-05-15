@@ -53,6 +53,11 @@ const SUPPORTED_MIME_TYPES = new Set<string>([
   "image/heic",
 ]);
 
+// Field names mirror the Python extractor's canonical chunk shape (see
+// CLAUDE.md → "Extractor service"). Do NOT translate `seitenzahl` /
+// `abschnitt` — they are part of the cross-language wire contract. The DB
+// columns on the Node side are English (`page_number`, `section`); the
+// translation happens at the insert site, not here.
 export const extractionChunkSchema = z.object({
   chunkIndex: z.number().int().nonnegative(),
   text: z.string().min(1),

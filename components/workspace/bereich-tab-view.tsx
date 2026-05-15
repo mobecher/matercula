@@ -5,20 +5,20 @@ import { type LinkedDocument, MaterialLinker } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
 
 interface BereichData {
-  lehrplan: { id: string; slug: string; titel: string };
-  klasse: { id: string; klasse: number; titel: string };
-  bereich: { id: string; titel: string; beschreibung: string | null };
+  lehrplan: { id: string; slug: string; title: string };
+  klasse: { id: string; klasse: number; title: string };
+  bereich: { id: string; title: string; description: string | null };
   kompetenzen: Array<{
     id: string;
     perspektive: "T" | "G" | "I" | null;
-    beschreibung: string;
-    dokumente: LinkedDocument[];
+    description: string;
+    documents: LinkedDocument[];
   }>;
   anwendungsbereiche: Array<{
     id: string;
-    titel: string;
-    beschreibung: string | null;
-    dokumente: LinkedDocument[];
+    title: string;
+    description: string | null;
+    documents: LinkedDocument[];
   }>;
 }
 
@@ -75,19 +75,19 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
       <nav className="mb-2 text-xs text-neutral-500">
-        <span>{data.lehrplan.titel}</span>
+        <span>{data.lehrplan.title}</span>
         <span className="mx-1">›</span>
         <button
           className="hover:text-neutral-900 hover:underline"
-          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)}
+          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.title)}
           type="button"
         >
-          {data.klasse.titel}
+          {data.klasse.title}
         </button>
       </nav>
-      <h1 className="text-3xl font-semibold tracking-tight">{data.bereich.titel}</h1>
-      {data.bereich.beschreibung && (
-        <p className="mt-2 text-sm text-neutral-600">{data.bereich.beschreibung}</p>
+      <h1 className="text-3xl font-semibold tracking-tight">{data.bereich.title}</h1>
+      {data.bereich.description && (
+        <p className="mt-2 text-sm text-neutral-600">{data.bereich.description}</p>
       )}
 
       <section className="mt-10">
@@ -122,19 +122,19 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                   <td className="px-4 py-3 text-neutral-800">
                     <button
                       className="text-left hover:underline"
-                      onClick={() => openKompetenzTab(k.id, shortenForTab(k.beschreibung))}
+                      onClick={() => openKompetenzTab(k.id, shortenForTab(k.description))}
                       type="button"
                     >
-                      {k.beschreibung}
+                      {k.description}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
-                    {k.dokumente.length}
+                    {k.documents.length}
                   </td>
                   <td className="px-4 py-3">
                     <MaterialLinker
-                      docs={k.dokumente}
-                      endpoint={`/api/kompetenzen/${k.id}/dokumente`}
+                      docs={k.documents}
+                      endpoint={`/api/kompetenzen/${k.id}/documents`}
                       mode="chips"
                       onChange={reload}
                     />
@@ -173,21 +173,21 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                       onClick={() =>
                         openAnwendungsbereichTab(
                           a.id,
-                          a.titel ?? shortenForTab(a.beschreibung ?? ""),
+                          a.title ?? shortenForTab(a.description ?? ""),
                         )
                       }
                       type="button"
                     >
-                      {a.beschreibung ?? a.titel}
+                      {a.description ?? a.title}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
-                    {a.dokumente.length}
+                    {a.documents.length}
                   </td>
                   <td className="px-4 py-3">
                     <MaterialLinker
-                      docs={a.dokumente}
-                      endpoint={`/api/anwendungsbereiche/${a.id}/dokumente`}
+                      docs={a.documents}
+                      endpoint={`/api/anwendungsbereiche/${a.id}/documents`}
                       mode="chips"
                       onChange={reload}
                     />

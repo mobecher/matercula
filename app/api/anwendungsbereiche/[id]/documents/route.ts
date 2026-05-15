@@ -2,26 +2,26 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
 import {
-  loadDocumentsForKompetenz,
-  deleteKompetenzLink,
-  linkKompetenz,
+  loadDocumentsForAnwendungsbereich,
+  deleteAnwendungsbereichLink,
+  linkAnwendungsbereich,
 } from "@/lib/curriculum/links";
 
 const linkSchema = z.object({
-  dokumentId: z.string().uuid(),
-  notiz: z.string().max(500).optional(),
+  documentId: z.string().uuid(),
+  note: z.string().max(500).optional(),
 });
 
 const deleteSchema = z.object({
-  dokumentId: z.string().uuid(),
+  documentId: z.string().uuid(),
 });
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;
-  const dokumente = await loadDocumentsForKompetenz(id, user.id);
-  return NextResponse.json({ dokumente });
+  const documents = await loadDocumentsForAnwendungsbereich(id, user.id);
+  return NextResponse.json({ documents });
 }
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -36,11 +36,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       { status: 400 },
     );
   }
-  const ok = await linkKompetenz({
-    dokumentId: result.data.dokumentId,
-    kompetenzId: id,
+  const ok = await linkAnwendungsbereich({
+    documentId: result.data.documentId,
+    anwendungsbereichId: id,
     ownerId: user.id,
-    notiz: result.data.notiz ?? null,
+    note: result.data.note ?? null,
   });
   if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ ok: true }, { status: 201 });
@@ -58,9 +58,9 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
       { status: 400 },
     );
   }
-  const ok = await deleteKompetenzLink({
-    dokumentId: result.data.dokumentId,
-    kompetenzId: id,
+  const ok = await deleteAnwendungsbereichLink({
+    documentId: result.data.documentId,
+    anwendungsbereichId: id,
     ownerId: user.id,
   });
   if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });

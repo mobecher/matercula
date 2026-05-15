@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { type Dokument, dokumente } from "@/lib/db/schema/dokumente";
+import { type Document, documents } from "@/lib/db/schema/documents";
 import {
   anwendungsbereiche,
   kompetenzbereiche,
@@ -9,9 +9,9 @@ import {
   lehrplanKlassen,
 } from "@/lib/db/schema/lehrplan";
 import {
-  dokumentAnwendungsbereichLinks,
-  dokumentKompetenzLinks,
-  dokumentLinkVorschlaege,
+  documentAnwendungsbereichLinks,
+  documentKompetenzLinks,
+  documentLinkSuggestions,
 } from "@/lib/db/schema/links";
 
 /**
@@ -19,43 +19,43 @@ import {
  * synchron, wenn ein Link manuell angelegt oder entfernt wurde.
  */
 async function syncSuggestionStatusForLink(args: {
-  dokumentId: string;
-  zielTyp: "kompetenz" | "anwendungsbereich";
+  documentId: string;
+  targetType: "kompetenz" | "anwendungsbereich";
   zielId: string;
   neuerStatus: "akzeptiert" | "offen";
 }): Promise<void> {
   const zielFilter =
-    args.zielTyp === "kompetenz"
-      ? eq(dokumentLinkVorschlaege.kompetenzId, args.zielId)
-      : eq(dokumentLinkVorschlaege.anwendungsbereichId, args.zielId);
+    args.targetType === "kompetenz"
+      ? eq(documentLinkSuggestions.kompetenzId, args.zielId)
+      : eq(documentLinkSuggestions.anwendungsbereichId, args.zielId);
   await db
-    .update(dokumentLinkVorschlaege)
+    .update(documentLinkSuggestions)
     .set({
       status: args.neuerStatus,
       decidedAt: args.neuerStatus === "akzeptiert" ? new Date() : null,
     })
     .where(
       and(
-        eq(dokumentLinkVorschlaege.dokumentId, args.dokumentId),
-        eq(dokumentLinkVorschlaege.zielTyp, args.zielTyp),
+        eq(documentLinkSuggestions.documentId, args.documentId),
+        eq(documentLinkSuggestions.targetType, args.targetType),
         zielFilter,
-        ne(dokumentLinkVorschlaege.status, args.neuerStatus),
+        ne(documentLinkSuggestions.status, args.neuerStatus),
       ),
     );
 }
 
 export interface VerknuepftesDokument {
   id: string;
-  titel: string;
+  title: string;
   icon: string | null;
-  notiz: string | null;
+  note: string | null;
 }
 
-/** Reverse-Link-Eintrag: ein Lehrplan-Element, mit dem ein Dokument verknüpft ist. */
+/** Reverse-Link-Eintrag: ein Lehrplan-Element, mit dem ein Document verknüpft ist. */
 export interface DokumentLehrplanLink {
   id: string;
   code: string;
-  titel: string;
+  title: string;
   /** Pfad-Beschriftung (Lehrplan › Klasse › Bereich) für Tooltip/Untertitel. */
   pfad: string;
 }
@@ -65,15 +65,15 @@ export interface DokumentLehrplanLinks {
   anwendungsbereiche: DokumentLehrplanLink[];
 }
 
-/** Reverse-Lookup: zu welchen Kompetenzen/Anwendungsbereichen gehört das Dokument? */
+/** Reverse-Lookup: zu welchen Kompetenzen/Anwendungsbereichen gehört das Document? */
 export async function loadLehrplanLinksForDocument(
-  dokumentId: string,
+  documentId: string,
   ownerId: string,
 ): Promise<DokumentLehrplanLinks | null> {
   const [doc] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
-    .where(and(eq(dokumente.id, dokumentId), eq(dokumente.ownerId, ownerId)))
+    .select({ id: documents.id })
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.ownerId, ownerId)))
     .limit(1);
   if (!doc) return null;
 
@@ -81,16 +81,16 @@ export async function loadLehrplanLinksForDocument(
     .select({
       id: kompetenzen.id,
       code: kompetenzen.code,
-      titel: kompetenzen.titel,
-      bereichTitel: kompetenzbereiche.titel,
-      klasseTitel: lehrplanKlassen.titel,
-      lehrplanTitel: lehrplaene.titel,
-      createdAt: dokumentKompetenzLinks.createdAt,
+      title: kompetenzen.title,
+      bereichTitel: kompetenzbereiche.title,
+      klasseTitel: lehrplanKlassen.title,
+      lehrplanTitel: lehrplaene.title,
+      createdAt: documentKompetenzLinks.createdAt,
     })
-    .from(dokumentKompetenzLinks)
+    .from(documentKompetenzLinks)
     .innerJoin(
       kompetenzen,
-      eq(kompetenzen.id, dokumentKompetenzLinks.kompetenzId),
+      eq(kompetenzen.id, documentKompetenzLinks.kompetenzId),
     )
     .innerJoin(
       kompetenzbereiche,
@@ -101,25 +101,25 @@ export async function loadLehrplanLinksForDocument(
       eq(lehrplanKlassen.id, kompetenzbereiche.klasseId),
     )
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
-    .where(eq(dokumentKompetenzLinks.dokumentId, dokumentId))
-    .orderBy(asc(dokumentKompetenzLinks.createdAt));
+    .where(eq(documentKompetenzLinks.documentId, documentId))
+    .orderBy(asc(documentKompetenzLinks.createdAt));
 
   const awbRows = await db
     .select({
       id: anwendungsbereiche.id,
       code: anwendungsbereiche.code,
-      titel: anwendungsbereiche.titel,
-      bereichTitel: kompetenzbereiche.titel,
-      klasseTitel: lehrplanKlassen.titel,
-      lehrplanTitel: lehrplaene.titel,
-      createdAt: dokumentAnwendungsbereichLinks.createdAt,
+      title: anwendungsbereiche.title,
+      bereichTitel: kompetenzbereiche.title,
+      klasseTitel: lehrplanKlassen.title,
+      lehrplanTitel: lehrplaene.title,
+      createdAt: documentAnwendungsbereichLinks.createdAt,
     })
-    .from(dokumentAnwendungsbereichLinks)
+    .from(documentAnwendungsbereichLinks)
     .innerJoin(
       anwendungsbereiche,
       eq(
         anwendungsbereiche.id,
-        dokumentAnwendungsbereichLinks.anwendungsbereichId,
+        documentAnwendungsbereichLinks.anwendungsbereichId,
       ),
     )
     .innerJoin(
@@ -131,20 +131,20 @@ export async function loadLehrplanLinksForDocument(
       eq(lehrplanKlassen.id, kompetenzbereiche.klasseId),
     )
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
-    .where(eq(dokumentAnwendungsbereichLinks.dokumentId, dokumentId))
-    .orderBy(asc(dokumentAnwendungsbereichLinks.createdAt));
+    .where(eq(documentAnwendungsbereichLinks.documentId, documentId))
+    .orderBy(asc(documentAnwendungsbereichLinks.createdAt));
 
   return {
     kompetenzen: kompRows.map((r) => ({
       id: r.id,
       code: r.code,
-      titel: r.titel,
+      title: r.title,
       pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
     })),
     anwendungsbereiche: awbRows.map((r) => ({
       id: r.id,
       code: r.code,
-      titel: r.titel,
+      title: r.title,
       pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
     })),
   };
@@ -156,32 +156,32 @@ export async function loadDocumentsForKompetenz(
 ): Promise<VerknuepftesDokument[]> {
   const links = await db
     .select()
-    .from(dokumentKompetenzLinks)
-    .where(eq(dokumentKompetenzLinks.kompetenzId, kompetenzId))
-    .orderBy(asc(dokumentKompetenzLinks.createdAt));
+    .from(documentKompetenzLinks)
+    .where(eq(documentKompetenzLinks.kompetenzId, kompetenzId))
+    .orderBy(asc(documentKompetenzLinks.createdAt));
   if (links.length === 0) return [];
   const docs = await db
     .select()
-    .from(dokumente)
+    .from(documents)
     .where(
       and(
         inArray(
-          dokumente.id,
-          links.map((l) => l.dokumentId),
+          documents.id,
+          links.map((l) => l.documentId),
         ),
-        eq(dokumente.ownerId, ownerId),
+        eq(documents.ownerId, ownerId),
       ),
     );
-  const byId = new Map<string, Dokument>(docs.map((d) => [d.id, d]));
+  const byId = new Map<string, Document>(docs.map((d) => [d.id, d]));
   return links
     .map((l) => {
-      const d = byId.get(l.dokumentId);
+      const d = byId.get(l.documentId);
       if (!d) return null;
       return {
         id: d.id,
-        titel: d.titel,
+        title: d.title,
         icon: d.icon,
-        notiz: l.notiz,
+        note: l.note,
       };
     })
     .filter((x): x is VerknuepftesDokument => x !== null);
@@ -193,65 +193,65 @@ export async function loadDocumentsForAnwendungsbereich(
 ): Promise<VerknuepftesDokument[]> {
   const links = await db
     .select()
-    .from(dokumentAnwendungsbereichLinks)
+    .from(documentAnwendungsbereichLinks)
     .where(
       eq(
-        dokumentAnwendungsbereichLinks.anwendungsbereichId,
+        documentAnwendungsbereichLinks.anwendungsbereichId,
         anwendungsbereichId,
       ),
     )
-    .orderBy(asc(dokumentAnwendungsbereichLinks.createdAt));
+    .orderBy(asc(documentAnwendungsbereichLinks.createdAt));
   if (links.length === 0) return [];
   const docs = await db
     .select()
-    .from(dokumente)
+    .from(documents)
     .where(
       and(
         inArray(
-          dokumente.id,
-          links.map((l) => l.dokumentId),
+          documents.id,
+          links.map((l) => l.documentId),
         ),
-        eq(dokumente.ownerId, ownerId),
+        eq(documents.ownerId, ownerId),
       ),
     );
-  const byId = new Map<string, Dokument>(docs.map((d) => [d.id, d]));
+  const byId = new Map<string, Document>(docs.map((d) => [d.id, d]));
   return links
     .map((l) => {
-      const d = byId.get(l.dokumentId);
+      const d = byId.get(l.documentId);
       if (!d) return null;
-      return { id: d.id, titel: d.titel, icon: d.icon, notiz: l.notiz };
+      return { id: d.id, title: d.title, icon: d.icon, note: l.note };
     })
     .filter((x): x is VerknuepftesDokument => x !== null);
 }
 
 export async function linkKompetenz(args: {
-  dokumentId: string;
+  documentId: string;
   kompetenzId: string;
   ownerId: string;
-  notiz?: string | null;
+  note?: string | null;
 }): Promise<boolean> {
   const [doc] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
+    .select({ id: documents.id })
+    .from(documents)
     .where(
       and(
-        eq(dokumente.id, args.dokumentId),
-        eq(dokumente.ownerId, args.ownerId),
+        eq(documents.id, args.documentId),
+        eq(documents.ownerId, args.ownerId),
       ),
     )
     .limit(1);
   if (!doc) return false;
   await db
-    .insert(dokumentKompetenzLinks)
+    .insert(documentKompetenzLinks)
     .values({
-      dokumentId: args.dokumentId,
+      documentId: args.documentId,
       kompetenzId: args.kompetenzId,
-      notiz: args.notiz ?? null,
+      note: args.note ?? null,
     })
     .onConflictDoNothing();
   await syncSuggestionStatusForLink({
-    dokumentId: args.dokumentId,
-    zielTyp: "kompetenz",
+    documentId: args.documentId,
+    targetType: "kompetenz",
     zielId: args.kompetenzId,
     neuerStatus: "akzeptiert",
   });
@@ -259,34 +259,34 @@ export async function linkKompetenz(args: {
 }
 
 export async function deleteKompetenzLink(args: {
-  dokumentId: string;
+  documentId: string;
   kompetenzId: string;
   ownerId: string;
 }): Promise<boolean> {
   const [doc] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
+    .select({ id: documents.id })
+    .from(documents)
     .where(
       and(
-        eq(dokumente.id, args.dokumentId),
-        eq(dokumente.ownerId, args.ownerId),
+        eq(documents.id, args.documentId),
+        eq(documents.ownerId, args.ownerId),
       ),
     )
     .limit(1);
   if (!doc) return false;
   const result = await db
-    .delete(dokumentKompetenzLinks)
+    .delete(documentKompetenzLinks)
     .where(
       and(
-        eq(dokumentKompetenzLinks.dokumentId, args.dokumentId),
-        eq(dokumentKompetenzLinks.kompetenzId, args.kompetenzId),
+        eq(documentKompetenzLinks.documentId, args.documentId),
+        eq(documentKompetenzLinks.kompetenzId, args.kompetenzId),
       ),
     )
-    .returning({ id: dokumentKompetenzLinks.id });
+    .returning({ id: documentKompetenzLinks.id });
   if (result.length > 0) {
     await syncSuggestionStatusForLink({
-      dokumentId: args.dokumentId,
-      zielTyp: "kompetenz",
+      documentId: args.documentId,
+      targetType: "kompetenz",
       zielId: args.kompetenzId,
       neuerStatus: "offen",
     });
@@ -295,33 +295,33 @@ export async function deleteKompetenzLink(args: {
 }
 
 export async function linkAnwendungsbereich(args: {
-  dokumentId: string;
+  documentId: string;
   anwendungsbereichId: string;
   ownerId: string;
-  notiz?: string | null;
+  note?: string | null;
 }): Promise<boolean> {
   const [doc] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
+    .select({ id: documents.id })
+    .from(documents)
     .where(
       and(
-        eq(dokumente.id, args.dokumentId),
-        eq(dokumente.ownerId, args.ownerId),
+        eq(documents.id, args.documentId),
+        eq(documents.ownerId, args.ownerId),
       ),
     )
     .limit(1);
   if (!doc) return false;
   await db
-    .insert(dokumentAnwendungsbereichLinks)
+    .insert(documentAnwendungsbereichLinks)
     .values({
-      dokumentId: args.dokumentId,
+      documentId: args.documentId,
       anwendungsbereichId: args.anwendungsbereichId,
-      notiz: args.notiz ?? null,
+      note: args.note ?? null,
     })
     .onConflictDoNothing();
   await syncSuggestionStatusForLink({
-    dokumentId: args.dokumentId,
-    zielTyp: "anwendungsbereich",
+    documentId: args.documentId,
+    targetType: "anwendungsbereich",
     zielId: args.anwendungsbereichId,
     neuerStatus: "akzeptiert",
   });
@@ -329,37 +329,37 @@ export async function linkAnwendungsbereich(args: {
 }
 
 export async function deleteAnwendungsbereichLink(args: {
-  dokumentId: string;
+  documentId: string;
   anwendungsbereichId: string;
   ownerId: string;
 }): Promise<boolean> {
   const [doc] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
+    .select({ id: documents.id })
+    .from(documents)
     .where(
       and(
-        eq(dokumente.id, args.dokumentId),
-        eq(dokumente.ownerId, args.ownerId),
+        eq(documents.id, args.documentId),
+        eq(documents.ownerId, args.ownerId),
       ),
     )
     .limit(1);
   if (!doc) return false;
   const result = await db
-    .delete(dokumentAnwendungsbereichLinks)
+    .delete(documentAnwendungsbereichLinks)
     .where(
       and(
-        eq(dokumentAnwendungsbereichLinks.dokumentId, args.dokumentId),
+        eq(documentAnwendungsbereichLinks.documentId, args.documentId),
         eq(
-          dokumentAnwendungsbereichLinks.anwendungsbereichId,
+          documentAnwendungsbereichLinks.anwendungsbereichId,
           args.anwendungsbereichId,
         ),
       ),
     )
-    .returning({ id: dokumentAnwendungsbereichLinks.id });
+    .returning({ id: documentAnwendungsbereichLinks.id });
   if (result.length > 0) {
     await syncSuggestionStatusForLink({
-      dokumentId: args.dokumentId,
-      zielTyp: "anwendungsbereich",
+      documentId: args.documentId,
+      targetType: "anwendungsbereich",
       zielId: args.anwendungsbereichId,
       neuerStatus: "offen",
     });

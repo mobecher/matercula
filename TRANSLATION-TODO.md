@@ -20,36 +20,13 @@ change.
 - All German comments in those files translated.
 - See git history for the exact rename map; LSP-aware renames updated all
   call sites.
+- DB schema renamed from German to English (non-glossary), with rename
+  migration `lib/db/migrations/0009_lying_joseph.sql` (preserves data).
+  All consumers updated.
 
 ## Remaining work
 
-### 1. DB schema + migrations
-
-Rename every German DB column / table that is **not** a glossary term, then
-generate a Drizzle migration and update all consumers in lockstep
-(`lib/db/schema/`, repository code, API routes, UI types).
-
-Examples (non-exhaustive):
-
-- `titel` → `title`, `beschreibung` → `description`, `inhalt` → `content`,
-  `inhaltMarkdown` → `contentMarkdown`, `dateiname` → `fileName`,
-  `notiz` → `note`, `vorhanden` → `present`, `vorschau` → `preview`,
-  `schluessel` → `keys`, `pfad` → `path`, `seitenzahl` → `pageNumber`,
-  `abschnitt` → `section`, `anzahlChunks` → `chunkCount`,
-  `anzahlSeiten` → `pageCount`, `gesamtZeichen` → `totalChars`,
-  `begruendung` → `rationale`, `modell` → `model`,
-  `perspektive` → `perspective`, `uebergreifendeThemen` → `crossCuttingTopics`,
-  `aktion` → `action`, `zielTyp`/`zielId`/`zielCode`/`zielTitel`/`zielPfad` →
-  `targetType` / `targetId` / `targetCode` / `targetTitle` / `targetPath`,
-  `zusammenfassung` → `summary`, `dokumentId` → `documentId`,
-  `vorschlagId` → `suggestionId`.
-- Tables: `dokumente` → `documents`, `vorschlaege` → `suggestions`.
-
-Keep glossary tables/columns: `lehrplan_versionen`, `kompetenzen`,
-`kompetenzbereiche`, `anwendungsbereiche`, `materialien`, `material_chunks`,
-`kompetenz_id`, `material_id`, `schulstufe`, etc.
-
-### 2. Wire JSON payloads + API route paths
+### 1. Wire JSON payloads + API route paths
 
 After (1), update every `NextResponse.json({...})` and Zod schema to use
 the new English keys, plus rename the German route segments where they
@@ -64,7 +41,7 @@ aren't glossary:
 Keep glossary segments: `/api/kompetenzen`, `/api/kompetenzbereiche`,
 `/api/anwendungsbereiche`, `/api/lehrplaene`.
 
-### 3. Enum / status string values
+### 2. Enum / status string values
 
 Currently used over the wire and in the DB:
 
@@ -77,7 +54,7 @@ Currently used over the wire and in the DB:
 
 Each requires a data migration plus updates in API + UI.
 
-### 4. Shared workspace types and component-internal helpers
+### 3. Shared workspace types and component-internal helpers
 
 - `lib/workspace/types.ts`: `DokumentKnoten` → `DocumentNode`,
   `DokumentTyp` → `DocumentType`, `OffenerTab` → `OpenTab`.
@@ -89,9 +66,9 @@ Each requires a data migration plus updates in API + UI.
   `benutzerName` → `userName`, `initialDokumentId` → `initialDocumentId`
   (and the call site in `app/(app)/workspace/layout.tsx`).
 
-### 5. File renames
+### 4. File renames
 
-After (4), rename component files where they aren't glossary:
+After (3), rename component files where they aren't glossary:
 
 - `components/workspace/link-vorschlaege.tsx` → `link-suggestions.tsx`
 - `components/workspace/material-uebersicht.tsx` → `material-overview.tsx`
@@ -101,13 +78,12 @@ Keep the glossary-named files: `lehrplan-backlinks.tsx`,
 `anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`,
 `material-linker.tsx`.
 
-### 6. Leftover comments / minor locals
+### 5. Leftover comments / minor locals
 
 `lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
-still have stray German comments and a few German local variables. Sweep
-them in the same pass as (1).
+still have stray German comments and a few German local variables.
 
-### 7. Out of scope
+### 6. Out of scope
 
 `services/extractor/` (Python) keeps the contract field names
 `seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the

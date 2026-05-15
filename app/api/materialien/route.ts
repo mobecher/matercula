@@ -94,16 +94,16 @@ export async function POST(request: Request) {
   }
 
   const id = randomUUID();
-  const dateiname = sanitizeFilename(file.name);
-  const storageKey = `materials/${user.id}/${id}/${dateiname}`;
+  const fileName = sanitizeFilename(file.name);
+  const storageKey = `materials/${user.id}/${id}/${fileName}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
   await uploadFile(storageKey, buffer, mimeType);
 
   const material = await createMaterial({
     ownerId: user.id,
-    titel: dateiname,
-    dateiname,
+    title: fileName,
+    fileName,
     mimeType,
     storageKey,
   });
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     {
       id: material.id,
       url,
-      name: material.dateiname,
+      name: material.fileName,
       contentType: material.mimeType,
       size: file.size,
     },

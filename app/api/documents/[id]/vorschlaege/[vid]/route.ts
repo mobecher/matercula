@@ -31,8 +31,8 @@ export async function PATCH(
     );
   }
   const result = await decideSuggestion({
-    dokumentId: dok.data,
-    vorschlagId: vorschlag.data,
+    documentId: dok.data,
+    suggestionId: vorschlag.data,
     ownerId: user.id,
     aktion: body.data.aktion,
   });

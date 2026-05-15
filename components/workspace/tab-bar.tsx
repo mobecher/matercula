@@ -75,18 +75,18 @@ function describeTab(
   findNode: ReturnType<typeof useWorkspace>["findNode"],
 ): { label: string; icon: string } | null {
   if (tab.kind === "dokument") {
-    const doc = findNode(tab.dokumentId);
+    const doc = findNode(tab.documentId);
     if (!doc) return null;
-    return { label: doc.titel, icon: doc.icon ?? "📄" };
+    return { label: doc.title, icon: doc.icon ?? "📄" };
   }
   if (tab.kind === "klasse") {
-    return { label: tab.titel, icon: "🎓" };
+    return { label: tab.title, icon: "🎓" };
   }
   if (tab.kind === "bereich") {
-    return { label: tab.titel, icon: "📚" };
+    return { label: tab.title, icon: "📚" };
   }
   if (tab.kind === "kompetenz") {
-    return { label: tab.titel, icon: "🎯" };
+    return { label: tab.title, icon: "🎯" };
   }
-  return { label: tab.titel, icon: "🧩" };
+  return { label: tab.title, icon: "🧩" };
 }

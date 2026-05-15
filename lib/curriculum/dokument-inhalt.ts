@@ -1,6 +1,6 @@
 /**
  * Liefert eine LLM-taugliche Textfassung des Inhalts einer
- * `dokumente`-Zeile (Spalte `inhaltMarkdown`).
+ * `documents`-Zeile (Spalte `contentMarkdown`).
  *
  * Die Spalte hält historisch Markdown, seit Einführung des Block-Editors
  * jedoch BlockNote-JSON (vom Editor mit `JSON.stringify(editor.document)`

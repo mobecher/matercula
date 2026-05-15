@@ -9,12 +9,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const detail = await loadAnwendungsbereichDetail(id);
   if (!detail) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const dokumente = await loadDocumentsForAnwendungsbereich(id, user.id);
+  const documents = await loadDocumentsForAnwendungsbereich(id, user.id);
   return NextResponse.json({
     lehrplan: detail.lehrplan,
     klasse: detail.klasse,
     bereich: detail.bereich,
     anwendungsbereich: detail.anwendungsbereich,
-    dokumente,
+    documents,
   });
 }

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useWorkspace } from "./workspace-context";
 
 interface KlasseData {
-  lehrplan: { id: string; slug: string; titel: string };
-  klasse: { id: string; klasse: number; titel: string };
+  lehrplan: { id: string; slug: string; title: string };
+  klasse: { id: string; klasse: number; title: string };
   bereiche: Array<{
-    bereich: { id: string; titel: string; beschreibung: string | null };
+    bereich: { id: string; title: string; description: string | null };
     kompetenzenAnzahl: number;
     anwendungsbereicheAnzahl: number;
   }>;
@@ -56,10 +56,10 @@ export function KlasseTabView({ lehrplanSlug, klasseNr }: KlasseTabViewProps) {
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
-      <p className="text-xs uppercase tracking-wider text-neutral-500">{data.lehrplan.titel}</p>
-      <h1 className="mt-1 text-3xl font-semibold tracking-tight">{data.klasse.titel}</h1>
+      <p className="text-xs uppercase tracking-wider text-neutral-500">{data.lehrplan.title}</p>
+      <h1 className="mt-1 text-3xl font-semibold tracking-tight">{data.klasse.title}</h1>
       <p className="mt-1 text-sm text-neutral-500">
-        Kompetenzbereiche im Lehrplan „{data.lehrplan.titel}“
+        Kompetenzbereiche im Lehrplan „{data.lehrplan.title}“
       </p>
 
       <div className="mt-8 overflow-hidden rounded-lg border border-neutral-200">
@@ -78,13 +78,13 @@ export function KlasseTabView({ lehrplanSlug, klasseNr }: KlasseTabViewProps) {
                 <td className="px-4 py-3">
                   <button
                     className="text-left font-medium text-neutral-900 hover:underline"
-                    onClick={() => openBereichTab(bereich.id, bereich.titel)}
+                    onClick={() => openBereichTab(bereich.id, bereich.title)}
                     type="button"
                   >
-                    {bereich.titel}
+                    {bereich.title}
                   </button>
                 </td>
-                <td className="px-4 py-3 text-neutral-600">{bereich.beschreibung ?? "—"}</td>
+                <td className="px-4 py-3 text-neutral-600">{bereich.description ?? "—"}</td>
                 <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
                   {kompetenzenAnzahl}
                 </td>

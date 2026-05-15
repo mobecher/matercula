@@ -22,7 +22,7 @@ export async function loadAllLehrplaene(): Promise<LehrplanOverview[]> {
   const plaene = await db
     .select()
     .from(lehrplaene)
-    .orderBy(asc(lehrplaene.sortierung), asc(lehrplaene.titel));
+    .orderBy(asc(lehrplaene.sortOrder), asc(lehrplaene.title));
   if (plaene.length === 0) return [];
   const klassen = await db
     .select()
@@ -33,7 +33,7 @@ export async function loadAllLehrplaene(): Promise<LehrplanOverview[]> {
         plaene.map((p) => p.id),
       ),
     )
-    .orderBy(asc(lehrplanKlassen.sortierung));
+    .orderBy(asc(lehrplanKlassen.sortOrder));
   const byLp = new Map<string, LehrplanKlasse[]>();
   for (const k of klassen) {
     const arr = byLp.get(k.lehrplanId) ?? [];
@@ -56,7 +56,7 @@ export async function loadLehrplanBySlug(
     .select()
     .from(lehrplanKlassen)
     .where(eq(lehrplanKlassen.lehrplanId, lp.id))
-    .orderBy(asc(lehrplanKlassen.sortierung));
+    .orderBy(asc(lehrplanKlassen.sortOrder));
   return { lehrplan: lp, klassen };
 }
 
@@ -90,7 +90,7 @@ export async function loadKlasseOverview(
     .select()
     .from(kompetenzbereiche)
     .where(eq(kompetenzbereiche.klasseId, klasse.id))
-    .orderBy(asc(kompetenzbereiche.sortierung));
+    .orderBy(asc(kompetenzbereiche.sortOrder));
   if (bereiche.length === 0) {
     return { lehrplan: lp, klasse, bereiche: [] };
   }
@@ -159,12 +159,12 @@ export async function loadKompetenzbereichDetail(
     .select()
     .from(kompetenzen)
     .where(eq(kompetenzen.kompetenzbereichId, bereich.id))
-    .orderBy(asc(kompetenzen.sortierung));
+    .orderBy(asc(kompetenzen.sortOrder));
   const apps = await db
     .select()
     .from(anwendungsbereiche)
     .where(eq(anwendungsbereiche.kompetenzbereichId, bereich.id))
-    .orderBy(asc(anwendungsbereiche.sortierung));
+    .orderBy(asc(anwendungsbereiche.sortOrder));
   return {
     lehrplan: lp,
     klasse,
@@ -250,25 +250,25 @@ export async function loadAnwendungsbereichDetail(
 
 export interface SidebarBereichItem {
   id: string;
-  titel: string;
+  title: string;
 }
 export interface SidebarBereich {
   id: string;
-  titel: string;
+  title: string;
   kompetenzen: SidebarBereichItem[];
   anwendungsbereiche: SidebarBereichItem[];
 }
 export interface SidebarLehrplanKlasse {
   id: string;
   klasse: number;
-  titel: string;
+  title: string;
   bereiche: SidebarBereich[];
 }
 
 export interface SidebarLehrplan {
   id: string;
   slug: string;
-  titel: string;
+  title: string;
   klassen: SidebarLehrplanKlasse[];
 }
 
@@ -280,7 +280,7 @@ export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {
   const plaene = await db
     .select()
     .from(lehrplaene)
-    .orderBy(asc(lehrplaene.titel));
+    .orderBy(asc(lehrplaene.title));
   if (plaene.length === 0) return [];
   const klassen = await db
     .select()
@@ -291,7 +291,7 @@ export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {
         plaene.map((p) => p.id),
       ),
     )
-    .orderBy(asc(lehrplanKlassen.sortierung));
+    .orderBy(asc(lehrplanKlassen.sortOrder));
   const bereiche = klassen.length
     ? await db
         .select()
@@ -302,7 +302,7 @@ export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {
             klassen.map((k) => k.id),
           ),
         )
-        .orderBy(asc(kompetenzbereiche.sortierung))
+        .orderBy(asc(kompetenzbereiche.sortOrder))
     : [];
   const bereichIds = bereiche.map((b) => b.id);
   const komps = bereichIds.length
@@ -310,14 +310,14 @@ export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {
         .select()
         .from(kompetenzen)
         .where(inArray(kompetenzen.kompetenzbereichId, bereichIds))
-        .orderBy(asc(kompetenzen.sortierung))
+        .orderBy(asc(kompetenzen.sortOrder))
     : [];
   const awbs = bereichIds.length
     ? await db
         .select()
         .from(anwendungsbereiche)
         .where(inArray(anwendungsbereiche.kompetenzbereichId, bereichIds))
-        .orderBy(asc(anwendungsbereiche.sortierung))
+        .orderBy(asc(anwendungsbereiche.sortOrder))
     : [];
 
   const kompsByBereich = new Map<string, Kompetenz[]>();
@@ -348,21 +348,21 @@ export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {
   return plaene.map((lp) => ({
     id: lp.id,
     slug: lp.slug,
-    titel: lp.titel,
+    title: lp.title,
     klassen: (klassenByLp.get(lp.id) ?? []).map((k) => ({
       id: k.id,
       klasse: k.klasse,
-      titel: k.titel,
+      title: k.title,
       bereiche: (bereicheByKlasse.get(k.id) ?? []).map((b) => ({
         id: b.id,
-        titel: b.titel,
+        title: b.title,
         kompetenzen: (kompsByBereich.get(b.id) ?? []).map((k) => ({
           id: k.id,
-          titel: k.titel,
+          title: k.title,
         })),
         anwendungsbereiche: (awbsByBereich.get(b.id) ?? []).map((a) => ({
           id: a.id,
-          titel: a.titel,
+          title: a.title,
         })),
       })),
     })),

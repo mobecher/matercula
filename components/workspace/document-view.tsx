@@ -68,7 +68,7 @@ export function DocumentView() {
     );
   }
 
-  const doc = findNode(activeTab.dokumentId);
+  const doc = findNode(activeTab.documentId);
   if (!doc) return <EmptyState />;
   return <DocumentEditor key={doc.id} doc={doc} />;
 }
@@ -76,23 +76,23 @@ export function DocumentView() {
 function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
   const { renameDocument, setIcon, saveContent } = useWorkspace();
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(doc.titel);
+  const [titleDraft, setTitleDraft] = useState(doc.title);
   const [backlinksReload, setBacklinksReload] = useState(0);
   const [vorschlaegeReload, setVorschlaegeReload] = useState(0);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset draft on doc switch even if titel is identical
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset draft on doc switch even if title is identical
   useEffect(() => {
-    setTitleDraft(doc.titel);
-  }, [doc.id, doc.titel]);
+    setTitleDraft(doc.title);
+  }, [doc.id, doc.title]);
 
   function commitTitle() {
     const trimmed = titleDraft.trim();
     if (!trimmed) {
-      setTitleDraft(doc.titel);
+      setTitleDraft(doc.title);
       return;
     }
-    if (trimmed !== doc.titel) {
+    if (trimmed !== doc.title) {
       void renameDocument(doc.id, trimmed);
     }
   }
@@ -113,7 +113,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
             type="button"
           >
             <span aria-hidden>
-              {doc.icon ?? (doc.typ === "ordner" ? "📁" : doc.typ === "pdf" ? "📕" : "📄")}
+              {doc.icon ?? (doc.type === "ordner" ? "📁" : doc.type === "pdf" ? "📕" : "📄")}
             </span>
           </button>
           {iconPickerOpen && (
@@ -157,25 +157,25 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         value={titleDraft}
       />
 
-      {doc.typ !== "ordner" && (
+      {doc.type !== "ordner" && (
         <LehrplanBacklinks
           docId={doc.id}
           reloadToken={backlinksReload}
           onLinksChanged={() => setVorschlaegeReload((t) => t + 1)}
         />
       )}
-      {(doc.typ === "seite" || doc.typ === "pdf") && (
+      {(doc.type === "seite" || doc.type === "pdf") && (
         <LinkSuggestions
           docId={doc.id}
           onLinksChanged={() => setBacklinksReload((t) => t + 1)}
           reloadToken={vorschlaegeReload}
         />
       )}
-      {doc.typ === "pdf" && doc.materialId && <MaterialOverview materialId={doc.materialId} />}
+      {doc.type === "pdf" && doc.materialId && <MaterialOverview materialId={doc.materialId} />}
 
-      {doc.typ === "ordner" ? (
+      {doc.type === "ordner" ? (
         <FolderHint />
-      ) : doc.typ === "pdf" ? (
+      ) : doc.type === "pdf" ? (
         <FileViewer materialId={doc.materialId} />
       ) : (
         <BlockEditor
@@ -190,16 +190,16 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
 
 interface MaterialMeta {
   id: string;
-  dateiname: string;
+  fileName: string;
   mimeType: string;
-  zusammenfassung: string | null;
+  summary: string | null;
   status: "uploaded" | "processing" | "ready" | "error";
 }
 
 /**
  * Renders the right preview/download experience for an uploaded material.
  *
- * The DB enum `dokumente.typ === "pdf"` is the legacy name for
+ * The DB enum `documents.type === "pdf"` is the legacy name for
  * "this document points at a Material file" — it covers any uploaded
  * format now (PDF, DOCX, PPTX, images, …). Branching here decides:
  *   - PDF → inline iframe preview (Safari needs iframe, not <object>)
@@ -290,20 +290,20 @@ function FileViewer({ materialId }: { materialId?: string }) {
           {iconForMime(meta.mimeType)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-neutral-900">{meta.dateiname}</p>
+          <p className="truncate font-medium text-neutral-900">{meta.fileName}</p>
           <p className="text-xs text-neutral-500">{meta.mimeType}</p>
         </div>
         <a
           className="inline-flex shrink-0 items-center gap-1 rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800"
-          download={meta.dateiname}
+          download={meta.fileName}
           href={url}
         >
           Herunterladen
         </a>
       </div>
-      {meta.zusammenfassung ? (
+      {meta.summary ? (
         <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">
-          {meta.zusammenfassung}
+          {meta.summary}
         </p>
       ) : meta.status === "uploaded" || meta.status === "processing" ? (
         <p className="mt-4 text-sm text-neutral-500">Inhaltsvorschau wird erstellt…</p>

@@ -14,30 +14,36 @@ import {
  * Curriculum domain ("Lehrplan").
  *
  * Hierarchy:
- *   lehrplaene (Fach, z. B. "Digitale Grundbildung")
- *     └─ lehrplan_klassen (Schulstufe, z. B. 1.-4. Klasse)
- *          └─ kompetenzbereiche (z. B. "Orientierung")
- *                 ├─ kompetenzen (mit Tag T/G/I + übergreifenden Themen)
- *                 └─ anwendungsbereiche (mit übergreifenden Themen)
+ *   lehrplaene (subject, e.g. "Digitale Grundbildung")
+ *     └─ lehrplan_klassen (Schulstufe, e.g. grades 1-4)
+ *          └─ kompetenzbereiche (e.g. "Orientierung")
+ *                 ├─ kompetenzen (with Tag T/G/I and cross-cutting topics)
+ *                 └─ anwendungsbereiche (with cross-cutting topics)
  *
- * Daten werden vom App-Anbieter rigide gepflegt (Read-only für Lehrkräfte).
+ * Data is curated rigidly by the app provider (read-only for teachers).
+ *
+ * Note: `Lehrplan`, `Kompetenzbereich`, `Kompetenz`, `Anwendungsbereich`,
+ * `Schulstufe` are domain glossary terms and stay German in code, DB and
+ * API payloads (see `CLAUDE.md`).
  */
 
 export const kompetenzPerspektiveEnum = pgEnum("kompetenz_perspektive", ["T", "G", "I"]);
 
 export const lehrplaene = pgTable("lehrplaene", {
   id: uuid("id").defaultRandom().primaryKey(),
-  /** Stabiler, menschenlesbarer Schlüssel (z. B. "digitale-grundbildung"). */
+  /** Stable, human-readable key (e.g. "digitale-grundbildung"). */
   slug: varchar("slug", { length: 128 }).notNull().unique(),
-  titel: text("titel").notNull(),
-  fach: text("fach").notNull(),
+  title: text("title").notNull(),
+  subject: text("subject").notNull(),
   schulstufe: varchar("schulstufe", { length: 64 }),
-  beschreibung: text("beschreibung"),
-  schuljahr: varchar("schuljahr", { length: 32 }),
-  gueltigAb: timestamp("gueltig_ab", { withTimezone: true }),
-  gueltigBis: timestamp("gueltig_bis", { withTimezone: true }),
-  sortierung: integer("sortierung").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  description: text("description"),
+  schoolYear: varchar("school_year", { length: 32 }),
+  validFrom: timestamp("valid_from", { withTimezone: true }),
+  validUntil: timestamp("valid_until", { withTimezone: true }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const lehrplanKlassen = pgTable(
@@ -48,12 +54,15 @@ export const lehrplanKlassen = pgTable(
       .notNull()
       .references(() => lehrplaene.id, { onDelete: "cascade" }),
     klasse: integer("klasse").notNull(),
-    titel: text("titel").notNull(),
-    beschreibung: text("beschreibung"),
-    sortierung: integer("sortierung").notNull().default(0),
+    title: text("title").notNull(),
+    description: text("description"),
+    sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => ({
-    uniqLehrplanKlasse: uniqueIndex("lehrplan_klassen_unique").on(t.lehrplanId, t.klasse),
+    uniqLehrplanKlasse: uniqueIndex("lehrplan_klassen_unique").on(
+      t.lehrplanId,
+      t.klasse,
+    ),
   }),
 );
 
@@ -65,12 +74,15 @@ export const kompetenzbereiche = pgTable(
       .notNull()
       .references(() => lehrplanKlassen.id, { onDelete: "cascade" }),
     code: varchar("code", { length: 64 }).notNull(),
-    titel: text("titel").notNull(),
-    beschreibung: text("beschreibung"),
-    sortierung: integer("sortierung").notNull().default(0),
+    title: text("title").notNull(),
+    description: text("description"),
+    sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => ({
-    uniqKlasseCode: uniqueIndex("kompetenzbereiche_klasse_code_unique").on(t.klasseId, t.code),
+    uniqKlasseCode: uniqueIndex("kompetenzbereiche_klasse_code_unique").on(
+      t.klasseId,
+      t.code,
+    ),
   }),
 );
 
@@ -82,12 +94,15 @@ export const kompetenzen = pgTable(
       .notNull()
       .references(() => kompetenzbereiche.id, { onDelete: "cascade" }),
     code: varchar("code", { length: 64 }).notNull(),
-    titel: text("titel").notNull(),
-    beschreibung: text("beschreibung"),
+    title: text("title").notNull(),
+    description: text("description"),
     perspektive: kompetenzPerspektiveEnum("perspektive"),
-    /** "Übergreifende Themen" wie Bildung, Berufsorientierung, Entrepreneurship, … */
-    uebergreifendeThemen: text("uebergreifende_themen").array().notNull().default([]),
-    sortierung: integer("sortierung").notNull().default(0),
+    /** "Übergreifende Themen" such as Bildung, Berufsorientierung, Entrepreneurship, … */
+    crossCuttingTopics: text("cross_cutting_topics")
+      .array()
+      .notNull()
+      .default([]),
+    sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => ({
     uniqBereichCode: uniqueIndex("kompetenzen_bereich_code_unique").on(
@@ -105,10 +120,13 @@ export const anwendungsbereiche = pgTable(
       .notNull()
       .references(() => kompetenzbereiche.id, { onDelete: "cascade" }),
     code: varchar("code", { length: 64 }).notNull(),
-    titel: text("titel").notNull(),
-    beschreibung: text("beschreibung"),
-    uebergreifendeThemen: text("uebergreifende_themen").array().notNull().default([]),
-    sortierung: integer("sortierung").notNull().default(0),
+    title: text("title").notNull(),
+    description: text("description"),
+    crossCuttingTopics: text("cross_cutting_topics")
+      .array()
+      .notNull()
+      .default([]),
+    sortOrder: integer("sort_order").notNull().default(0),
   },
   (t) => ({
     uniqBereichCode: uniqueIndex("anwendungsbereiche_bereich_code_unique").on(

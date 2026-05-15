@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { type Dokument, dokumente } from "@/lib/db/schema/dokumente";
+import { type Document, documents } from "@/lib/db/schema/documents";
 import { materialien } from "@/lib/db/schema/materials";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
@@ -9,24 +9,24 @@ export async function loadDocumentTreeForUser(
 ): Promise<DokumentKnoten[]> {
   const alle = await db
     .select()
-    .from(dokumente)
-    .where(eq(dokumente.ownerId, ownerId))
-    .orderBy(asc(dokumente.sortierung), asc(dokumente.createdAt));
+    .from(documents)
+    .where(eq(documents.ownerId, ownerId))
+    .orderBy(asc(documents.sortOrder), asc(documents.createdAt));
 
   return buildTree(alle);
 }
 
-function buildTree(zeilen: Dokument[]): DokumentKnoten[] {
+function buildTree(zeilen: Document[]): DokumentKnoten[] {
   const nachId = new Map<string, DokumentKnoten & { _parent: string | null }>();
   for (const z of zeilen) {
     nachId.set(z.id, {
       id: z.id,
-      titel: z.titel,
-      typ: z.typ,
+      title: z.title,
+      type: z.type,
       icon: z.icon ?? undefined,
-      inhalt: z.inhaltMarkdown ?? undefined,
+      inhalt: z.contentMarkdown ?? undefined,
       materialId: z.materialId ?? undefined,
-      children: z.typ === "ordner" ? [] : undefined,
+      children: z.type === "ordner" ? [] : undefined,
       _parent: z.parentId,
     });
   }
@@ -56,16 +56,16 @@ function buildTree(zeilen: Dokument[]): DokumentKnoten[] {
 interface CreateDocumentInput {
   ownerId: string;
   parentId: string | null;
-  typ: "ordner" | "seite" | "pdf";
-  titel: string;
+  type: "ordner" | "seite" | "pdf";
+  title: string;
   icon?: string | null;
-  inhaltMarkdown?: string | null;
+  contentMarkdown?: string | null;
   materialId?: string | null;
 }
 
 export async function createDocument(
   input: CreateDocumentInput,
-): Promise<Dokument | undefined> {
+): Promise<Document | undefined> {
   if (
     input.parentId &&
     !(await documentBelongsToOwner(input.parentId, input.ownerId))
@@ -78,32 +78,32 @@ export async function createDocument(
   ) {
     return undefined;
   }
-  const sortierung = await naechsteSortierung(input.ownerId, input.parentId);
+  const sortOrder = await naechsteSortierung(input.ownerId, input.parentId);
   const [erstellt] = await db
-    .insert(dokumente)
+    .insert(documents)
     .values({
       ownerId: input.ownerId,
       parentId: input.parentId,
-      typ: input.typ,
-      titel: input.titel,
+      type: input.type,
+      title: input.title,
       icon: input.icon ?? null,
-      inhaltMarkdown: input.inhaltMarkdown ?? null,
+      contentMarkdown: input.contentMarkdown ?? null,
       materialId: input.materialId ?? null,
-      sortierung,
+      sortOrder,
     })
     .returning();
   return erstellt;
 }
 
-/** Prüft, ob ein Dokument dem angegebenen Owner gehört. */
+/** Prüft, ob ein Document dem angegebenen Owner gehört. */
 async function documentBelongsToOwner(
   id: string,
   ownerId: string,
 ): Promise<boolean> {
   const [row] = await db
-    .select({ id: dokumente.id })
-    .from(dokumente)
-    .where(and(eq(dokumente.id, id), eq(dokumente.ownerId, ownerId)))
+    .select({ id: documents.id })
+    .from(documents)
+    .where(and(eq(documents.id, id), eq(documents.ownerId, ownerId)))
     .limit(1);
   return !!row;
 }
@@ -120,31 +120,31 @@ async function gehoertMaterialZuOwner(id: string, ownerId: string): Promise<bool
 
 async function naechsteSortierung(ownerId: string, parentId: string | null): Promise<number> {
   const geschwister = await db
-    .select({ sortierung: dokumente.sortierung })
-    .from(dokumente)
+    .select({ sortOrder: documents.sortOrder })
+    .from(documents)
     .where(
       and(
-        eq(dokumente.ownerId, ownerId),
-        parentId === null ? isNull(dokumente.parentId) : eq(dokumente.parentId, parentId),
+        eq(documents.ownerId, ownerId),
+        parentId === null ? isNull(documents.parentId) : eq(documents.parentId, parentId),
       ),
     );
-  const max = geschwister.reduce((acc, g) => Math.max(acc, g.sortierung), 0);
+  const max = geschwister.reduce((acc, g) => Math.max(acc, g.sortOrder), 0);
   return max + 1000;
 }
 
 interface UpdateDocumentInput {
   id: string;
   ownerId: string;
-  titel?: string;
+  title?: string;
   icon?: string | null;
-  inhaltMarkdown?: string | null;
+  contentMarkdown?: string | null;
   parentId?: string | null;
-  sortierung?: number;
+  sortOrder?: number;
 }
 
 export async function updateDocument(
   input: UpdateDocumentInput,
-): Promise<Dokument | undefined> {
+): Promise<Document | undefined> {
   if (input.parentId !== undefined && input.parentId !== null) {
     if (input.parentId === input.id) return undefined;
     if (!(await documentBelongsToOwner(input.parentId, input.ownerId))) {
@@ -158,20 +158,20 @@ export async function updateDocument(
     if (wuerdeZyklusErzeugen) return undefined;
   }
 
-  const aenderungen: Partial<typeof dokumente.$inferInsert> = {};
-  if (input.titel !== undefined) aenderungen.titel = input.titel;
+  const aenderungen: Partial<typeof documents.$inferInsert> = {};
+  if (input.title !== undefined) aenderungen.title = input.title;
   if (input.icon !== undefined) aenderungen.icon = input.icon;
-  if (input.inhaltMarkdown !== undefined)
-    aenderungen.inhaltMarkdown = input.inhaltMarkdown;
+  if (input.contentMarkdown !== undefined)
+    aenderungen.contentMarkdown = input.contentMarkdown;
   if (input.parentId !== undefined) aenderungen.parentId = input.parentId;
-  if (input.sortierung !== undefined) aenderungen.sortierung = input.sortierung;
+  if (input.sortOrder !== undefined) aenderungen.sortOrder = input.sortOrder;
   aenderungen.updatedAt = new Date();
 
   const [aktualisiert] = await db
-    .update(dokumente)
+    .update(documents)
     .set(aenderungen)
     .where(
-      and(eq(dokumente.id, input.id), eq(dokumente.ownerId, input.ownerId)),
+      and(eq(documents.id, input.id), eq(documents.ownerId, input.ownerId)),
     )
     .returning();
   return aktualisiert;
@@ -188,9 +188,9 @@ async function isDescendant(args: {
 }): Promise<boolean> {
   if (args.ancestorId === args.candidateId) return true;
   const all = await db
-    .select({ id: dokumente.id, parentId: dokumente.parentId })
-    .from(dokumente)
-    .where(eq(dokumente.ownerId, args.ownerId));
+    .select({ id: documents.id, parentId: documents.parentId })
+    .from(documents)
+    .where(eq(documents.ownerId, args.ownerId));
   const childrenByParent = new Map<string, string[]>();
   for (const row of all) {
     if (!row.parentId) continue;
@@ -217,9 +217,9 @@ export async function deleteDocument(
   ownerId: string,
 ): Promise<boolean> {
   const ergebnis = await db
-    .delete(dokumente)
-    .where(and(eq(dokumente.id, id), eq(dokumente.ownerId, ownerId)))
-    .returning({ id: dokumente.id });
+    .delete(documents)
+    .where(and(eq(documents.id, id), eq(documents.ownerId, ownerId)))
+    .returning({ id: documents.id });
   return ergebnis.length > 0;
 }
 
@@ -237,10 +237,10 @@ interface MoveDocumentInput {
 
 /**
  * Moves a document to a new parent and/or position. Computes a new
- * `sortierung` value between the surrounding siblings so the visual order
+ * `sortOrder` value between the surrounding siblings so the visual order
  * matches `position`. Rejects moves that would create a cycle.
  */
-export async function moveDocument(input: MoveDocumentInput): Promise<Dokument | undefined> {
+export async function moveDocument(input: MoveDocumentInput): Promise<Document | undefined> {
   if (input.parentId !== null) {
     if (input.parentId === input.id) return undefined;
     if (!(await documentBelongsToOwner(input.parentId, input.ownerId))) {
@@ -255,17 +255,17 @@ export async function moveDocument(input: MoveDocumentInput): Promise<Dokument |
   }
 
   const siblings = await db
-    .select({ id: dokumente.id, sortierung: dokumente.sortierung })
-    .from(dokumente)
+    .select({ id: documents.id, sortOrder: documents.sortOrder })
+    .from(documents)
     .where(
       and(
-        eq(dokumente.ownerId, input.ownerId),
+        eq(documents.ownerId, input.ownerId),
         input.parentId === null
-          ? isNull(dokumente.parentId)
-          : eq(dokumente.parentId, input.parentId),
+          ? isNull(documents.parentId)
+          : eq(documents.parentId, input.parentId),
       ),
     )
-    .orderBy(asc(dokumente.sortierung));
+    .orderBy(asc(documents.sortOrder));
 
   const filtered = siblings.filter((s) => s.id !== input.id);
   const targetIndex =
@@ -278,19 +278,19 @@ export async function moveDocument(input: MoveDocumentInput): Promise<Dokument |
 
   let newSort: number;
   if (before && after) {
-    newSort = (before.sortierung + after.sortierung) / 2;
+    newSort = (before.sortOrder + after.sortOrder) / 2;
   } else if (before) {
-    newSort = before.sortierung + 1000;
+    newSort = before.sortOrder + 1000;
   } else if (after) {
-    newSort = after.sortierung - 1000;
+    newSort = after.sortOrder - 1000;
   } else {
     newSort = 1000;
   }
 
   const [updated] = await db
-    .update(dokumente)
-    .set({ parentId: input.parentId, sortierung: newSort, updatedAt: new Date() })
-    .where(and(eq(dokumente.id, input.id), eq(dokumente.ownerId, input.ownerId)))
+    .update(documents)
+    .set({ parentId: input.parentId, sortOrder: newSort, updatedAt: new Date() })
+    .where(and(eq(documents.id, input.id), eq(documents.ownerId, input.ownerId)))
     .returning();
   return updated;
 }

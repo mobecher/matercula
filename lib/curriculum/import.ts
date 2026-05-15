@@ -78,7 +78,7 @@ export function slugify(input: string): string {
 
 export interface CurriculumKatalogKlasse {
   klasse: number;
-  titel: string;
+  title: string;
   kompetenzbereicheAnzahl: number;
   kompetenzenAnzahl: number;
   anwendungsbereicheAnzahl: number;
@@ -89,7 +89,7 @@ export interface CurriculumKatalogFach {
   fachKey: string;
   /** Stabiler Slug, unter dem dieser Lehrplan in der DB abgelegt wird. */
   slug: string;
-  titel: string;
+  title: string;
   klassen: CurriculumKatalogKlasse[];
 }
 
@@ -126,7 +126,7 @@ export async function loadCurriculumCatalogFromDb(
         }
         return {
           klasse,
-          titel: year.title,
+          title: year.title,
           kompetenzbereicheAnzahl: year.competence_areas.length,
           kompetenzenAnzahl: kompCount,
           anwendungsbereicheAnzahl: awbCount,
@@ -134,7 +134,7 @@ export async function loadCurriculumCatalogFromDb(
       })
       .filter((k): k is CurriculumKatalogKlasse => k !== null)
       .sort((a, b) => a.klasse - b.klasse);
-    return { fachKey, slug, titel: lp.title, klassen };
+    return { fachKey, slug, title: lp.title, klassen };
   });
 
   return { quelle: fileName, faecher };
@@ -153,7 +153,7 @@ export interface ImportAuswahl {
 export interface ImportErgebnis {
   fachKey: string;
   slug: string;
-  titel: string;
+  title: string;
   klassen: Array<{
     klasse: number;
     bereiche: number;
@@ -162,24 +162,24 @@ export interface ImportErgebnis {
   }>;
 }
 
-async function upsertLehrplan(slug: string, titel: string) {
+async function upsertLehrplan(slug: string, title: string) {
   const existing = await db.select().from(lehrplaene).where(eq(lehrplaene.slug, slug)).limit(1);
   if (existing[0]) return existing[0];
   const [created] = await db
     .insert(lehrplaene)
-    .values({ slug, titel, fach: titel, schulstufe: "Sekundarstufe I" })
+    .values({ slug, title, subject: title, schulstufe: "Sekundarstufe I" })
     .returning();
   return created;
 }
 
-async function upsertKlasse(lehrplanId: string, klasseNr: number, titel: string) {
+async function upsertKlasse(lehrplanId: string, klasseNr: number, title: string) {
   const existing = (
     await db.select().from(lehrplanKlassen).where(eq(lehrplanKlassen.lehrplanId, lehrplanId))
   ).find((k) => k.klasse === klasseNr);
   if (existing) return existing;
   const [created] = await db
     .insert(lehrplanKlassen)
-    .values({ lehrplanId, klasse: klasseNr, titel, sortierung: klasseNr })
+    .values({ lehrplanId, klasse: klasseNr, title, sortOrder: klasseNr })
     .returning();
   return created;
 }
@@ -187,9 +187,9 @@ async function upsertKlasse(lehrplanId: string, klasseNr: number, titel: string)
 async function upsertBereich(
   klasseId: string,
   code: string,
-  titel: string,
-  beschreibung: string | null,
-  sortierung: number,
+  title: string,
+  description: string | null,
+  sortOrder: number,
 ) {
   const existing = (
     await db.select().from(kompetenzbereiche).where(eq(kompetenzbereiche.klasseId, klasseId))
@@ -197,7 +197,7 @@ async function upsertBereich(
   if (existing) return existing;
   const [created] = await db
     .insert(kompetenzbereiche)
-    .values({ klasseId, code, titel, beschreibung, sortierung })
+    .values({ klasseId, code, title, description, sortOrder })
     .returning();
   return created;
 }
@@ -211,7 +211,7 @@ async function importLehrplan(
   const ergebnis: ImportErgebnis = {
     fachKey: raw.title,
     slug,
-    titel: raw.title,
+    title: raw.title,
     klassen: [],
   };
 
@@ -247,15 +247,15 @@ async function importLehrplan(
         kompSort += 1;
         const code = `${bereichCode}-k${kompSort}`;
         if (kompCodes.has(code)) continue;
-        const beschr = c.description.trim();
+        const desc = c.description.trim();
         await db.insert(kompetenzen).values({
           kompetenzbereichId: bereich.id,
           code,
-          titel: shortTitle(beschr),
-          beschreibung: beschr,
+          title: shortTitle(desc),
+          description: desc,
           perspektive: parsePerspektive(c.perspective),
-          uebergreifendeThemen: [],
-          sortierung: kompSort,
+          crossCuttingTopics: [],
+          sortOrder: kompSort,
         });
         neueKomp += 1;
       }
@@ -271,14 +271,14 @@ async function importLehrplan(
         appSort += 1;
         const code = `${bereichCode}-a${appSort}`;
         if (appCodes.has(code)) continue;
-        const beschr = app.trim();
+        const desc = app.trim();
         await db.insert(anwendungsbereiche).values({
           kompetenzbereichId: bereich.id,
           code,
-          titel: shortTitle(beschr),
-          beschreibung: beschr,
-          uebergreifendeThemen: [],
-          sortierung: appSort,
+          title: shortTitle(desc),
+          description: desc,
+          crossCuttingTopics: [],
+          sortOrder: appSort,
         });
         neueAwb += 1;
       }

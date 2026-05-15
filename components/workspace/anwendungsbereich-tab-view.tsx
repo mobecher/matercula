@@ -5,16 +5,16 @@ import { type LinkedDocument, MaterialLinker } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
 
 interface AnwendungsbereichDetailData {
-  lehrplan: { id: string; slug: string; titel: string };
-  klasse: { id: string; klasse: number; titel: string };
-  bereich: { id: string; titel: string };
+  lehrplan: { id: string; slug: string; title: string };
+  klasse: { id: string; klasse: number; title: string };
+  bereich: { id: string; title: string };
   anwendungsbereich: {
     id: string;
-    titel: string;
-    beschreibung: string | null;
-    uebergreifendeThemen: string[];
+    title: string;
+    description: string | null;
+    crossCuttingTopics: string[];
   };
-  dokumente: LinkedDocument[];
+  documents: LinkedDocument[];
 }
 
 export function AnwendungsbereichTabView({ anwendungsbereichId }: { anwendungsbereichId: string }) {
@@ -58,33 +58,33 @@ export function AnwendungsbereichTabView({ anwendungsbereichId }: { anwendungsbe
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
       <nav className="mb-2 text-xs text-neutral-500">
-        <span>{data.lehrplan.titel}</span>
+        <span>{data.lehrplan.title}</span>
         <span className="mx-1">›</span>
         <button
           className="hover:text-neutral-900 hover:underline"
-          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)}
+          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.title)}
           type="button"
         >
-          {data.klasse.titel}
+          {data.klasse.title}
         </button>
         <span className="mx-1">›</span>
         <button
           className="hover:text-neutral-900 hover:underline"
-          onClick={() => openBereichTab(data.bereich.id, data.bereich.titel)}
+          onClick={() => openBereichTab(data.bereich.id, data.bereich.title)}
           type="button"
         >
-          {data.bereich.titel}
+          {data.bereich.title}
         </button>
       </nav>
 
-      <h1 className="text-2xl font-semibold tracking-tight">{data.anwendungsbereich.titel}</h1>
-      {data.anwendungsbereich.beschreibung && (
-        <p className="mt-2 text-base text-neutral-800">{data.anwendungsbereich.beschreibung}</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{data.anwendungsbereich.title}</h1>
+      {data.anwendungsbereich.description && (
+        <p className="mt-2 text-base text-neutral-800">{data.anwendungsbereich.description}</p>
       )}
 
-      {data.anwendungsbereich.uebergreifendeThemen.length > 0 && (
+      {data.anwendungsbereich.crossCuttingTopics.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {data.anwendungsbereich.uebergreifendeThemen.map((t) => (
+          {data.anwendungsbereich.crossCuttingTopics.map((t) => (
             <span
               className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700"
               key={t}
@@ -98,8 +98,8 @@ export function AnwendungsbereichTabView({ anwendungsbereichId }: { anwendungsbe
       <section className="mt-10">
         <h2 className="mb-3 text-lg font-semibold">Verknüpfte Materialien</h2>
         <MaterialLinker
-          docs={data.dokumente}
-          endpoint={`/api/anwendungsbereiche/${anwendungsbereichId}/dokumente`}
+          docs={data.documents}
+          endpoint={`/api/anwendungsbereiche/${anwendungsbereichId}/documents`}
           mode="table"
           onChange={reload}
         />

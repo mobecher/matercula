@@ -32,12 +32,12 @@ export async function GET(
   const [mat] = await db
     .select({
       id: materialien.id,
-      titel: materialien.titel,
-      dateiname: materialien.dateiname,
+      title: materialien.title,
+      fileName: materialien.fileName,
       mimeType: materialien.mimeType,
       status: materialien.status,
       statusReason: materialien.statusReason,
-      zusammenfassung: materialien.zusammenfassung,
+      summary: materialien.summary,
       createdAt: materialien.createdAt,
       updatedAt: materialien.updatedAt,
     })
@@ -60,7 +60,7 @@ export async function GET(
   // function.
   const pagesAndLengths = await db
     .select({
-      seitenzahl: materialChunks.seitenzahl,
+      pageNumber: materialChunks.pageNumber,
       laenge: materialChunks.text,
     })
     .from(materialChunks)
@@ -68,7 +68,7 @@ export async function GET(
   const pageSet = new Set<number>();
   let gesamtZeichen = 0;
   for (const row of pagesAndLengths) {
-    if (row.seitenzahl != null) pageSet.add(row.seitenzahl);
+    if (row.pageNumber != null) pageSet.add(row.pageNumber);
     gesamtZeichen += row.laenge.length;
   }
 
@@ -76,8 +76,8 @@ export async function GET(
     .select({
       chunkIndex: materialChunks.chunkIndex,
       text: materialChunks.text,
-      seitenzahl: materialChunks.seitenzahl,
-      abschnitt: materialChunks.abschnitt,
+      pageNumber: materialChunks.pageNumber,
+      section: materialChunks.section,
     })
     .from(materialChunks)
     .where(eq(materialChunks.materialId, mat.id))
@@ -86,12 +86,12 @@ export async function GET(
 
   return NextResponse.json({
     id: mat.id,
-    titel: mat.titel,
-    dateiname: mat.dateiname,
+    title: mat.title,
+    fileName: mat.fileName,
     mimeType: mat.mimeType,
     status: mat.status,
     statusReason: mat.statusReason,
-    zusammenfassung: mat.zusammenfassung,
+    summary: mat.summary,
     createdAt: mat.createdAt,
     updatedAt: mat.updatedAt,
     anzahlChunks: agg?.anzahlChunks ?? 0,
@@ -99,8 +99,8 @@ export async function GET(
     gesamtZeichen,
     vorschau: previewRows.map((r) => ({
       chunkIndex: r.chunkIndex,
-      seitenzahl: r.seitenzahl,
-      abschnitt: r.abschnitt,
+      pageNumber: r.pageNumber,
+      section: r.section,
       // 320-character snippet is enough for the list view.
       text: r.text.length > 320 ? `${r.text.slice(0, 320).trimEnd()}…` : r.text,
     })),
