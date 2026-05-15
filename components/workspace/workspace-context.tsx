@@ -19,7 +19,7 @@ import {
 } from "@/lib/workspace/api-client";
 import type { DokumentKnoten, DokumentTyp } from "@/lib/workspace/types";
 
-export type WorkspaceTab =
+export type WorkspaceTab = (
   | { kind: "dokument"; key: string; dokumentId: string }
   | {
       kind: "klasse";
@@ -35,7 +35,16 @@ export type WorkspaceTab =
       key: string;
       anwendungsbereichId: string;
       titel: string;
-    };
+    }
+) & {
+  /**
+   * Preview tabs are temporary (VS-Code-Style): wenn sie via Single-Click
+   * geöffnet werden, werden sie durch die nächste Preview ersetzt statt
+   * eine neue Tab-Position zu belegen. Doppelklick oder Bearbeitung
+   * promoted die Tab zu einer permanenten (preview = false / undefined).
+   */
+  preview?: boolean;
+};
 
 export function dokumentTabKey(id: string): string {
   return `dok:${id}`;
@@ -60,13 +69,14 @@ interface WorkspaceContextValue {
   activeTabKey: string | null;
   activeTab: WorkspaceTab | null;
   saveStatus: "idle" | "saving" | "saved" | "error";
-  openDocument: (id: string) => void;
+  openDocument: (id: string, options?: { preview?: boolean }) => void;
   openKlasseTab: (lehrplanSlug: string, klasseNr: number, titel: string) => void;
   openBereichTab: (bereichId: string, titel: string) => void;
   openKompetenzTab: (kompetenzId: string, titel: string) => void;
   openAnwendungsbereichTab: (anwendungsbereichId: string, titel: string) => void;
   closeTab: (key: string) => void;
   setActiveTab: (key: string) => void;
+  promoteTab: (key: string) => void;
   renameDocument: (id: string, titel: string) => Promise<void>;
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
@@ -123,17 +133,49 @@ export function WorkspaceProvider({
     setTree(next);
   }, []);
 
-  const upsertTab = useCallback((tab: WorkspaceTab) => {
-    setOpenTabs((prev) => (prev.some((t) => t.key === tab.key) ? prev : [...prev, tab]));
+  const upsertTab = useCallback((tab: WorkspaceTab, opts?: { preview?: boolean }) => {
+    const preview = opts?.preview ?? false;
+    setOpenTabs((prev) => {
+      const existingIdx = prev.findIndex((t) => t.key === tab.key);
+      if (existingIdx >= 0) {
+        // Bereits geöffnet: wenn permanent geöffnet wird, Preview-Flag entfernen.
+        if (!preview && prev[existingIdx].preview) {
+          const next = [...prev];
+          next[existingIdx] = { ...prev[existingIdx], preview: false } as WorkspaceTab;
+          return next;
+        }
+        return prev;
+      }
+      if (preview) {
+        // Existierende Preview-Tab an gleicher Stelle ersetzen.
+        const previewIdx = prev.findIndex((t) => t.preview);
+        if (previewIdx >= 0) {
+          const next = [...prev];
+          next[previewIdx] = { ...tab, preview: true };
+          return next;
+        }
+        return [...prev, { ...tab, preview: true }];
+      }
+      return [...prev, tab];
+    });
     setActiveTabKey(tab.key);
   }, []);
 
   const openDocument = useCallback(
-    (id: string) => {
-      upsertTab({ kind: "dokument", key: dokumentTabKey(id), dokumentId: id });
+    (id: string, options?: { preview?: boolean }) => {
+      upsertTab(
+        { kind: "dokument", key: dokumentTabKey(id), dokumentId: id },
+        { preview: options?.preview ?? true },
+      );
     },
     [upsertTab],
   );
+
+  const promoteTab = useCallback((key: string) => {
+    setOpenTabs((prev) =>
+      prev.map((t) => (t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t)),
+    );
+  }, []);
 
   const openKlasseTab = useCallback(
     (lehrplanSlug: string, klasseNr: number, titel: string) => {
@@ -229,6 +271,11 @@ export function WorkspaceProvider({
 
   const saveContent = useCallback((id: string, content: string) => {
     setTree((prev) => mapTree(prev, id, (n) => ({ ...n, inhalt: content })));
+    // Bearbeiten promotet eine Preview-Tab zu einer permanenten.
+    const key = dokumentTabKey(id);
+    setOpenTabs((prev) =>
+      prev.map((t) => (t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t)),
+    );
 
     const existing = saveTimers.current.get(id);
     if (existing) clearTimeout(existing);
@@ -253,7 +300,7 @@ export function WorkspaceProvider({
         await refresh();
         const newId = result?.dokument?.id as string | undefined;
         if (newId && typ === "seite") {
-          openDocument(newId);
+          openDocument(newId, { preview: false });
         }
         return newId ?? null;
       } catch {
@@ -296,7 +343,7 @@ export function WorkspaceProvider({
         });
         await refresh();
         const newId = result?.dokument?.id as string | undefined;
-        if (newId) openDocument(newId);
+        if (newId) openDocument(newId, { preview: false });
         return newId ?? null;
       } catch {
         await refresh();
@@ -367,6 +414,7 @@ export function WorkspaceProvider({
       openAnwendungsbereichTab,
       closeTab,
       setActiveTab,
+      promoteTab,
       renameDocument,
       setIcon,
       saveContent,
@@ -391,6 +439,7 @@ export function WorkspaceProvider({
       openAnwendungsbereichTab,
       closeTab,
       setActiveTab,
+      promoteTab,
       renameDocument,
       setIcon,
       saveContent,

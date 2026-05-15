@@ -5,7 +5,8 @@ import { useSidebarToggle } from "./workspace-frame";
 import { useWorkspace, type WorkspaceTab } from "./workspace-context";
 
 export function TabBar() {
-  const { openTabs, activeTabKey, findNode, setActiveTab, closeTab, saveStatus } = useWorkspace();
+  const { openTabs, activeTabKey, findNode, setActiveTab, closeTab, promoteTab, saveStatus } =
+    useWorkspace();
   const { sidebarOpen, toggleSidebar } = useSidebarToggle();
 
   return (
@@ -37,10 +38,12 @@ export function TabBar() {
               <button
                 className="flex min-w-0 flex-1 items-center gap-1.5 px-3 py-2 text-left text-sm"
                 onClick={() => setActiveTab(tab.key)}
+                onDoubleClick={() => promoteTab(tab.key)}
                 type="button"
+                title={tab.preview ? "Doppelklick, um Tab zu fixieren" : undefined}
               >
                 <span aria-hidden>{meta.icon}</span>
-                <span className="truncate">{meta.label}</span>
+                <span className={`truncate ${tab.preview ? "italic" : ""}`}>{meta.label}</span>
               </button>
               <button
                 aria-label={`Tab „${meta.label}“ schließen`}
