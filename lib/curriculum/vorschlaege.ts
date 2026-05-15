@@ -489,22 +489,28 @@ export async function entscheideVorschlag(
   if (!vorschlag) return null;
 
   if (eingabe.aktion === "akzeptieren") {
+    // Die KI-Begründung des Vorschlags wird als Notiz an der Verknüpfung
+    // gespeichert, damit nachvollziehbar bleibt, warum der Link existiert.
+    const notiz = vorschlag.begruendung?.trim() ? vorschlag.begruendung : null;
     if (vorschlag.zielTyp === "kompetenz" && vorschlag.kompetenzId) {
       await db
         .insert(dokumentKompetenzLinks)
         .values({
           dokumentId: eingabe.dokumentId,
           kompetenzId: vorschlag.kompetenzId,
-          notiz: null,
+          notiz,
         })
         .onConflictDoNothing();
-    } else if (vorschlag.zielTyp === "anwendungsbereich" && vorschlag.anwendungsbereichId) {
+    } else if (
+      vorschlag.zielTyp === "anwendungsbereich" &&
+      vorschlag.anwendungsbereichId
+    ) {
       await db
         .insert(dokumentAnwendungsbereichLinks)
         .values({
           dokumentId: eingabe.dokumentId,
           anwendungsbereichId: vorschlag.anwendungsbereichId,
-          notiz: null,
+          notiz,
         })
         .onConflictDoNothing();
     }

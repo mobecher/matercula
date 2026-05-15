@@ -81,24 +81,31 @@ function BlockEditorInstance({
     };
   }, [editor]);
 
+  // Persistiere Inhaltsänderungen über die Editor-Transaktions-API. `BlockNoteView`s
+  // `onChange`-Prop verschluckt bestimmte Updates (z. B. Paste-Vorgänge), weil die
+  // React-Synchronisation hinter ProseMirror-Transaktionen herhinkt. `editor.onChange`
+  // wird hingegen für jede Transaktion (Tippen, Paste, Drag, Slash-Menü …) ausgelöst.
+  useEffect(() => {
+    const unsubscribe = editor.onChange(() => {
+      if (!hydratedRef.current) return;
+      if (suppressNextChangeRef.current) {
+        suppressNextChangeRef.current = false;
+        return;
+      }
+      // Persistiere als BlockNote-JSON (verlustfrei – Datei-/Bildblöcke
+      // bleiben erhalten). Wird beim Laden anhand des `[`-Präfixes von
+      // legacy-Markdown unterschieden.
+      const json = JSON.stringify(editor.document);
+      onChangeRef.current(json);
+    });
+    return () => {
+      unsubscribe?.();
+    };
+  }, [editor]);
+
   return (
     <div className="-mx-3">
-      <BlockNoteView
-        editor={editor}
-        theme="light"
-        onChange={async () => {
-          if (!hydratedRef.current) return;
-          if (suppressNextChangeRef.current) {
-            suppressNextChangeRef.current = false;
-            return;
-          }
-          // Persistiere als BlockNote-JSON (verlustfrei – Datei-/Bildblöcke
-          // bleiben erhalten). Wird beim Laden anhand des `[`-Präfixes von
-          // legacy-Markdown unterschieden.
-          const json = JSON.stringify(editor.document);
-          onChangeRef.current(json);
-        }}
-      />
+      <BlockNoteView editor={editor} theme="light" />
     </div>
   );
 }
