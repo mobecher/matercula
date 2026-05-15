@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useWorkspace } from "./workspace-context";
 
-interface VorschlagAnsicht {
+interface SuggestionView {
   id: string;
   zielTyp: "kompetenz" | "anwendungsbereich";
   zielId: string;
@@ -20,37 +20,37 @@ interface VorschlagAnsicht {
 
 type FetchStatus = "idle" | "loading" | "generating" | "ready" | "error";
 
-const STATUS_LABEL: Record<VorschlagAnsicht["status"], string> = {
+const STATUS_LABEL: Record<SuggestionView["status"], string> = {
   offen: "Offen",
   akzeptiert: "Akzeptiert",
   abgelehnt: "Abgelehnt",
 };
 
-const STATUS_BADGE: Record<VorschlagAnsicht["status"], string> = {
+const STATUS_BADGE: Record<SuggestionView["status"], string> = {
   offen: "bg-amber-100 text-amber-800",
   akzeptiert: "bg-emerald-100 text-emerald-800",
   abgelehnt: "bg-neutral-200 text-neutral-600",
 };
 
-const TYP_BADGE: Record<VorschlagAnsicht["zielTyp"], string> = {
+const TYP_BADGE: Record<SuggestionView["zielTyp"], string> = {
   kompetenz: "bg-blue-50 text-blue-700 border-blue-200",
   anwendungsbereich: "bg-purple-50 text-purple-700 border-purple-200",
 };
 
-const TYP_LABEL: Record<VorschlagAnsicht["zielTyp"], string> = {
+const TYP_LABEL: Record<SuggestionView["zielTyp"], string> = {
   kompetenz: "Kompetenz",
   anwendungsbereich: "Anwendungsbereich",
 };
 
 /**
- * Panel mit KI-Vorschlägen für Verknüpfungen Dokument ↔ Lehrplanelement.
+ * Panel showing AI-generated suggestions for document ↔ Lehrplan element links.
  *
- * - Zeigt vorhandene Vorschläge sortiert nach Konfidenz.
- * - "Vorschläge generieren" triggert eine LLM-Auswertung im Hintergrund.
- * - Akzeptieren legt zusätzlich den manuellen Link an; auf das
- *   Backlinks-Refresh-Event muss der Aufrufer reagieren (Prop-Callback).
+ * - Lists existing suggestions sorted by confidence.
+ * - "Vorschläge generieren" triggers an LLM evaluation in the background.
+ * - Accepting also creates the manual link; the caller must react to the
+ *   backlinks-refresh event via the prop callback.
  */
-export function LinkVorschlaege({
+export function LinkSuggestions({
   docId,
   onLinksChanged,
   reloadToken,
@@ -60,22 +60,22 @@ export function LinkVorschlaege({
   reloadToken?: number;
 }) {
   const { openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
-  const [vorschlaege, setVorschlaege] = useState<VorschlagAnsicht[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionView[]>([]);
   const [status, setStatus] = useState<FetchStatus>("idle");
-  const [fehler, setFehler] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setStatus("loading");
-    setFehler(null);
+    setError(null);
     try {
       const r = await fetch(`/api/dokumente/${docId}/vorschlaege`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = (await r.json()) as { vorschlaege: VorschlagAnsicht[] };
-      setVorschlaege(data.vorschlaege);
+      const data = (await r.json()) as { vorschlaege: SuggestionView[] };
+      setSuggestions(data.vorschlaege);
       setStatus("ready");
     } catch (e) {
-      setFehler(e instanceof Error ? e.message : "Unbekannter Fehler");
+      setError(e instanceof Error ? e.message : "Unbekannter Fehler");
       setStatus("error");
     }
   }, [docId]);
@@ -84,8 +84,8 @@ export function LinkVorschlaege({
     void reload();
   }, [reload]);
 
-  // Externe Änderungen (z. B. manuelles Verknüpfen in den Backlinks)
-  // triggern ein Reload, damit Status der Vorschläge konsistent bleibt.
+  // External changes (e.g. manual linking via the backlinks panel) trigger a
+  // reload so the suggestions' status stays consistent.
   useEffect(() => {
     if (reloadToken === undefined) return;
     void reload();
@@ -93,31 +93,34 @@ export function LinkVorschlaege({
 
   async function generate() {
     setStatus("generating");
-    setFehler(null);
+    setError(null);
     try {
       const r = await fetch(`/api/dokumente/${docId}/vorschlaege`, {
         method: "POST",
       });
       const data = (await r.json().catch(() => null)) as {
-        vorschlaege?: VorschlagAnsicht[];
+        vorschlaege?: SuggestionView[];
         message?: string;
         error?: string;
       } | null;
       if (!r.ok) {
-        setFehler(data?.message ?? data?.error ?? `HTTP ${r.status}`);
-        setVorschlaege(data?.vorschlaege ?? []);
+        setError(data?.message ?? data?.error ?? `HTTP ${r.status}`);
+        setSuggestions(data?.vorschlaege ?? []);
         setStatus("error");
         return;
       }
-      setVorschlaege(data?.vorschlaege ?? []);
+      setSuggestions(data?.vorschlaege ?? []);
       setStatus("ready");
     } catch (e) {
-      setFehler(e instanceof Error ? e.message : "Unbekannter Fehler");
+      setError(e instanceof Error ? e.message : "Unbekannter Fehler");
       setStatus("error");
     }
   }
 
-  async function decide(v: VorschlagAnsicht, aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen") {
+  async function decide(
+    v: SuggestionView,
+    aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen",
+  ) {
     setBusyId(v.id);
     try {
       const r = await fetch(`/api/dokumente/${docId}/vorschlaege/${v.id}`, {
@@ -126,11 +129,12 @@ export function LinkVorschlaege({
         body: JSON.stringify({ aktion }),
       });
       if (!r.ok) return;
-      const data = (await r.json()) as { vorschlag: VorschlagAnsicht };
-      setVorschlaege((prev) => prev.map((p) => (p.id === v.id ? data.vorschlag : p)));
-      // "akzeptieren" legt einen Link an, "zuruecksetzen" entfernt einen
-      // ggf. bereits angelegten Link – in beiden Fällen müssen die Backlinks
-      // refreshed werden.
+      const data = (await r.json()) as { vorschlag: SuggestionView };
+      setSuggestions((prev) =>
+        prev.map((p) => (p.id === v.id ? data.vorschlag : p)),
+      );
+      // "akzeptieren" creates a link, "zuruecksetzen" removes a previously
+      // created link – in both cases the backlinks must be refreshed.
       if (aktion === "akzeptieren" || aktion === "zuruecksetzen") {
         onLinksChanged?.();
       }
@@ -139,18 +143,20 @@ export function LinkVorschlaege({
     }
   }
 
-  const offene = vorschlaege.filter((v) => v.status === "offen");
-  const entschieden = vorschlaege.filter((v) => v.status !== "offen");
+  const openSuggestions = suggestions.filter((v) => v.status === "offen");
+  const decided = suggestions.filter((v) => v.status !== "offen");
   const generating = status === "generating";
 
   return (
     <div className="mb-6 space-y-3 border-b border-neutral-100 pb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-wider text-neutral-400">KI-Vorschläge</span>
-          {offene.length > 0 && (
+          <span className="text-xs uppercase tracking-wider text-neutral-400">
+            KI-Vorschläge
+          </span>
+          {openSuggestions.length > 0 && (
             <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-              {offene.length} offen
+              {openSuggestions.length} offen
             </span>
           )}
         </div>
@@ -164,24 +170,26 @@ export function LinkVorschlaege({
         </button>
       </div>
 
-      {status === "loading" && <p className="text-xs text-neutral-400">Lade Vorschläge…</p>}
+      {status === "loading" && (
+        <p className="text-xs text-neutral-400">Lade Vorschläge…</p>
+      )}
 
-      {fehler && (
+      {error && (
         <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
-          {fehler}
+          {error}
         </p>
       )}
 
-      {status === "ready" && vorschlaege.length === 0 && (
+      {status === "ready" && suggestions.length === 0 && (
         <p className="text-xs text-neutral-500">
-          Noch keine Vorschläge. Mit „Vorschläge generieren" startet die KI-Auswertung dieses
-          Dokuments.
+          Noch keine Vorschläge. Mit „Vorschläge generieren" startet die
+          KI-Auswertung dieses Dokuments.
         </p>
       )}
 
-      {offene.length > 0 && (
+      {openSuggestions.length > 0 && (
         <ul className="space-y-2">
-          {offene.map((v) => (
+          {openSuggestions.map((v) => (
             <li
               key={v.id}
               className="rounded-md border border-neutral-200 bg-white p-3 text-sm shadow-sm"
@@ -219,8 +227,12 @@ export function LinkVorschlaege({
                   >
                     {v.zielTitel}
                   </button>
-                  <p className="mt-0.5 text-xs text-neutral-500">{v.zielPfad}</p>
-                  <p className="mt-1.5 text-sm text-neutral-700">{v.begruendung}</p>
+                  <p className="mt-0.5 text-xs text-neutral-500">
+                    {v.zielPfad}
+                  </p>
+                  <p className="mt-1.5 text-sm text-neutral-700">
+                    {v.begruendung}
+                  </p>
                 </div>
                 <div className="flex shrink-0 flex-col gap-1">
                   <button
@@ -246,13 +258,13 @@ export function LinkVorschlaege({
         </ul>
       )}
 
-      {entschieden.length > 0 && (
+      {decided.length > 0 && (
         <details className="text-xs text-neutral-500">
           <summary className="cursor-pointer select-none hover:text-neutral-800">
-            Bereits entschieden ({entschieden.length})
+            Bereits entschieden ({decided.length})
           </summary>
           <ul className="mt-2 space-y-1.5">
-            {entschieden.map((v) => (
+            {decided.map((v) => (
               <li
                 key={v.id}
                 className="rounded border border-neutral-100 bg-neutral-50 px-2 py-1.5"
@@ -265,12 +277,18 @@ export function LinkVorschlaege({
                       >
                         {STATUS_LABEL[v.status]}
                       </span>
-                      <span className="font-mono text-[10px] text-neutral-500">{v.zielCode}</span>
+                      <span className="font-mono text-[10px] text-neutral-500">
+                        {v.zielCode}
+                      </span>
                       <ConfidenceBadge value={v.confidence} subtle />
                     </div>
-                    <p className="mt-1 font-medium text-neutral-800">{v.zielTitel}</p>
+                    <p className="mt-1 font-medium text-neutral-800">
+                      {v.zielTitel}
+                    </p>
                     {v.begruendung && (
-                      <p className="mt-1 whitespace-pre-wrap text-neutral-600">{v.begruendung}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-neutral-600">
+                        {v.begruendung}
+                      </p>
                     )}
                   </div>
                   {v.status === "abgelehnt" && (

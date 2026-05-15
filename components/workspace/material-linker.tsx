@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 import { useWorkspace } from "./workspace-context";
 
-export interface VerknuepftesDokument {
+export interface LinkedDocument {
   id: string;
   titel: string;
   icon: string | null;
@@ -12,11 +12,11 @@ export interface VerknuepftesDokument {
 }
 
 interface MaterialLinkerProps {
-  /** REST-Endpoint, der POST { dokumentId } / DELETE { dokumentId } akzeptiert. */
+  /** REST endpoint that accepts POST { dokumentId } / DELETE { dokumentId }. */
   endpoint: string;
-  docs: VerknuepftesDokument[];
+  docs: LinkedDocument[];
   onChange: () => void;
-  /** "table" → Vollbild-Tabelle für Detailseiten, "chips" → kompakte Inline-Variante. */
+  /** "table" → full-width table for detail pages, "chips" → compact inline variant. */
   mode: "table" | "chips";
 }
 
@@ -188,9 +188,9 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
     };
   }, [open]);
 
-  const seiten = useMemo(() => collectSeiten(tree), [tree]);
+  const pages = useMemo(() => collectPages(tree), [tree]);
   const needle = filter.trim().toLowerCase();
-  const filtered = seiten.filter(
+  const filtered = pages.filter(
     (s) => !excludeIds.has(s.id) && (needle === "" || s.titel.toLowerCase().includes(needle)),
   );
 
@@ -224,7 +224,7 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
           <ul className="max-h-64 overflow-y-auto py-1">
             {filtered.length === 0 && (
               <li className="px-3 py-2 text-xs text-neutral-500">
-                {seiten.length === 0
+                {pages.length === 0
                   ? "Noch keine Materialien vorhanden."
                   : "Keine passenden Materialien."}
               </li>
@@ -252,7 +252,7 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
   );
 }
 
-function collectSeiten(nodes: DokumentKnoten[]): Array<{
+function collectPages(nodes: DokumentKnoten[]): Array<{
   id: string;
   titel: string;
   icon: string | null;

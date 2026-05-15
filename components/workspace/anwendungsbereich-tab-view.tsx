@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MaterialLinker, type VerknuepftesDokument } from "./material-linker";
+import { type LinkedDocument, MaterialLinker } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
 
 interface AnwendungsbereichDetailData {
@@ -14,7 +14,7 @@ interface AnwendungsbereichDetailData {
     beschreibung: string | null;
     uebergreifendeThemen: string[];
   };
-  dokumente: VerknuepftesDokument[];
+  dokumente: LinkedDocument[];
 }
 
 export function AnwendungsbereichTabView({ anwendungsbereichId }: { anwendungsbereichId: string }) {

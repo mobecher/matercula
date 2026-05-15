@@ -38,10 +38,10 @@ export type WorkspaceTab = (
     }
 ) & {
   /**
-   * Preview tabs are temporary (VS-Code-Style): wenn sie via Single-Click
-   * geöffnet werden, werden sie durch die nächste Preview ersetzt statt
-   * eine neue Tab-Position zu belegen. Doppelklick oder Bearbeitung
-   * promoted die Tab zu einer permanenten (preview = false / undefined).
+   * Preview tabs are temporary (VS Code-style): when opened via single click
+   * they are replaced by the next preview instead of taking up a new tab
+   * slot. Double-clicking or editing promotes the tab to permanent
+   * (preview = false / undefined).
    */
   preview?: boolean;
 };
@@ -138,7 +138,7 @@ export function WorkspaceProvider({
     setOpenTabs((prev) => {
       const existingIdx = prev.findIndex((t) => t.key === tab.key);
       if (existingIdx >= 0) {
-        // Bereits geöffnet: wenn permanent geöffnet wird, Preview-Flag entfernen.
+        // Already open: when reopened as permanent, drop the preview flag.
         if (!preview && prev[existingIdx].preview) {
           const next = [...prev];
           next[existingIdx] = { ...prev[existingIdx], preview: false } as WorkspaceTab;
@@ -147,7 +147,7 @@ export function WorkspaceProvider({
         return prev;
       }
       if (preview) {
-        // Existierende Preview-Tab an gleicher Stelle ersetzen.
+        // Replace any existing preview tab in place.
         const previewIdx = prev.findIndex((t) => t.preview);
         if (previewIdx >= 0) {
           const next = [...prev];
@@ -273,7 +273,7 @@ export function WorkspaceProvider({
 
   const saveContent = useCallback((id: string, content: string) => {
     setTree((prev) => mapTree(prev, id, (n) => ({ ...n, inhalt: content })));
-    // Bearbeiten promotet eine Preview-Tab zu einer permanenten.
+    // Editing promotes a preview tab to permanent.
     const key = dokumentTabKey(id);
     setOpenTabs((prev) =>
       prev.map((t) =>
@@ -318,7 +318,7 @@ export function WorkspaceProvider({
   const uploadFileDocument = useCallback(
     async (parentId: string | null, file: File) => {
       try {
-        // 1) Datei in den S3-Speicher laden (liefert Material-ID).
+        // 1) Upload the file to S3 storage (returns a Material id).
         const formData = new FormData();
         formData.append("file", file);
         const uploadRes = await fetch("/api/materialien", {
@@ -332,10 +332,10 @@ export function WorkspaceProvider({
           contentType?: string;
         };
 
-        // 2) Dokument vom Typ `pdf` (= generischer „Datei“-Knoten) anlegen,
-        //    das auf das Material verweist. Der Enum-Wert `pdf` ist aus
-        //    historischen Gründen so benannt; er steht jetzt für jede
-        //    hochgeladene Datei beliebigen Formats.
+        // 2) Create a document of `typ = pdf` (the generic "file" node)
+        //    that points at the Material. The enum value `pdf` is named that
+        //    way for historical reasons; it now stands for any uploaded file
+        //    of any format.
         const mime = uploaded.contentType ?? file.type ?? "application/octet-stream";
         const titel = file.name.replace(/\.[^.]+$/, "") || uploaded.name;
         const result = await createDocument({

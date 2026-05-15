@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MaterialLinker, type VerknuepftesDokument } from "./material-linker";
+import { type LinkedDocument, MaterialLinker } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
 
 interface KompetenzDetailData {
@@ -14,7 +14,7 @@ interface KompetenzDetailData {
     beschreibung: string;
     uebergreifendeThemen: string[];
   };
-  dokumente: VerknuepftesDokument[];
+  dokumente: LinkedDocument[];
 }
 
 const PERSPEKTIVE_LABEL: Record<string, string> = {

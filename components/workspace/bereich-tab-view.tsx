@@ -1,15 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MaterialLinker } from "./material-linker";
+import { type LinkedDocument, MaterialLinker } from "./material-linker";
 import { useWorkspace } from "./workspace-context";
-
-interface VerknuepftesDokument {
-  id: string;
-  titel: string;
-  icon: string | null;
-  notiz: string | null;
-}
 
 interface BereichData {
   lehrplan: { id: string; slug: string; titel: string };
@@ -19,13 +12,13 @@ interface BereichData {
     id: string;
     perspektive: "T" | "G" | "I" | null;
     beschreibung: string;
-    dokumente: VerknuepftesDokument[];
+    dokumente: LinkedDocument[];
   }>;
   anwendungsbereiche: Array<{
     id: string;
     titel: string;
     beschreibung: string | null;
-    dokumente: VerknuepftesDokument[];
+    dokumente: LinkedDocument[];
   }>;
 }
 

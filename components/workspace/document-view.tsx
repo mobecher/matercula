@@ -8,8 +8,8 @@ import { BereichTabView } from "./bereich-tab-view";
 import { KlasseTabView } from "./klasse-tab-view";
 import { KompetenzTabView } from "./kompetenz-tab-view";
 import { LehrplanBacklinks } from "./lehrplan-backlinks";
-import { LinkVorschlaege } from "./link-vorschlaege";
-import { MaterialUebersicht } from "./material-uebersicht";
+import { LinkSuggestions } from "./link-vorschlaege";
+import { MaterialOverview } from "./material-uebersicht";
 import { iconForMime, useWorkspace } from "./workspace-context";
 
 const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
@@ -165,13 +165,13 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         />
       )}
       {(doc.typ === "seite" || doc.typ === "pdf") && (
-        <LinkVorschlaege
+        <LinkSuggestions
           docId={doc.id}
           onLinksChanged={() => setBacklinksReload((t) => t + 1)}
           reloadToken={vorschlaegeReload}
         />
       )}
-      {doc.typ === "pdf" && doc.materialId && <MaterialUebersicht materialId={doc.materialId} />}
+      {doc.typ === "pdf" && doc.materialId && <MaterialOverview materialId={doc.materialId} />}
 
       {doc.typ === "ordner" ? (
         <FolderHint />
@@ -230,7 +230,7 @@ function FileViewer({ materialId }: { materialId?: string }) {
         setMeta(next);
         setLoading(false);
         // Poll while extraction is still in flight so the summary appears
-        // as soon as the worker finishes — same cadence as MaterialUebersicht.
+        // as soon as the worker finishes — same cadence as MaterialOverview.
         if (next.status === "uploaded" || next.status === "processing") {
           timer = setTimeout(tick, 2000);
         }
@@ -264,9 +264,9 @@ function FileViewer({ materialId }: { materialId?: string }) {
   const url = `/api/materialien/${materialId}/download`;
 
   if (meta.mimeType === "application/pdf") {
-    // Safari rendert PDFs in <object>-Tags (vor allem bei Cross-Origin-Redirect
-    // auf eine signierte S3-URL) unzuverlässig. <iframe> funktioniert dort
-    // verlässlich; Firefox/Chrome sind ohnehin egal.
+    // Safari renders PDFs unreliably inside <object> tags (especially when
+    // there's a cross-origin redirect to a signed S3 URL). <iframe> works
+    // reliably there; Firefox/Chrome don't care either way.
     return (
       <div className="relative h-[80vh] w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-100">
         <iframe className="h-full w-full" src={`${url}#view=FitH`} title="PDF-Vorschau" />

@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-interface VorschauChunk {
+interface PreviewChunk {
   chunkIndex: number;
   seitenzahl: number | null;
   abschnitt: string | null;
   text: string;
 }
 
-interface UebersichtAntwort {
+interface OverviewResponse {
   id: string;
   titel: string;
   dateiname: string;
@@ -19,17 +19,17 @@ interface UebersichtAntwort {
   anzahlChunks: number;
   anzahlSeiten: number;
   gesamtZeichen: number;
-  vorschau: VorschauChunk[];
+  vorschau: PreviewChunk[];
 }
 
-const STATUS_LABEL: Record<UebersichtAntwort["status"], string> = {
+const STATUS_LABEL: Record<OverviewResponse["status"], string> = {
   uploaded: "Wartet auf Verarbeitung",
   processing: "Wird verarbeitet…",
   ready: "Bereit",
   error: "Fehler",
 };
 
-const STATUS_BADGE: Record<UebersichtAntwort["status"], string> = {
+const STATUS_BADGE: Record<OverviewResponse["status"], string> = {
   uploaded: "bg-amber-100 text-amber-800",
   processing: "bg-blue-100 text-blue-800",
   ready: "bg-emerald-100 text-emerald-800",
@@ -37,36 +37,36 @@ const STATUS_BADGE: Record<UebersichtAntwort["status"], string> = {
 };
 
 /**
- * Inhaltsübersicht für ein hochgeladenes Material (PDF/DOCX):
- * Status der Extraktions-Pipeline, Anzahl Chunks/Seiten, Vorschau der ersten
- * Textabschnitte. Solange der Status `uploaded` oder `processing` ist, wird
- * im Sekundentakt nachgepollt, bis sich etwas ändert.
+ * Content overview for an uploaded material (PDF/DOCX): status of the
+ * extraction pipeline, number of chunks/pages, and a preview of the first
+ * text sections. While the status is `uploaded` or `processing` we poll
+ * once per second until something changes.
  */
-export function MaterialUebersicht({ materialId }: { materialId: string }) {
-  const [data, setData] = useState<UebersichtAntwort | null>(null);
-  const [fehler, setFehler] = useState<string | null>(null);
+export function MaterialOverview({ materialId }: { materialId: string }) {
+  const [data, setData] = useState<OverviewResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [vorschauOffen, setVorschauOffen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
-    let abgebrochen = false;
+    let aborted = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     async function tick() {
       try {
         const r = await fetch(`/api/materialien/${materialId}/uebersicht`);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const next = (await r.json()) as UebersichtAntwort;
-        if (abgebrochen) return;
+        const next = (await r.json()) as OverviewResponse;
+        if (aborted) return;
         setData(next);
-        setFehler(null);
+        setError(null);
         setLoading(false);
         if (next.status === "uploaded" || next.status === "processing") {
           timer = setTimeout(tick, 2000);
         }
       } catch (e) {
-        if (abgebrochen) return;
-        setFehler(e instanceof Error ? e.message : "Unbekannter Fehler");
+        if (aborted) return;
+        setError(e instanceof Error ? e.message : "Unbekannter Fehler");
         setLoading(false);
       }
     }
@@ -74,7 +74,7 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
     void tick();
 
     return () => {
-      abgebrochen = true;
+      aborted = true;
       if (timer) clearTimeout(timer);
     };
   }, [materialId]);
@@ -87,10 +87,10 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
     );
   }
 
-  if (fehler || !data) {
+  if (error || !data) {
     return (
       <section className="mb-6 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-        Übersicht konnte nicht geladen werden{fehler ? `: ${fehler}` : "."}
+        Übersicht konnte nicht geladen werden{error ? `: ${error}` : "."}
       </section>
     );
   }
@@ -130,11 +130,11 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
       {data.vorschau.length > 0 && (
         <details
           className="space-y-2"
-          open={vorschauOffen}
-          onToggle={(e) => setVorschauOffen((e.target as HTMLDetailsElement).open)}
+          open={previewOpen}
+          onToggle={(e) => setPreviewOpen((e.target as HTMLDetailsElement).open)}
         >
           <summary className="cursor-pointer list-none text-[11px] uppercase tracking-wider text-neutral-400 hover:text-neutral-600">
-            <span className="mr-1 inline-block w-3">{vorschauOffen ? "▾" : "▸"}</span>
+            <span className="mr-1 inline-block w-3">{previewOpen ? "▾" : "▸"}</span>
             Vorschau erste Abschnitte
           </summary>
           <ul className="space-y-2">

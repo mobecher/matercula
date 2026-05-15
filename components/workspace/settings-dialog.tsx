@@ -27,26 +27,26 @@ interface ProviderInfo {
 }
 
 /**
- * Modaler Dialog für Benutzereinstellungen (aktuell: LLM-API-Schlüssel).
+ * Modal dialog for user settings (currently: LLM API keys).
  *
- * - Lädt beim Öffnen den aktuellen Status (maskierte Schlüssel) vom Server.
- * - Zeigt nur Klartext, den der Benutzer gerade neu eingibt; Bestandsschlüssel
- *   werden serverseitig maskiert und nie an den Client gesendet.
- * - Leerer Eingabewert + Speichern = Schlüssel wird gelöscht.
- * - Felder ohne Eingabe bleiben unverändert.
+ * - Loads the current state (masked keys) from the server when opened.
+ * - Only shows plaintext for keys the user is currently entering;
+ *   existing keys are masked server-side and never sent to the client.
+ * - Empty input value + save = the key is deleted.
+ * - Fields without input are left unchanged.
  */
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<SettingsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [fehler, setFehler] = useState<string | null>(null);
-  const [hinweis, setHinweis] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<ProviderField, string>>({
     openaiApiKey: "",
     anthropicApiKey: "",
     deepseekApiKey: "",
   });
-  const [loeschen, setLoeschen] = useState<Record<ProviderField, boolean>>({
+  const [deleting, setDeleting] = useState<Record<ProviderField, boolean>>({
     openaiApiKey: false,
     anthropicApiKey: false,
     deepseekApiKey: false,
@@ -67,7 +67,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       })
       .catch((e) => {
         if (!cancelled) {
-          setFehler(e instanceof Error ? e.message : "Unbekannter Fehler");
+          setError(e instanceof Error ? e.message : "Unbekannter Fehler");
           setLoading(false);
         }
       });
@@ -105,21 +105,21 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     },
   ];
 
-  async function speichern() {
+  async function save() {
     setSaving(true);
-    setFehler(null);
-    setHinweis(null);
+    setError(null);
+    setNotice(null);
     try {
       const body: Partial<Record<ProviderField, string>> = {};
       for (const p of providers) {
-        if (loeschen[p.field]) {
+        if (deleting[p.field]) {
           body[p.field] = "";
         } else if (drafts[p.field].trim() !== "") {
           body[p.field] = drafts[p.field].trim();
         }
       }
       if (Object.keys(body).length === 0) {
-        setHinweis("Keine Änderungen zu speichern.");
+        setNotice("Keine Änderungen zu speichern.");
         setSaving(false);
         return;
       }
@@ -132,14 +132,14 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       const updated = (await r.json()) as SettingsResponse;
       setData(updated);
       setDrafts({ openaiApiKey: "", anthropicApiKey: "", deepseekApiKey: "" });
-      setLoeschen({
+      setDeleting({
         openaiApiKey: false,
         anthropicApiKey: false,
         deepseekApiKey: false,
       });
-      setHinweis("Gespeichert.");
+      setNotice("Gespeichert.");
     } catch (e) {
-      setFehler(e instanceof Error ? e.message : "Unbekannter Fehler");
+      setError(e instanceof Error ? e.message : "Unbekannter Fehler");
     } finally {
       setSaving(false);
     }
@@ -217,7 +217,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                 <input
                   autoComplete="off"
                   className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 font-mono text-xs placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none disabled:bg-neutral-100"
-                  disabled={loeschen[p.field]}
+                  disabled={deleting[p.field]}
                   id={`field-${p.field}`}
                   onChange={(e) => setDrafts((prev) => ({ ...prev, [p.field]: e.target.value }))}
                   placeholder={
@@ -229,9 +229,9 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                 {p.status?.vorhanden && (
                   <label className="flex items-center gap-2 text-xs text-neutral-600">
                     <input
-                      checked={loeschen[p.field]}
+                      checked={deleting[p.field]}
                       onChange={(e) =>
-                        setLoeschen((prev) => ({
+                        setDeleting((prev) => ({
                           ...prev,
                           [p.field]: e.target.checked,
                         }))
@@ -244,14 +244,14 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               </div>
             ))}
 
-          {fehler && (
+          {error && (
             <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
-              {fehler}
+              {error}
             </p>
           )}
-          {hinweis && !fehler && (
+          {notice && !error && (
             <p className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
-              {hinweis}
+              {notice}
             </p>
           )}
         </div>
@@ -267,7 +267,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           <button
             className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
             disabled={saving || loading}
-            onClick={() => void speichern()}
+            onClick={() => void save()}
             type="button"
           >
             {saving ? "Speichere…" : "Speichern"}
