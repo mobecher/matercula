@@ -11,9 +11,7 @@ import { useState } from "react";
 function parseYouTubeId(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
-  const withProtocol = /^https?:\/\//i.test(trimmed)
-    ? trimmed
-    : `https://${trimmed}`;
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 
   let url: URL;
   try {
@@ -87,9 +85,7 @@ export const youtubeEmbedBlockSpec = createReactBlockSpec(
       const commit = () => {
         const id = parseYouTubeId(draftUrl);
         if (!id) {
-          setError(
-            "Bitte einen gültigen YouTube-Link einfügen (z. B. https://youtu.be/…)",
-          );
+          setError("Bitte einen gültigen YouTube-Link einfügen (z. B. https://youtu.be/…)");
           return;
         }
         setError(null);
@@ -121,6 +117,7 @@ export const youtubeEmbedBlockSpec = createReactBlockSpec(
           >
             <input
               type="url"
+              // biome-ignore lint/a11y/noAutofocus: focus on entering edit mode is the expected UX
               autoFocus
               placeholder="https://www.youtube.com/watch?v=… oder https://youtu.be/…"
               value={draftUrl}
@@ -136,9 +133,7 @@ export const youtubeEmbedBlockSpec = createReactBlockSpec(
               }}
               className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm"
             />
-            {error ? (
-              <div className="text-xs text-red-600">{error}</div>
-            ) : null}
+            {error ? <div className="text-xs text-red-600">{error}</div> : null}
             <div className="flex gap-2">
               <button
                 type="button"

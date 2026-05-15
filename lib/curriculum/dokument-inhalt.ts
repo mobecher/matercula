@@ -103,7 +103,10 @@ export async function dokumentInhaltFuerAi(
           meta: await safeFetchYoutube(url, fetchYoutubeFn),
         })),
       )
-    : youtubeUrls.map((url) => ({ url, meta: null as Awaited<ReturnType<typeof fetchYoutubeMeta>> }));
+    : youtubeUrls.map((url) => ({
+        url,
+        meta: null as Awaited<ReturnType<typeof fetchYoutubeMeta>>,
+      }));
 
   const linkLookup = new Map<string, ExternalPage | null>();
   for (const r of linkResults) linkLookup.set(r.card.url, r.page);
@@ -113,7 +116,10 @@ export async function dokumentInhaltFuerAi(
   const ctx = { externalCharsRemaining: MAX_TOTAL_EXTERNAL_CHARS };
   const lines: string[] = [];
   renderBlocks(blocks, lines, linkLookup, youtubeLookup, ctx);
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return lines
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 interface ExternalPage {
@@ -212,11 +218,7 @@ function renderBlocks(
         const title = meta?.title ?? "";
         const author = meta?.authorName ?? "";
         const headline =
-          title && author
-            ? `${title} – ${author} (${url})`
-            : title
-              ? `${title} (${url})`
-              : url;
+          title && author ? `${title} – ${author} (${url})` : title ? `${title} (${url})` : url;
         lines.push(`[Eingebettetes YouTube-Video: ${headline}]`);
         // Hinweis: Transkript ist nicht verfügbar (siehe lib/web/youtube.ts).
         lines.push("");

@@ -117,10 +117,7 @@ export function LinkVorschlaege({
     }
   }
 
-  async function decide(
-    v: VorschlagAnsicht,
-    aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen",
-  ) {
+  async function decide(v: VorschlagAnsicht, aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen") {
     setBusyId(v.id);
     try {
       const r = await fetch(`/api/dokumente/${docId}/vorschlaege/${v.id}`, {
@@ -150,9 +147,7 @@ export function LinkVorschlaege({
     <div className="mb-6 space-y-3 border-b border-neutral-100 pb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-wider text-neutral-400">
-            KI-Vorschläge
-          </span>
+          <span className="text-xs uppercase tracking-wider text-neutral-400">KI-Vorschläge</span>
           {offene.length > 0 && (
             <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
               {offene.length} offen
@@ -169,9 +164,7 @@ export function LinkVorschlaege({
         </button>
       </div>
 
-      {status === "loading" && (
-        <p className="text-xs text-neutral-400">Lade Vorschläge…</p>
-      )}
+      {status === "loading" && <p className="text-xs text-neutral-400">Lade Vorschläge…</p>}
 
       {fehler && (
         <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
@@ -181,8 +174,8 @@ export function LinkVorschlaege({
 
       {status === "ready" && vorschlaege.length === 0 && (
         <p className="text-xs text-neutral-500">
-          Noch keine Vorschläge. Mit „Vorschläge generieren" startet die
-          KI-Auswertung dieses Dokuments.
+          Noch keine Vorschläge. Mit „Vorschläge generieren" startet die KI-Auswertung dieses
+          Dokuments.
         </p>
       )}
 
@@ -226,12 +219,8 @@ export function LinkVorschlaege({
                   >
                     {v.zielTitel}
                   </button>
-                  <p className="mt-0.5 text-xs text-neutral-500">
-                    {v.zielPfad}
-                  </p>
-                  <p className="mt-1.5 text-sm text-neutral-700">
-                    {v.begruendung}
-                  </p>
+                  <p className="mt-0.5 text-xs text-neutral-500">{v.zielPfad}</p>
+                  <p className="mt-1.5 text-sm text-neutral-700">{v.begruendung}</p>
                 </div>
                 <div className="flex shrink-0 flex-col gap-1">
                   <button
@@ -276,18 +265,12 @@ export function LinkVorschlaege({
                       >
                         {STATUS_LABEL[v.status]}
                       </span>
-                      <span className="font-mono text-[10px] text-neutral-500">
-                        {v.zielCode}
-                      </span>
+                      <span className="font-mono text-[10px] text-neutral-500">{v.zielCode}</span>
                       <ConfidenceBadge value={v.confidence} subtle />
                     </div>
-                    <p className="mt-1 font-medium text-neutral-800">
-                      {v.zielTitel}
-                    </p>
+                    <p className="mt-1 font-medium text-neutral-800">{v.zielTitel}</p>
                     {v.begruendung && (
-                      <p className="mt-1 whitespace-pre-wrap text-neutral-600">
-                        {v.begruendung}
-                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-neutral-600">{v.begruendung}</p>
                     )}
                   </div>
                   {v.status === "abgelehnt" && (

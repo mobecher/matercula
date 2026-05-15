@@ -32,7 +32,11 @@ function baueBaum(zeilen: Dokument[]): DokumentKnoten[] {
   const wurzeln: DokumentKnoten[] = [];
   for (const knoten of nachId.values()) {
     if (knoten._parent && nachId.has(knoten._parent)) {
-      const eltern = nachId.get(knoten._parent)!;
+      const eltern = nachId.get(knoten._parent);
+      if (!eltern) {
+        wurzeln.push(knoten);
+        continue;
+      }
       eltern.children = eltern.children ?? [];
       eltern.children.push(knoten);
     } else {
@@ -183,7 +187,8 @@ async function isDescendant(args: {
   const stack = [args.ancestorId];
   const seen = new Set<string>();
   while (stack.length > 0) {
-    const current = stack.pop()!;
+    const current = stack.pop();
+    if (!current) break;
     if (seen.has(current)) continue;
     seen.add(current);
     if (current === args.candidateId) return true;

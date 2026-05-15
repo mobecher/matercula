@@ -48,6 +48,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
   const [reloadToken, setReloadToken] = useState(0);
   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reloadToken is the manual re-fetch trigger
   useEffect(() => {
     let cancelled = false;
     setError(null);

@@ -39,11 +39,7 @@ export function parseYouTubeId(input: string): string | null {
     const id = url.pathname.slice(1).split("/")[0];
     return ID_PATTERN.test(id) ? id : null;
   }
-  if (
-    host === "youtube.com" ||
-    host === "m.youtube.com" ||
-    host === "youtube-nocookie.com"
-  ) {
+  if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
     if (url.pathname === "/watch") {
       const v = url.searchParams.get("v");
       return v && ID_PATTERN.test(v) ? v : null;

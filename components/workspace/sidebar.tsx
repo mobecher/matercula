@@ -149,9 +149,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           </ul>
 
           {tree.length === 0 && (
-            <p className="px-2 py-4 text-xs text-neutral-500">
-              Noch keine Dokumente vorhanden.
-            </p>
+            <p className="px-2 py-4 text-xs text-neutral-500">Noch keine Dokumente vorhanden.</p>
           )}
         </nav>
       </div>
@@ -219,9 +217,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           <span>Einstellungen</span>
         </button>
       </div>
-      {settingsOpen && (
-        <SettingsDialog onClose={() => setSettingsOpen(false)} />
-      )}
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </aside>
   );
 }
@@ -341,11 +337,10 @@ function TreeNode({ node, depth }: TreeNodeProps) {
 
   return (
     <li>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop affordance handled by inner button */}
       <div
         className={`group relative flex items-center gap-1 rounded-md py-1 pr-1 text-sm transition-colors ${
-          active
-            ? "bg-neutral-200 font-medium text-neutral-900"
-            : "text-neutral-700"
+          active ? "bg-neutral-200 font-medium text-neutral-900" : "text-neutral-700"
         } ${dropZone === "into" ? "ring-2 ring-blue-400" : "hover:bg-neutral-200"}`}
         draggable={!renaming}
         onDragLeave={handleDragLeave}
@@ -368,13 +363,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
         )}
 
         <button
-          aria-label={
-            isFolder
-              ? open
-                ? "Ordner einklappen"
-                : "Ordner ausklappen"
-              : undefined
-          }
+          aria-label={isFolder ? (open ? "Ordner einklappen" : "Ordner ausklappen") : undefined}
           className={`inline-flex h-4 w-4 shrink-0 items-center justify-center text-neutral-400 ${
             isFolder ? "" : "opacity-0"
           }`}
@@ -489,11 +478,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
       </div>
 
       {isFolder && open && node.children && node.children.length > 0 && (
-        <ChildList
-          parentId={node.id}
-          depth={depth + 1}
-          children={node.children}
-        />
+        <ChildList parentId={node.id} depth={depth + 1} nodes={node.children} />
       )}
     </li>
   );
@@ -508,10 +493,10 @@ interface SiblingDropDetail {
 interface ChildListProps {
   parentId: string;
   depth: number;
-  children: DokumentKnoten[];
+  nodes: DokumentKnoten[];
 }
 
-function ChildList({ parentId, depth, children }: ChildListProps) {
+function ChildList({ parentId, depth, nodes }: ChildListProps) {
   const { moveDocument } = useWorkspace();
   const ulRef = useRef<HTMLUListElement | null>(null);
 
@@ -521,7 +506,7 @@ function ChildList({ parentId, depth, children }: ChildListProps) {
     function handler(event: Event) {
       const e = event as CustomEvent<SiblingDropDetail>;
       const { draggedId, anchorId, place } = e.detail;
-      const idx = children.findIndex((c) => c.id === anchorId);
+      const idx = nodes.findIndex((c) => c.id === anchorId);
       if (idx === -1) return;
       // Only handle if the anchor is a direct child of this list.
       event.stopPropagation();
@@ -530,11 +515,11 @@ function ChildList({ parentId, depth, children }: ChildListProps) {
     }
     el.addEventListener("matercula:sibling-drop", handler);
     return () => el.removeEventListener("matercula:sibling-drop", handler);
-  }, [children, parentId, moveDocument]);
+  }, [nodes, parentId, moveDocument]);
 
   return (
     <ul ref={ulRef} className="space-y-0.5">
-      {children.map((child) => (
+      {nodes.map((child) => (
         <TreeNode key={child.id} node={child} depth={depth} />
       ))}
     </ul>
@@ -646,7 +631,7 @@ function KlasseItem({
   slug: string;
   klasse: SidebarLehrplan["klassen"][number];
 }) {
-  const { activeTab, openKlasseTab, openBereichTab } = useWorkspace();
+  const { activeTab, openKlasseTab } = useWorkspace();
   const [open, setOpen] = useState(false);
   const klasseKey = klasseTabKey(slug, klasse.klasse);
   const klasseActive = activeTab?.key === klasseKey;

@@ -1,8 +1,8 @@
 "use client";
 
 import { Bars3Icon } from "@heroicons/react/24/outline";
-import { useSidebarToggle } from "./workspace-frame";
 import { useWorkspace, type WorkspaceTab } from "./workspace-context";
+import { useSidebarToggle } from "./workspace-frame";
 
 export function TabBar() {
   const { openTabs, activeTabKey, findNode, setActiveTab, closeTab, promoteTab, saveStatus } =

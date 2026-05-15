@@ -13,9 +13,7 @@ export function decodeHtmlEntities(value: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&#x27;/gi, "'")
     .replace(/&nbsp;/g, " ")
-    .replace(/&#(\d+);/g, (_, code: string) =>
-      String.fromCodePoint(Number.parseInt(code, 10)),
-    )
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number.parseInt(code, 10)))
     .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
       String.fromCodePoint(Number.parseInt(code, 16)),
     );

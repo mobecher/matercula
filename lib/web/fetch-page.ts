@@ -57,13 +57,9 @@ export interface FetchPageOptions {
 
 const DEFAULT_TIMEOUT_MS = 5000;
 const DEFAULT_MAX_BYTES = 512 * 1024;
-const DEFAULT_UA =
-  "Mozilla/5.0 (compatible; MaterculaLinkPreview/1.0; +https://matercula.app)";
+const DEFAULT_UA = "Mozilla/5.0 (compatible; MaterculaLinkPreview/1.0; +https://matercula.app)";
 
-export async function fetchPage(
-  rawUrl: string,
-  opts: FetchPageOptions = {},
-): Promise<FetchedPage> {
+export async function fetchPage(rawUrl: string, opts: FetchPageOptions = {}): Promise<FetchedPage> {
   const target = parseAndValidateUrl(rawUrl);
   const fetchImpl = opts.fetchImpl ?? fetch;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
@@ -86,19 +82,12 @@ export async function fetchPage(
   }
 
   if (!response.ok) {
-    throw new WebFetchError(
-      "fetch_failed",
-      `HTTP ${response.status}`,
-      response.status,
-    );
+    throw new WebFetchError("fetch_failed", `HTTP ${response.status}`, response.status);
   }
 
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("text/html") && !contentType.includes("xhtml")) {
-    throw new WebFetchError(
-      "unsupported_content_type",
-      `content-type=${contentType || "unknown"}`,
-    );
+    throw new WebFetchError("unsupported_content_type", `content-type=${contentType || "unknown"}`);
   }
 
   const html = await readCapped(response, maxBytes);
@@ -232,8 +221,7 @@ export function parseHtmlMetadata(html: string, baseUrl: URL): HtmlMetadata {
   return {
     url: meta("og:url") ?? baseUrl.toString(),
     title: meta("og:title") ?? meta("twitter:title") ?? fallbackTitle,
-    description:
-      meta("og:description") ?? meta("twitter:description") ?? fallbackDescription,
+    description: meta("og:description") ?? meta("twitter:description") ?? fallbackDescription,
     image: absoluteImage,
     siteName: meta("og:site_name"),
   };

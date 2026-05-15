@@ -23,8 +23,7 @@ export function LehrplanBacklinks({
   reloadToken?: number;
   onLinksChanged?: () => void;
 }) {
-  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } =
-    useWorkspace();
+  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
   const [data, setData] = useState<DokumentLehrplanLinks | null>(null);
   const [busy, setBusy] = useState(false);
 

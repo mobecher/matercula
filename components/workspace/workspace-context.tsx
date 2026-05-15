@@ -173,7 +173,9 @@ export function WorkspaceProvider({
 
   const promoteTab = useCallback((key: string) => {
     setOpenTabs((prev) =>
-      prev.map((t) => (t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t)),
+      prev.map((t) =>
+        t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t,
+      ),
     );
   }, []);
 
@@ -274,7 +276,9 @@ export function WorkspaceProvider({
     // Bearbeiten promotet eine Preview-Tab zu einer permanenten.
     const key = dokumentTabKey(id);
     setOpenTabs((prev) =>
-      prev.map((t) => (t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t)),
+      prev.map((t) =>
+        t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t,
+      ),
     );
 
     const existing = saveTimers.current.get(id);
@@ -485,7 +489,8 @@ function collectIds(node: DokumentKnoten | undefined): Set<string> {
   if (!node) return ids;
   const stack: DokumentKnoten[] = [node];
   while (stack.length > 0) {
-    const current = stack.pop()!;
+    const current = stack.pop();
+    if (!current) break;
     ids.add(current.id);
     if (current.children) stack.push(...current.children);
   }

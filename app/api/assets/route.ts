@@ -70,18 +70,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "empty_file" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: "file_too_large", maxBytes: MAX_BYTES },
-      { status: 413 },
-    );
+    return NextResponse.json({ error: "file_too_large", maxBytes: MAX_BYTES }, { status: 413 });
   }
 
   const mimeType = file.type || "application/octet-stream";
   if (!ALLOWED_MIME_TYPES.has(mimeType)) {
-    return NextResponse.json(
-      { error: "unsupported_mime_type", mimeType },
-      { status: 415 },
-    );
+    return NextResponse.json({ error: "unsupported_mime_type", mimeType }, { status: 415 });
   }
 
   const id = randomUUID();

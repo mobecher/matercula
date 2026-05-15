@@ -55,9 +55,7 @@ export const linkCardBlockSpec = createReactBlockSpec(
       const commit = async () => {
         const trimmed = draftUrl.trim();
         if (!trimmed) return;
-        const normalized = /^https?:\/\//i.test(trimmed)
-          ? trimmed
-          : `https://${trimmed}`;
+        const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 
         // Fetch Open Graph metadata. Manual user input always wins over
         // remote values – we only fill fields the user left empty.
@@ -107,6 +105,7 @@ export const linkCardBlockSpec = createReactBlockSpec(
           >
             <input
               type="url"
+              // biome-ignore lint/a11y/noAutofocus: focus on entering edit mode is the expected UX
               autoFocus
               placeholder="https://example.com"
               value={draftUrl}
@@ -194,9 +193,7 @@ export const linkCardBlockSpec = createReactBlockSpec(
                   {title || host || url}
                 </div>
                 {description ? (
-                  <div className="mt-0.5 line-clamp-2 text-xs text-gray-600">
-                    {description}
-                  </div>
+                  <div className="mt-0.5 line-clamp-2 text-xs text-gray-600">{description}</div>
                 ) : null}
                 <div className="mt-1 truncate text-xs text-gray-500">
                   {siteName ? `${siteName} · ${host}` : host}

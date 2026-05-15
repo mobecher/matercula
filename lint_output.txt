@@ -1,0 +1,600 @@
+
+> lehrplan-tagger@0.1.0 lint /Users/ux3d_becher/Developer/matercula
+> biome check .
+
+components/workspace/workspace-context.tsx:488:21 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    486 │   const stack: DokumentKnoten[] = [node];
+    487 │   while (stack.length > 0) {
+  > 488 │     const current = stack.pop()!;
+        │                     ^^^^^^^^^^^^
+    489 │     ids.add(current.id);
+    490 │     if (current.children) stack.push(...current.children);
+  
+
+lib/workspace/repository.ts:35:22 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    33 │   for (const knoten of nachId.values()) {
+    34 │     if (knoten._parent && nachId.has(knoten._parent)) {
+  > 35 │       const eltern = nachId.get(knoten._parent)!;
+       │                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    36 │       eltern.children = eltern.children ?? [];
+    37 │       eltern.children.push(knoten);
+  
+
+lib/workspace/repository.ts:186:21 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+    184 │   const seen = new Set<string>();
+    185 │   while (stack.length > 0) {
+  > 186 │     const current = stack.pop()!;
+        │                     ^^^^^^^^^^^^
+    187 │     if (seen.has(current)) continue;
+    188 │     seen.add(current);
+  
+
+app/api/assets/route.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     71  71 │     }
+     72  72 │     if (file.size > MAX_BYTES) {
+     73     │ - ····return·NextResponse.json(
+     74     │ - ······{·error:·"file_too_large",·maxBytes:·MAX_BYTES·},
+     75     │ - ······{·status:·413·},
+     76     │ - ····);
+         73 │ + ····return·NextResponse.json({·error:·"file_too_large",·maxBytes:·MAX_BYTES·},·{·status:·413·});
+     77  74 │     }
+     78  75 │   
+     79  76 │     const mimeType = file.type || "application/octet-stream";
+     80  77 │     if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+     81     │ - ····return·NextResponse.json(
+     82     │ - ······{·error:·"unsupported_mime_type",·mimeType·},
+     83     │ - ······{·status:·415·},
+     84     │ - ····);
+         78 │ + ····return·NextResponse.json({·error:·"unsupported_mime_type",·mimeType·},·{·status:·415·});
+     85  79 │     }
+     86  80 │   
+  
+
+components/workspace/anwendungsbereich-tab-view.tsx:27:3 lint/correctness/useExhaustiveDependencies  FIXABLE  ━━━━━━━━━━
+
+  × This hook specifies more dependencies than necessary: reloadToken.
+  
+    25 │   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
+    26 │ 
+  > 27 │   useEffect(() => {
+       │   ^^^^^^^^^
+    28 │     let cancelled = false;
+    29 │     setError(null);
+  
+  i This dependency can be removed from the list.
+  
+    42 │       cancelled = true;
+    43 │     };
+  > 44 │   }, [anwendungsbereichId, reloadToken]);
+       │                            ^^^^^^^^^^^
+    45 │ 
+    46 │   if (error) {
+  
+  i React relies on hook dependencies to determine when to re-compute Effects.
+    Specifying more dependencies than required can lead to unnecessary re-rendering
+    and degraded performance.
+  
+  i Unsafe fix: Remove the extra dependencies from the list.
+  
+    44 │ ··},·[anwendungsbereichId,·reloadToken]);
+       │                          -------------   
+
+components/workspace/bereich-tab-view.tsx:51:3 lint/correctness/useExhaustiveDependencies  FIXABLE  ━━━━━━━━━━
+
+  × This hook specifies more dependencies than necessary: reloadToken.
+  
+    49 │   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
+    50 │ 
+  > 51 │   useEffect(() => {
+       │   ^^^^^^^^^
+    52 │     let cancelled = false;
+    53 │     setError(null);
+  
+  i This dependency can be removed from the list.
+  
+    66 │       cancelled = true;
+    67 │     };
+  > 68 │   }, [bereichId, reloadToken]);
+       │                  ^^^^^^^^^^^
+    69 │ 
+    70 │   if (error) {
+  
+  i React relies on hook dependencies to determine when to re-compute Effects.
+    Specifying more dependencies than required can lead to unnecessary re-rendering
+    and degraded performance.
+  
+  i Unsafe fix: Remove the extra dependencies from the list.
+  
+    68 │ ··},·[bereichId,·reloadToken]);
+       │                -------------   
+
+components/workspace/block-editor.tsx:6:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━
+
+  × Sort these imports.
+  
+     4 │ import "@blocknote/ariakit/style.css";
+     5 │ 
+   > 6 │ import { BlockNoteView } from "@blocknote/ariakit";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   > 7 │ import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
+        ...
+  > 11 │   insertOrUpdateBlockForSlashMenu,
+  > 12 │ } from "@blocknote/core/extensions";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    13 │ import {
+    14 │   type DefaultReactSuggestionItem,
+  
+  i Safe fix: Organize imports and exports (Biome)
+  
+      6   6 │   import { BlockNoteView } from "@blocknote/ariakit";
+      7   7 │   import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
+      8     │ - import·{·de·}·from·"@blocknote/core/locales";
+      9     │ - import·{
+     10     │ - ··filterSuggestionItems,
+     11     │ - ··insertOrUpdateBlockForSlashMenu,
+     12     │ - }·from·"@blocknote/core/extensions";
+          8 │ + import·{
+          9 │ + ··filterSuggestionItems,
+         10 │ + ··insertOrUpdateBlockForSlashMenu,
+         11 │ + }·from·"@blocknote/core/extensions";
+         12 │ + import·{·de·}·from·"@blocknote/core/locales";
+     13  13 │   import {
+     14  14 │     type DefaultReactSuggestionItem,
+  
+
+components/workspace/block-editor.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+      7   7 │   import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
+      8   8 │   import { de } from "@blocknote/core/locales";
+      9     │ - import·{
+     10     │ - ··filterSuggestionItems,
+     11     │ - ··insertOrUpdateBlockForSlashMenu,
+     12     │ - }·from·"@blocknote/core/extensions";
+          9 │ + import·{·filterSuggestionItems,·insertOrUpdateBlockForSlashMenu·}·from·"@blocknote/core/extensions";
+     13  10 │   import {
+     14  11 │     type DefaultReactSuggestionItem,
+    ······· │ 
+     84  81 │   type EditorType = typeof schema.BlockNoteEditor;
+     85  82 │   
+     86     │ - function·getCustomSlashMenuItems(
+     87     │ - ··editor:·EditorType,
+     88     │ - ):·DefaultReactSuggestionItem[]·{
+         83 │ + function·getCustomSlashMenuItems(editor:·EditorType):·DefaultReactSuggestionItem[]·{
+     89  84 │     return [
+     90  85 │       ...getDefaultReactSlashMenuItems(editor),
+    ······· │ 
+     94  89 │         aliases: ["link", "card", "url", "karte"],
+     95  90 │         group: "Medien",
+     96     │ - ······onItemClick:·()·=>
+     97     │ - ········insertOrUpdateBlockForSlashMenu(editor,·{·type:·"linkCard"·}),
+         91 │ + ······onItemClick:·()·=>·insertOrUpdateBlockForSlashMenu(editor,·{·type:·"linkCard"·}),
+     98  92 │       },
+     99  93 │       {
+    ······· │ 
+    102  96 │         aliases: ["youtube", "video", "embed", "einbetten"],
+    103  97 │         group: "Medien",
+    104     │ - ······onItemClick:·()·=>
+    105     │ - ········insertOrUpdateBlockForSlashMenu(editor,·{·type:·"youtubeEmbed"·}),
+         98 │ + ······onItemClick:·()·=>·insertOrUpdateBlockForSlashMenu(editor,·{·type:·"youtubeEmbed"·}),
+    106  99 │       },
+    107 100 │     ];
+    108 101 │   }
+    109 102 │   
+    110     │ - export·function·BlockEditor({
+    111     │ - ··docId,
+    112     │ - ··initialMarkdown,
+    113     │ - ··onChangeMarkdown,
+    114     │ - }:·BlockEditorProps)·{
+        103 │ + export·function·BlockEditor({·docId,·initialMarkdown,·onChangeMarkdown·}:·BlockEditorProps)·{
+    115 104 │     return (
+    116 105 │       <BlockEditorInstance
+    ······· │ 
+    194 183 │     return (
+    195 184 │       <div className="-mx-3">
+    196     │ - ······<BlockNoteView
+    197     │ - ········editor={editor}
+    198     │ - ········theme="light"
+    199     │ - ········slashMenu={false}
+    200     │ - ········filePanel={false}
+    201     │ - ······>
+        185 │ + ······<BlockNoteView·editor={editor}·theme="light"·slashMenu={false}·filePanel={false}>
+    202 186 │           <SuggestionMenuController
+    203 187 │             triggerCharacter="/"
+    204     │ - ··········getItems={async·(query)·=>
+    205     │ - ············filterSuggestionItems(getCustomSlashMenuItems(editor),·query)
+    206     │ - ··········}
+        188 │ + ··········getItems={async·(query)·=>·filterSuggestionItems(getCustomSlashMenuItems(editor),·query)}
+    207 189 │           />
+    208 190 │           <FilePanelController filePanel={UploadOnlyFilePanel} />
+  
+
+components/workspace/blocks/link-card-block.tsx:110:15 lint/a11y/noAutofocus  FIXABLE  ━━━━━━━━━━
+
+  × Avoid the autoFocus attribute.
+  
+    108 │             <input
+    109 │               type="url"
+  > 110 │               autoFocus
+        │               ^^^^^^^^^
+    111 │               placeholder="https://example.com"
+    112 │               value={draftUrl}
+  
+  i Unsafe fix: Remove the autoFocus attribute.
+  
+    108 108 │               <input
+    109 109 │                 type="url"
+    110     │ - ··············autoFocus
+    111 110 │                 placeholder="https://example.com"
+    112 111 │                 value={draftUrl}
+  
+
+components/workspace/blocks/link-card-block.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     56  56 │           const trimmed = draftUrl.trim();
+     57  57 │           if (!trimmed) return;
+     58     │ - ········const·normalized·=·/^https?:\/\//i.test(trimmed)
+     59     │ - ··········?·trimmed
+     60     │ - ··········:·`https://${trimmed}`;
+         58 │ + ········const·normalized·=·/^https?:\/\//i.test(trimmed)·?·trimmed·:·`https://${trimmed}`;
+     61  59 │   
+     62  60 │           // Fetch Open Graph metadata. Manual user input always wins over
+    ······· │ 
+    195 193 │                   </div>
+    196 194 │                   {description ? (
+    197     │ - ··················<div·className="mt-0.5·line-clamp-2·text-xs·text-gray-600">
+    198     │ - ····················{description}
+    199     │ - ··················</div>
+        195 │ + ··················<div·className="mt-0.5·line-clamp-2·text-xs·text-gray-600">{description}</div>
+    200 196 │                   ) : null}
+    201 197 │                   <div className="mt-1 truncate text-xs text-gray-500">
+  
+
+components/workspace/blocks/youtube-embed-block.tsx:124:15 lint/a11y/noAutofocus  FIXABLE  ━━━━━━━━━━
+
+  × Avoid the autoFocus attribute.
+  
+    122 │             <input
+    123 │               type="url"
+  > 124 │               autoFocus
+        │               ^^^^^^^^^
+    125 │               placeholder="https://www.youtube.com/watch?v=… oder https://youtu.be/…"
+    126 │               value={draftUrl}
+  
+  i Unsafe fix: Remove the autoFocus attribute.
+  
+    122 122 │               <input
+    123 123 │                 type="url"
+    124     │ - ··············autoFocus
+    125 124 │                 placeholder="https://www.youtube.com/watch?v=… oder https://youtu.be/…"
+    126 125 │                 value={draftUrl}
+  
+
+components/workspace/blocks/youtube-embed-block.tsx format ━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     12  12 │     const trimmed = input.trim();
+     13  13 │     if (!trimmed) return null;
+     14     │ - ··const·withProtocol·=·/^https?:\/\//i.test(trimmed)
+     15     │ - ····?·trimmed
+     16     │ - ····:·`https://${trimmed}`;
+         14 │ + ··const·withProtocol·=·/^https?:\/\//i.test(trimmed)·?·trimmed·:·`https://${trimmed}`;
+     17  15 │   
+     18  16 │     let url: URL;
+    ······· │ 
+     88  86 │           const id = parseYouTubeId(draftUrl);
+     89  87 │           if (!id) {
+     90     │ - ··········setError(
+     91     │ - ············"Bitte·einen·gültigen·YouTube-Link·einfügen·(z.·B.·https://youtu.be/…)",
+     92     │ - ··········);
+         88 │ + ··········setError("Bitte·einen·gültigen·YouTube-Link·einfügen·(z.·B.·https://youtu.be/…)");
+     93  89 │             return;
+     94  90 │           }
+    ······· │ 
+    137 133 │                 className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+    138 134 │               />
+    139     │ - ············{error·?·(
+    140     │ - ··············<div·className="text-xs·text-red-600">{error}</div>
+    141     │ - ············)·:·null}
+        135 │ + ············{error·?·<div·className="text-xs·text-red-600">{error}</div>·:·null}
+    142 136 │               <div className="flex gap-2">
+    143 137 │                 <button
+  
+
+components/workspace/document-view.tsx:84:3 lint/correctness/useExhaustiveDependencies  FIXABLE  ━━━━━━━━━━
+
+  × This hook specifies more dependencies than necessary: doc.id.
+  
+    82 │   const titleRef = useRef<HTMLInputElement | null>(null);
+    83 │ 
+  > 84 │   useEffect(() => {
+       │   ^^^^^^^^^
+    85 │     setTitleDraft(doc.titel);
+    86 │   }, [doc.id, doc.titel]);
+  
+  i This dependency can be removed from the list.
+  
+    84 │   useEffect(() => {
+    85 │     setTitleDraft(doc.titel);
+  > 86 │   }, [doc.id, doc.titel]);
+       │       ^^^^^^
+    87 │ 
+    88 │   function commitTitle() {
+  
+  i React relies on hook dependencies to determine when to re-compute Effects.
+    Specifying more dependencies than required can lead to unnecessary re-rendering
+    and degraded performance.
+  
+  i Unsafe fix: Remove the extra dependencies from the list.
+  
+    86 │ ··},·[doc.id,·doc.titel]);
+       │       --------            
+
+components/workspace/document-view.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    171 171 │           />
+    172 172 │         )}
+    173     │ - ······{doc.typ·===·"pdf"·&&·doc.materialId·&&·(
+    174     │ - ········<MaterialUebersicht·materialId={doc.materialId}·/>
+    175     │ - ······)}
+        173 │ + ······{doc.typ·===·"pdf"·&&·doc.materialId·&&·<MaterialUebersicht·materialId={doc.materialId}·/>}
+    176 174 │   
+    177 175 │         {doc.typ === "ordner" ? (
+    ······· │ 
+    251 249 │     if (!materialId) {
+    252 250 │       return (
+    253     │ - ······<p·className="text-sm·text-neutral-500">
+    254     │ - ········Diese·Datei·hat·keine·zugeordnete·Quelle·mehr.
+    255     │ - ······</p>
+        251 │ + ······<p·className="text-sm·text-neutral-500">Diese·Datei·hat·keine·zugeordnete·Quelle·mehr.</p>
+    256 252 │       );
+    257 253 │     }
+    ······· │ 
+    310 306 │           </p>
+    311 307 │         ) : meta.status === "uploaded" || meta.status === "processing" ? (
+    312     │ - ········<p·className="mt-4·text-sm·text-neutral-500">
+    313     │ - ··········Inhaltsvorschau·wird·erstellt…
+    314     │ - ········</p>
+        308 │ + ········<p·className="mt-4·text-sm·text-neutral-500">Inhaltsvorschau·wird·erstellt…</p>
+    315 309 │         ) : meta.status === "error" ? (
+    316 310 │           <p className="mt-4 text-sm text-neutral-500">
+  
+
+components/workspace/kompetenz-tab-view.tsx:39:3 lint/correctness/useExhaustiveDependencies  FIXABLE  ━━━━━━━━━━
+
+  × This hook specifies more dependencies than necessary: reloadToken.
+  
+    37 │   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
+    38 │ 
+  > 39 │   useEffect(() => {
+       │   ^^^^^^^^^
+    40 │     let cancelled = false;
+    41 │     setError(null);
+  
+  i This dependency can be removed from the list.
+  
+    54 │       cancelled = true;
+    55 │     };
+  > 56 │   }, [kompetenzId, reloadToken]);
+       │                    ^^^^^^^^^^^
+    57 │ 
+    58 │   if (error) {
+  
+  i React relies on hook dependencies to determine when to re-compute Effects.
+    Specifying more dependencies than required can lead to unnecessary re-rendering
+    and degraded performance.
+  
+  i Unsafe fix: Remove the extra dependencies from the list.
+  
+    56 │ ··},·[kompetenzId,·reloadToken]);
+       │                  -------------   
+
+components/workspace/lehrplan-backlinks.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     24  24 │     onLinksChanged?: () => void;
+     25  25 │   }) {
+     26     │ - ··const·{·lehrplaene,·openKompetenzTab,·openAnwendungsbereichTab·}·=
+     27     │ - ····useWorkspace();
+         26 │ + ··const·{·lehrplaene,·openKompetenzTab,·openAnwendungsbereichTab·}·=·useWorkspace();
+     28  27 │     const [data, setData] = useState<DokumentLehrplanLinks | null>(null);
+     29  28 │     const [busy, setBusy] = useState(false);
+  
+
+components/workspace/link-vorschlaege.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    118 118 │     }
+    119 119 │   
+    120     │ - ··async·function·decide(
+    121     │ - ····v:·VorschlagAnsicht,
+    122     │ - ····aktion:·"akzeptieren"·|·"ablehnen"·|·"zuruecksetzen",
+    123     │ - ··)·{
+        120 │ + ··async·function·decide(v:·VorschlagAnsicht,·aktion:·"akzeptieren"·|·"ablehnen"·|·"zuruecksetzen")·{
+    124 121 │       setBusyId(v.id);
+    125 122 │       try {
+    ······· │ 
+    151 148 │         <div className="flex items-center justify-between">
+    152 149 │           <div className="flex items-center gap-2">
+    153     │ - ··········<span·className="text-xs·uppercase·tracking-wider·text-neutral-400">
+    154     │ - ············KI-Vorschläge
+    155     │ - ··········</span>
+        150 │ + ··········<span·className="text-xs·uppercase·tracking-wider·text-neutral-400">KI-Vorschläge</span>
+    156 151 │             {offene.length > 0 && (
+    157 152 │               <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+    ······· │ 
+    170 165 │         </div>
+    171 166 │   
+    172     │ - ······{status·===·"loading"·&&·(
+    173     │ - ········<p·className="text-xs·text-neutral-400">Lade·Vorschläge…</p>
+    174     │ - ······)}
+        167 │ + ······{status·===·"loading"·&&·<p·className="text-xs·text-neutral-400">Lade·Vorschläge…</p>}
+    175 168 │   
+    176 169 │         {fehler && (
+    ······· │ 
+    182 175 │         {status === "ready" && vorschlaege.length === 0 && (
+    183 176 │           <p className="text-xs text-neutral-500">
+    184     │ - ··········Noch·keine·Vorschläge.·Mit·„Vorschläge·generieren"·startet·die
+    185     │ - ··········KI-Auswertung·dieses·Dokuments.
+        177 │ + ··········Noch·keine·Vorschläge.·Mit·„Vorschläge·generieren"·startet·die·KI-Auswertung·dieses
+        178 │ + ··········Dokuments.
+    186 179 │           </p>
+    187 180 │         )}
+    ······· │ 
+    227 220 │                       {v.zielTitel}
+    228 221 │                     </button>
+    229     │ - ··················<p·className="mt-0.5·text-xs·text-neutral-500">
+    230     │ - ····················{v.zielPfad}
+    231     │ - ··················</p>
+    232     │ - ··················<p·className="mt-1.5·text-sm·text-neutral-700">
+    233     │ - ····················{v.begruendung}
+    234     │ - ··················</p>
+        222 │ + ··················<p·className="mt-0.5·text-xs·text-neutral-500">{v.zielPfad}</p>
+        223 │ + ··················<p·className="mt-1.5·text-sm·text-neutral-700">{v.begruendung}</p>
+    235 224 │                   </div>
+    236 225 │                   <div className="flex shrink-0 flex-col gap-1">
+    ······· │ 
+    277 266 │                           {STATUS_LABEL[v.status]}
+    278 267 │                         </span>
+    279     │ - ······················<span·className="font-mono·text-[10px]·text-neutral-500">
+    280     │ - ························{v.zielCode}
+    281     │ - ······················</span>
+        268 │ + ······················<span·className="font-mono·text-[10px]·text-neutral-500">{v.zielCode}</span>
+    282 269 │                         <ConfidenceBadge value={v.confidence} subtle />
+    283 270 │                       </div>
+    284     │ - ····················<p·className="mt-1·font-medium·text-neutral-800">
+    285     │ - ······················{v.zielTitel}
+    286     │ - ····················</p>
+        271 │ + ····················<p·className="mt-1·font-medium·text-neutral-800">{v.zielTitel}</p>
+    287 272 │                       {v.begruendung && (
+    288     │ - ······················<p·className="mt-1·whitespace-pre-wrap·text-neutral-600">
+    289     │ - ························{v.begruendung}
+    290     │ - ······················</p>
+        273 │ + ······················<p·className="mt-1·whitespace-pre-wrap·text-neutral-600">{v.begruendung}</p>
+    291 274 │                       )}
+    292 275 │                     </div>
+  
+
+components/workspace/material-uebersicht.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     99  99 │       <section className="mb-6 space-y-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm">
+    100 100 │         <header className="flex flex-wrap items-center gap-2">
+    101     │ - ········<span·className="text-xs·uppercase·tracking-wider·text-neutral-400">
+    102     │ - ··········Inhaltsübersicht
+    103     │ - ········</span>
+        101 │ + ········<span·className="text-xs·uppercase·tracking-wider·text-neutral-400">Inhaltsübersicht</span>
+    104 102 │           <span
+    105 103 │             className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_BADGE[data.status]}`}
+    ······· │ 
+    122 120 │           <div>
+    123 121 │             <dt className="text-neutral-500">Seiten</dt>
+    124     │ - ··········<dd·className="font-medium">
+    125     │ - ············{data.anzahlSeiten·>·0·?·data.anzahlSeiten·:·"—"}
+    126     │ - ··········</dd>
+        122 │ + ··········<dd·className="font-medium">{data.anzahlSeiten·>·0·?·data.anzahlSeiten·:·"—"}</dd>
+    127 123 │           </div>
+    128 124 │           <div>
+  
+
+components/workspace/tab-bar.tsx:3:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━
+
+  × Sort these imports.
+  
+    1 │ "use client";
+    2 │ 
+  > 3 │ import { Bars3Icon } from "@heroicons/react/24/outline";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 4 │ import { useSidebarToggle } from "./workspace-frame";
+  > 5 │ import { useWorkspace, type WorkspaceTab } from "./workspace-context";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    6 │ 
+    7 │ export function TabBar() {
+  
+  i Safe fix: Organize imports and exports (Biome)
+  
+     2  2 │   
+     3  3 │   import { Bars3Icon } from "@heroicons/react/24/outline";
+     4    │ - import·{·useSidebarToggle·}·from·"./workspace-frame";
+     5    │ - import·{·useWorkspace,·type·WorkspaceTab·}·from·"./workspace-context";
+        4 │ + import·{·useWorkspace,·type·WorkspaceTab·}·from·"./workspace-context";
+        5 │ + import·{·useSidebarToggle·}·from·"./workspace-frame";
+     6  6 │   
+     7  7 │   export function TabBar() {
+  
+
+scripts/worker.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    12 12 │   import { materialien } from "@/lib/db/schema/materials";
+    13 13 │   import type { TagMaterialPayload } from "@/lib/jobs/queue";
+    14    │ - import·{
+    15    │ - ··getQueue,
+    16    │ - ··TAG_MATERIAL_JOB,
+    17    │ - ··TAG_MATERIAL_RETRY_LIMIT,
+    18    │ - }·from·"@/lib/jobs/queue";
+       14 │ + import·{·getQueue,·TAG_MATERIAL_JOB,·TAG_MATERIAL_RETRY_LIMIT·}·from·"@/lib/jobs/queue";
+    19 15 │   import { handleTagMaterial } from "@/lib/jobs/tag-material";
+    20 16 │   
+    ····· │ 
+    37 33 │             // `error` status so the user sees the failure and we re-throw
+    38 34 │             // so pg-boss still records the job as failed.
+    39    │ - ··········const·isFinalAttempt·=
+    40    │ - ············(job.retryCount·??·0)·>=·TAG_MATERIAL_RETRY_LIMIT;
+       35 │ + ··········const·isFinalAttempt·=·(job.retryCount·??·0)·>=·TAG_MATERIAL_RETRY_LIMIT;
+    41 36 │             if (isFinalAttempt) {
+    42 37 │               const message = err instanceof Error ? err.message : String(err);
+    ····· │ 
+    49 44 │                   .set({
+    50 45 │                     status: "error",
+    51    │ - ··················statusReason:·`worker:retries_exhausted:${message}`.slice(
+    52    │ - ····················0,
+    53    │ - ····················500,
+    54    │ - ··················),
+       46 │ + ··················statusReason:·`worker:retries_exhausted:${message}`.slice(0,·500),
+    55 47 │                     updatedAt: new Date(),
+    56 48 │                   })
+    57 49 │                   .where(eq(materialien.id, job.data.materialId));
+    58 50 │               } catch (updateErr) {
+    59    │ - ··············console.error(
+    60    │ - ················"[worker]·failed·to·mark·material·as·error",
+    61    │ - ················updateErr,
+    62    │ - ··············);
+       51 │ + ··············console.error("[worker]·failed·to·mark·material·as·error",·updateErr);
+    63 52 │               }
+    64 53 │             }
+  
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 10.
+Checked 110 files in 34ms. No fixes applied.
+Found 26 errors.
+Found 4 warnings.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
+ ELIFECYCLE  Command failed with exit code 1.

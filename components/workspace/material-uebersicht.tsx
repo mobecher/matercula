@@ -98,9 +98,7 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
   return (
     <section className="mb-6 space-y-3 rounded-md border border-neutral-200 bg-white p-4 shadow-sm">
       <header className="flex flex-wrap items-center gap-2">
-        <span className="text-xs uppercase tracking-wider text-neutral-400">
-          Inhaltsübersicht
-        </span>
+        <span className="text-xs uppercase tracking-wider text-neutral-400">Inhaltsübersicht</span>
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_BADGE[data.status]}`}
         >
@@ -121,9 +119,7 @@ export function MaterialUebersicht({ materialId }: { materialId: string }) {
         </div>
         <div>
           <dt className="text-neutral-500">Seiten</dt>
-          <dd className="font-medium">
-            {data.anzahlSeiten > 0 ? data.anzahlSeiten : "—"}
-          </dd>
+          <dd className="font-medium">{data.anzahlSeiten > 0 ? data.anzahlSeiten : "—"}</dd>
         </div>
         <div>
           <dt className="text-neutral-500">Zeichen</dt>

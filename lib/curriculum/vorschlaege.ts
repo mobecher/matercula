@@ -272,8 +272,7 @@ export async function generiereVorschlaegeFuerDokument(
       return {
         ok: false,
         grund: "kein_inhalt",
-        fehler:
-          mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
+        fehler: mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
         vorschlaege: [],
       };
     }
@@ -510,10 +509,7 @@ export async function entscheideVorschlag(
           notiz,
         })
         .onConflictDoNothing();
-    } else if (
-      vorschlag.zielTyp === "anwendungsbereich" &&
-      vorschlag.anwendungsbereichId
-    ) {
+    } else if (vorschlag.zielTyp === "anwendungsbereich" && vorschlag.anwendungsbereichId) {
       await db
         .insert(dokumentAnwendungsbereichLinks)
         .values({
@@ -536,19 +532,13 @@ export async function entscheideVorschlag(
             eq(dokumentKompetenzLinks.kompetenzId, vorschlag.kompetenzId),
           ),
         );
-    } else if (
-      vorschlag.zielTyp === "anwendungsbereich" &&
-      vorschlag.anwendungsbereichId
-    ) {
+    } else if (vorschlag.zielTyp === "anwendungsbereich" && vorschlag.anwendungsbereichId) {
       await db
         .delete(dokumentAnwendungsbereichLinks)
         .where(
           and(
             eq(dokumentAnwendungsbereichLinks.dokumentId, eingabe.dokumentId),
-            eq(
-              dokumentAnwendungsbereichLinks.anwendungsbereichId,
-              vorschlag.anwendungsbereichId,
-            ),
+            eq(dokumentAnwendungsbereichLinks.anwendungsbereichId, vorschlag.anwendungsbereichId),
           ),
         );
     }

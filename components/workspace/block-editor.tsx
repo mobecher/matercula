@@ -5,11 +5,8 @@ import "@blocknote/ariakit/style.css";
 
 import { BlockNoteView } from "@blocknote/ariakit";
 import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
+import { filterSuggestionItems, insertOrUpdateBlockForSlashMenu } from "@blocknote/core/extensions";
 import { de } from "@blocknote/core/locales";
-import {
-  filterSuggestionItems,
-  insertOrUpdateBlockForSlashMenu,
-} from "@blocknote/core/extensions";
 import {
   type DefaultReactSuggestionItem,
   FilePanel,
@@ -83,9 +80,7 @@ const schema = BlockNoteSchema.create({
 
 type EditorType = typeof schema.BlockNoteEditor;
 
-function getCustomSlashMenuItems(
-  editor: EditorType,
-): DefaultReactSuggestionItem[] {
+function getCustomSlashMenuItems(editor: EditorType): DefaultReactSuggestionItem[] {
   return [
     ...getDefaultReactSlashMenuItems(editor),
     {
@@ -93,25 +88,19 @@ function getCustomSlashMenuItems(
       subtext: "Vorschau-Karte mit Titel, Beschreibung und Favicon",
       aliases: ["link", "card", "url", "karte"],
       group: "Medien",
-      onItemClick: () =>
-        insertOrUpdateBlockForSlashMenu(editor, { type: "linkCard" }),
+      onItemClick: () => insertOrUpdateBlockForSlashMenu(editor, { type: "linkCard" }),
     },
     {
       title: "YouTube-Video",
       subtext: "YouTube-Link als eingebettetes Video",
       aliases: ["youtube", "video", "embed", "einbetten"],
       group: "Medien",
-      onItemClick: () =>
-        insertOrUpdateBlockForSlashMenu(editor, { type: "youtubeEmbed" }),
+      onItemClick: () => insertOrUpdateBlockForSlashMenu(editor, { type: "youtubeEmbed" }),
     },
   ];
 }
 
-export function BlockEditor({
-  docId,
-  initialMarkdown,
-  onChangeMarkdown,
-}: BlockEditorProps) {
+export function BlockEditor({ docId, initialMarkdown, onChangeMarkdown }: BlockEditorProps) {
   return (
     <BlockEditorInstance
       key={docId}
@@ -193,17 +182,10 @@ function BlockEditorInstance({
 
   return (
     <div className="-mx-3">
-      <BlockNoteView
-        editor={editor}
-        theme="light"
-        slashMenu={false}
-        filePanel={false}
-      >
+      <BlockNoteView editor={editor} theme="light" slashMenu={false} filePanel={false}>
         <SuggestionMenuController
           triggerCharacter="/"
-          getItems={async (query) =>
-            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-          }
+          getItems={async (query) => filterSuggestionItems(getCustomSlashMenuItems(editor), query)}
         />
         <FilePanelController filePanel={UploadOnlyFilePanel} />
       </BlockNoteView>

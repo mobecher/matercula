@@ -81,6 +81,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
   const [vorschlaegeReload, setVorschlaegeReload] = useState(0);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset draft on doc switch even if titel is identical
   useEffect(() => {
     setTitleDraft(doc.titel);
   }, [doc.id, doc.titel]);
@@ -170,9 +171,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
           reloadToken={vorschlaegeReload}
         />
       )}
-      {doc.typ === "pdf" && doc.materialId && (
-        <MaterialUebersicht materialId={doc.materialId} />
-      )}
+      {doc.typ === "pdf" && doc.materialId && <MaterialUebersicht materialId={doc.materialId} />}
 
       {doc.typ === "ordner" ? (
         <FolderHint />
@@ -250,9 +249,7 @@ function FileViewer({ materialId }: { materialId?: string }) {
 
   if (!materialId) {
     return (
-      <p className="text-sm text-neutral-500">
-        Diese Datei hat keine zugeordnete Quelle mehr.
-      </p>
+      <p className="text-sm text-neutral-500">Diese Datei hat keine zugeordnete Quelle mehr.</p>
     );
   }
 
@@ -309,9 +306,7 @@ function FileViewer({ materialId }: { materialId?: string }) {
           {meta.zusammenfassung}
         </p>
       ) : meta.status === "uploaded" || meta.status === "processing" ? (
-        <p className="mt-4 text-sm text-neutral-500">
-          Inhaltsvorschau wird erstellt…
-        </p>
+        <p className="mt-4 text-sm text-neutral-500">Inhaltsvorschau wird erstellt…</p>
       ) : meta.status === "error" ? (
         <p className="mt-4 text-sm text-neutral-500">
           Inhaltsvorschau konnte nicht erstellt werden.
