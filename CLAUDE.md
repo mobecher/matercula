@@ -1,67 +1,97 @@
 # CLAUDE.md
 
+> **Language policy for this repository:** All code, comments, commit
+> messages, documentation, and agent responses MUST be written in **English**.
+> The only exceptions are the German domain terms listed in the glossary
+> below and user-facing UI strings (which are German). Do not translate
+> glossary terms into English in code, schema, or docs — and do not write
+> the rest of the codebase in German.
+
 ## Domain glossary
-- **Lehrplan**: Offizieller curricularer Rahmen; gespeichert in `lehrplan_versionen`.
-- **Kompetenzbereich**: Thematische Gruppe von Kompetenzen; gespeichert in `kompetenzbereiche`.
-- **Kompetenz**: Einzelne Lernziel-Einheit; gespeichert in `kompetenzen`.
-- **Deskriptor**: Konkretisierung einer Kompetenz; gespeichert in `deskriptoren`.
-- **Schulstufe**: Zielstufe im Schulsystem; Feld `schulstufe` in `lehrplan_versionen`.
-- **Material**: Unterrichtsmaterial und seine Chunks; gespeichert in `materialien` und `material_chunks`.
-- **Tag**: Verknüpfung Material↔Kompetenz inklusive KI-Begründung; gespeichert in `material_kompetenz_links`.
+
+These terms stay in German everywhere (code identifiers, DB columns, API
+payloads, internal docs):
+
+- **Lehrplan**: Official curricular framework; stored in `lehrplan_versionen`.
+- **Kompetenzbereich**: Thematic group of competences; stored in
+  `kompetenzbereiche`.
+- **Kompetenz**: Individual learning-objective unit; stored in `kompetenzen`.
+- **Deskriptor**: Concrete refinement of a `Kompetenz`; stored in
+  `deskriptoren`.
+- **Schulstufe**: Target grade level in the school system; field `schulstufe`
+  in `lehrplan_versionen`.
+- **Material**: Teaching material and its chunks; stored in `materialien` and
+  `material_chunks`.
+- **Tag**: Link between `Material` and `Kompetenz`, including the AI
+  rationale; stored in `material_kompetenz_links`.
 
 ## Naming convention
-- Verwende **Deutsch** für fachliche Begriffe in Code und DB-Spalten (`kompetenzen`, `titel`, `schuljahr`).
-- Verwende **Englisch** für technische Belange (`createdAt`, `ownerId`, `status`).
-- UI-Texte sind auf **Deutsch**.
+
+- Use **German** for domain terms in code and DB columns (`kompetenzen`,
+  `titel`, `schuljahr`).
+- Use **English** for technical concerns (`createdAt`, `ownerId`, `status`).
+- UI strings are in **German**.
+- Everything else — code, comments, internal docs, PR descriptions, agent
+  responses — is in **English**.
 
 ## Architectural rules
-- Nutze niemals die Vercel Edge Runtime.
-- Nutze keine Vercel-spezifischen Datenprodukte (KV/Postgres/Blob); verwende ausschließlich Abstraktionen unter `lib/`.
-- Alle API-Routen validieren Eingaben mit Zod.
-- Datenbankzugriffe laufen nur über Drizzle; Raw SQL ist nur in Migrationen erlaubt.
-- KI-Aufrufe laufen ausschließlich über `lib/ai/providers.ts`.
+
+- Never use the Vercel Edge Runtime.
+- Do not use Vercel-specific data products (KV/Postgres/Blob); only use the
+  abstractions under `lib/`.
+- All API routes validate input with Zod.
+- Database access goes only through Drizzle; raw SQL is only allowed in
+  migrations.
+- AI calls go exclusively through `lib/ai/providers.ts`.
 
 ## How to add a feature
-1. Schema in `lib/db/schema/` ergänzen.
-2. Migration erzeugen (`pnpm db:generate`) und anwenden (`pnpm db:migrate`).
-3. API-Route mit Zod-Validierung unter `app/api/` hinzufügen.
-4. UI im App Router (`app/`) ergänzen.
-5. Passenden Playwright-Smoke-Test in `tests/` ergänzen.
+
+1. Add the schema in `lib/db/schema/`.
+2. Generate a migration (`pnpm db:generate`) and apply it (`pnpm db:migrate`).
+3. Add an API route with Zod validation under `app/api/`.
+4. Add the UI in the App Router (`app/`).
+5. Add a matching Playwright smoke test in `tests/`.
 
 ## What's intentionally NOT built yet
 
-- KI-Tagging-Pipeline (Schritte 2 & 3 von `tagMaterial`: Embeddings, LLM-Tagging)
-- Markdown-Editor
-- Ausgereifte Page-Reference-Workflows
+- AI tagging pipeline (steps 2 & 3 of `tagMaterial`: embeddings, LLM tagging)
+- Markdown editor
+- Mature page-reference workflows
 
 ## Extractor service
 
-- Einziger Python-Anteil im Stack: Python 3.12 + FastAPI + `unstructured`,
-  liegt in `/services/extractor/`.
-- Der Node-Worker ruft den Service über HTTP via `lib/extraction/client.ts`
-  auf. **Niemals inline im Worker extrahieren** — die Service-Grenze ist
-  bewusst gesetzt.
-- **Internal-only**: kein Host-Port in Compose, keine Public IP auf Fly.
-  Auf Fly läuft der Service ausschließlich im Private-Network (`.internal`).
-  Sicherheitsmodell ist Netzwerk-Isolation, deshalb keine Auth.
-- **Canonical chunk shape** (Vertrag, gespiegelt in
+- The only Python part of the stack: Python 3.12 + FastAPI + `unstructured`,
+  located in `/services/extractor/`.
+- The Node worker calls the service over HTTP via `lib/extraction/client.ts`.
+  **Never extract inline in the worker** — the service boundary is
+  intentional.
+- **Internal-only**: no host port in Compose, no public IP on Fly. On Fly the
+  service runs only on the private network (`.internal`). The security model
+  is network isolation, hence no auth.
+- **Canonical chunk shape** (contract, mirrored in
   `lib/extraction/client.ts`):
   `chunkIndex`, `text`, `seitenzahl`, `abschnitt` plus `meta.summary`.
-  Diese Feldnamen sind Pflicht — Embedding und Tagging downstream hängen
-  daran. Form ändern = ganze Pipeline ändern.
-- **Nur PDF emittiert echte Seitenzahlen.** Für alle anderen Formate
-  (DOCX, PPTX, HTML, E-Mail, Bilder, …) sind `seitenzahl` und
-  `meta.pageCount` per Design `null`. Nicht "korrigieren".
-- Scanned-PDF-OCR ist absichtlich nicht unterstützt (`strategy="fast"`
-  für PDFs). Bild-OCR (`.png`/`.jpeg`/…) ist hingegen aktiv — dort ist
-  OCR die einzige Möglichkeit, überhaupt Text zu gewinnen.
-- Unterstützte MIMEs siehe `services/extractor/app/extraction.py`
-  (`SUPPORTED_MIMES`) und Spiegel in `lib/extraction/client.ts`. Beim
-  Erweitern beide Listen plus die Allow-List in
-  `app/api/materialien/route.ts` synchron halten.
+  These field names are mandatory — embedding and tagging downstream depend
+  on them. Changing the shape means changing the whole pipeline.
+- **Only PDF emits real page numbers.** For all other formats (DOCX, PPTX,
+  HTML, email, images, …), `seitenzahl` and `meta.pageCount` are `null` by
+  design. Do not "fix" this.
+- Scanned-PDF OCR is intentionally not supported (`strategy="fast"` for
+  PDFs). Image OCR (`.png`/`.jpeg`/…) is enabled — there OCR is the only
+  way to get any text at all.
+- Supported MIMEs: see `services/extractor/app/extraction.py`
+  (`SUPPORTED_MIMES`) and the mirror in `lib/extraction/client.ts`. When
+  extending, keep both lists plus the allow-list in
+  `app/api/materialien/route.ts` in sync.
 
 ## Common pitfalls
-- Übersetze `Kompetenz` im Code nicht in `Competence`.
-- Füge keine zusätzliche ORM neben Drizzle hinzu.
-- Füge keine State-Manager ein (React Server Components + URL-State bevorzugen).
-- Code ist immer in Englisch außer bei fachlichen Begriffen (siehe Naming Convention).
+
+- Do not translate `Kompetenz` to `Competence` in code.
+- Do not add another ORM next to Drizzle.
+- Do not introduce state managers (prefer React Server Components + URL
+  state).
+- Code is always in English except for the domain terms listed in the
+  glossary.
+- Do not respond to prompts in German and do not write documentation in
+  German — English only, with German reserved for glossary terms and UI
+  strings.
