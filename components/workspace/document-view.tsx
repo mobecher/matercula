@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import type { DokumentKnoten } from "@/lib/workspace/types";
+import type { DocumentNode } from "@/lib/workspace/types";
 import { AnwendungsbereichTabView } from "./anwendungsbereich-tab-view";
 import { BereichTabView } from "./bereich-tab-view";
 import { KlasseTabView } from "./klasse-tab-view";
@@ -73,7 +73,7 @@ export function DocumentView() {
   return <DocumentEditor key={doc.id} doc={doc} />;
 }
 
-function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
+function DocumentEditor({ doc }: { doc: DocumentNode }) {
   const { renameDocument, setIcon, saveContent } = useWorkspace();
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState(doc.title);

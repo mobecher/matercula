@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useEffect, useRef, useState } from "react";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
-import type { DokumentKnoten } from "@/lib/workspace/types";
+import type { DocumentNode } from "@/lib/workspace/types";
 import { SettingsDialog } from "./settings-dialog";
 import {
   anwendungsbereichTabKey,
@@ -223,7 +223,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
 }
 
 interface TreeNodeProps {
-  node: DokumentKnoten;
+  node: DocumentNode;
   depth: number;
 }
 
@@ -246,7 +246,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
   const [dropZone, setDropZone] = useState<"before" | "into" | "after" | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const active = !isFolder && activeTab?.kind === "dokument" && activeTab.documentId === node.id;
+  const active = !isFolder && activeTab?.kind === "document" && activeTab.documentId === node.id;
 
   useEffect(() => {
     if (renaming && inputRef.current) {
@@ -493,7 +493,7 @@ interface SiblingDropDetail {
 interface ChildListProps {
   parentId: string;
   depth: number;
-  nodes: DokumentKnoten[];
+  nodes: DocumentNode[];
 }
 
 function ChildList({ parentId, depth, nodes }: ChildListProps) {
@@ -551,8 +551,8 @@ function IconButton({
   );
 }
 
-function filterTree(nodes: DokumentKnoten[], needle: string): DokumentKnoten[] {
-  const result: DokumentKnoten[] = [];
+function filterTree(nodes: DocumentNode[], needle: string): DocumentNode[] {
+  const result: DocumentNode[] = [];
   for (const node of nodes) {
     const childMatches = node.children ? filterTree(node.children, needle) : [];
     const selfMatches = node.title.toLowerCase().includes(needle);

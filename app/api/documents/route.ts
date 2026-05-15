@@ -24,8 +24,8 @@ export async function GET() {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const baum = await loadDocumentTreeForUser(user.id);
-  return NextResponse.json({ baum });
+  const tree = await loadDocumentTreeForUser(user.id);
+  return NextResponse.json({ tree });
 }
 
 export async function POST(request: Request) {

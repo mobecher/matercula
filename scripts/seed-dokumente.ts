@@ -2,8 +2,8 @@ import { eq } from "drizzle-orm";
 import { db, sqlClient } from "@/lib/db";
 import { users } from "@/lib/db/schema/auth";
 import { documents } from "@/lib/db/schema/documents";
-import { dokumentBaum } from "@/lib/workspace/mock-data";
-import type { DokumentKnoten } from "@/lib/workspace/types";
+import { documentTree } from "@/lib/workspace/mock-data";
+import type { DocumentNode } from "@/lib/workspace/types";
 
 async function seedForUser(email: string) {
   const [benutzer] = await db
@@ -27,7 +27,7 @@ async function seedForUser(email: string) {
   }
 
   async function insertKnoten(
-    knoten: DokumentKnoten,
+    knoten: DocumentNode,
     parentId: string | null,
     sortOrder: number,
   ) {
@@ -54,7 +54,7 @@ async function seedForUser(email: string) {
   }
 
   let i = 0;
-  for (const wurzel of dokumentBaum) {
+  for (const wurzel of documentTree) {
     await insertKnoten(wurzel, null, (i + 1) * 1000);
     i += 1;
   }

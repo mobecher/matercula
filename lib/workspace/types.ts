@@ -1,18 +1,18 @@
-export type DokumentTyp = "folder" | "page" | "file";
+export type DocumentType = "folder" | "page" | "file";
 
-export interface DokumentKnoten {
+export interface DocumentNode {
   id: string;
   title: string;
-  type: DokumentTyp;
+  type: DocumentType;
   icon?: string;
-  children?: DokumentKnoten[];
-  /** Markdown-ähnlicher Inhalt – nur für Typ `seite` relevant. */
+  children?: DocumentNode[];
+  /** Markdown-like content — only relevant for `type === "page"`. */
   inhalt?: string;
-  /** Verweis auf das hochgeladene Material – nur für Typ `pdf` (oder zukünftige Datei-Typen). */
+  /** Reference to the uploaded Material — only for `type === "file"`. */
   materialId?: string;
 }
 
-export interface OffenerTab {
+export interface OpenTab {
   id: string;
   documentId: string;
 }

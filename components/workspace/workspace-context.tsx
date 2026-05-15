@@ -17,10 +17,10 @@ import {
   moveDocumentRequest,
   updateDocument,
 } from "@/lib/workspace/api-client";
-import type { DokumentKnoten, DokumentTyp } from "@/lib/workspace/types";
+import type { DocumentNode, DocumentType } from "@/lib/workspace/types";
 
 export type WorkspaceTab = (
-  | { kind: "dokument"; key: string; documentId: string }
+  | { kind: "document"; key: string; documentId: string }
   | {
       kind: "klasse";
       key: string;
@@ -46,7 +46,7 @@ export type WorkspaceTab = (
   preview?: boolean;
 };
 
-export function dokumentTabKey(id: string): string {
+export function documentTabKey(id: string): string {
   return `dok:${id}`;
 }
 export function klasseTabKey(slug: string, klasseNr: number): string {
@@ -63,7 +63,7 @@ export function anwendungsbereichTabKey(id: string): string {
 }
 
 interface WorkspaceContextValue {
-  tree: DokumentKnoten[];
+  tree: DocumentNode[];
   lehrplaene: SidebarLehrplan[];
   openTabs: WorkspaceTab[];
   activeTabKey: string | null;
@@ -80,11 +80,11 @@ interface WorkspaceContextValue {
   renameDocument: (id: string, title: string) => Promise<void>;
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
-  addDocument: (parentId: string | null, type: DokumentTyp) => Promise<string | null>;
+  addDocument: (parentId: string | null, type: DocumentType) => Promise<string | null>;
   uploadFileDocument: (parentId: string | null, file: File) => Promise<string | null>;
   removeDocument: (id: string) => Promise<void>;
   moveDocument: (id: string, parentId: string | null, position?: number) => Promise<void>;
-  findNode: (id: string) => DokumentKnoten | undefined;
+  findNode: (id: string) => DocumentNode | undefined;
   refresh: () => Promise<void>;
 }
 
@@ -97,7 +97,7 @@ export function useWorkspace() {
 }
 
 interface WorkspaceProviderProps {
-  initialTree: DokumentKnoten[];
+  initialTree: DocumentNode[];
   lehrplaene: SidebarLehrplan[];
   initialDocumentId?: string;
   children: React.ReactNode;
@@ -109,19 +109,19 @@ export function WorkspaceProvider({
   initialDocumentId,
   children,
 }: WorkspaceProviderProps) {
-  const [tree, setTree] = useState<DokumentKnoten[]>(initialTree);
+  const [tree, setTree] = useState<DocumentNode[]>(initialTree);
   const initial: WorkspaceTab[] = initialDocumentId
     ? [
         {
-          kind: "dokument",
-          key: dokumentTabKey(initialDocumentId),
+          kind: "document",
+          key: documentTabKey(initialDocumentId),
           documentId: initialDocumentId,
         },
       ]
     : [];
   const [openTabs, setOpenTabs] = useState<WorkspaceTab[]>(initial);
   const [activeTabKey, setActiveTabKey] = useState<string | null>(
-    initialDocumentId ? dokumentTabKey(initialDocumentId) : null,
+    initialDocumentId ? documentTabKey(initialDocumentId) : null,
   );
   const [saveStatus, setSaveStatus] = useState<WorkspaceContextValue["saveStatus"]>("idle");
   const saveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -164,7 +164,7 @@ export function WorkspaceProvider({
   const openDocument = useCallback(
     (id: string, options?: { preview?: boolean }) => {
       upsertTab(
-        { kind: "dokument", key: dokumentTabKey(id), documentId: id },
+        { kind: "document", key: documentTabKey(id), documentId: id },
         { preview: options?.preview ?? true },
       );
     },
@@ -274,7 +274,7 @@ export function WorkspaceProvider({
   const saveContent = useCallback((id: string, content: string) => {
     setTree((prev) => mapTree(prev, id, (n) => ({ ...n, inhalt: content })));
     // Editing promotes a preview tab to permanent.
-    const key = dokumentTabKey(id);
+    const key = documentTabKey(id);
     setOpenTabs((prev) =>
       prev.map((t) =>
         t.key === key && t.preview ? ({ ...t, preview: false } as WorkspaceTab) : t,
@@ -297,7 +297,7 @@ export function WorkspaceProvider({
   }, []);
 
   const addDocument = useCallback(
-    async (parentId: string | null, type: DokumentTyp) => {
+    async (parentId: string | null, type: DocumentType) => {
       const title = type === "folder" ? "Neuer Ordner" : "Neue Seite";
       try {
         const result = await createDocument({ parentId, type, title });
@@ -365,9 +365,9 @@ export function WorkspaceProvider({
       } finally {
         await refresh();
         setOpenTabs((prev) => {
-          const next = prev.filter((t) => !(t.kind === "dokument" && idsToClose.has(t.documentId)));
+          const next = prev.filter((t) => !(t.kind === "document" && idsToClose.has(t.documentId)));
           const activeWasRemoved = prev.some(
-            (t) => t.key === activeTabKey && t.kind === "dokument" && idsToClose.has(t.documentId),
+            (t) => t.key === activeTabKey && t.kind === "document" && idsToClose.has(t.documentId),
           );
           if (activeWasRemoved) {
             setActiveTabKey(next[next.length - 1]?.key ?? null);
@@ -459,7 +459,7 @@ export function WorkspaceProvider({
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 
-function findNodeInTree(nodes: DokumentKnoten[], id: string): DokumentKnoten | undefined {
+function findNodeInTree(nodes: DocumentNode[], id: string): DocumentNode | undefined {
   for (const n of nodes) {
     if (n.id === id) return n;
     if (n.children) {
@@ -471,10 +471,10 @@ function findNodeInTree(nodes: DokumentKnoten[], id: string): DokumentKnoten | u
 }
 
 function mapTree(
-  nodes: DokumentKnoten[],
+  nodes: DocumentNode[],
   id: string,
-  transform: (n: DokumentKnoten) => DokumentKnoten,
-): DokumentKnoten[] {
+  transform: (n: DocumentNode) => DocumentNode,
+): DocumentNode[] {
   return nodes.map((n) => {
     if (n.id === id) return transform(n);
     if (n.children) {
@@ -484,10 +484,10 @@ function mapTree(
   });
 }
 
-function collectIds(node: DokumentKnoten | undefined): Set<string> {
+function collectIds(node: DocumentNode | undefined): Set<string> {
   const ids = new Set<string>();
   if (!node) return ids;
-  const stack: DokumentKnoten[] = [node];
+  const stack: DocumentNode[] = [node];
   while (stack.length > 0) {
     const current = stack.pop();
     if (!current) break;

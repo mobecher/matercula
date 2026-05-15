@@ -1,8 +1,8 @@
-import type { DokumentKnoten, DokumentTyp } from "./types";
+import type { DocumentNode, DocumentType } from "./types";
 
 export interface CreateDocumentPayload {
   parentId: string | null;
-  type: DokumentTyp;
+  type: DocumentType;
   title: string;
   icon?: string | null;
   materialId?: string | null;
@@ -27,10 +27,10 @@ async function jsonOrThrow(response: Response) {
   return response.json();
 }
 
-export async function fetchTree(): Promise<DokumentKnoten[]> {
+export async function fetchTree(): Promise<DocumentNode[]> {
   const res = await fetch("/api/documents", { cache: "no-store" });
   const body = await jsonOrThrow(res);
-  return body.baum as DokumentKnoten[];
+  return body.tree as DocumentNode[];
 }
 
 export async function createDocument(payload: CreateDocumentPayload) {

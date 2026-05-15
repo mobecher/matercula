@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
-import type { DokumentKnoten } from "@/lib/workspace/types";
+import type { DocumentNode } from "@/lib/workspace/types";
 import { Sidebar } from "./sidebar";
 import { WorkspaceProvider } from "./workspace-context";
 
@@ -20,18 +20,18 @@ export function useSidebarToggle(): SidebarToggleContextValue {
 }
 
 interface WorkspaceFrameProps {
-  baum: DokumentKnoten[];
+  tree: DocumentNode[];
   lehrplaene: SidebarLehrplan[];
-  benutzerName: string;
-  initialDokumentId?: string;
+  userName: string;
+  initialDocumentId?: string;
   children: React.ReactNode;
 }
 
 export function WorkspaceFrame({
-  baum,
+  tree,
   lehrplaene,
-  benutzerName,
-  initialDokumentId,
+  userName,
+  initialDocumentId,
   children,
 }: WorkspaceFrameProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -42,13 +42,13 @@ export function WorkspaceFrame({
 
   return (
     <WorkspaceProvider
-      initialTree={baum}
+      initialTree={tree}
       lehrplaene={lehrplaene}
-      initialDocumentId={initialDokumentId}
+      initialDocumentId={initialDocumentId}
     >
       <SidebarToggleContext.Provider value={toggleValue}>
         <div className="flex h-screen w-full overflow-hidden bg-neutral-50 text-neutral-900">
-          {sidebarOpen && <Sidebar userName={benutzerName} lehrplaene={lehrplaene} />}
+          {sidebarOpen && <Sidebar userName={userName} lehrplaene={lehrplaene} />}
           <div className="flex min-w-0 flex-1 flex-col">
             <main className="min-h-0 flex-1 overflow-auto bg-white">{children}</main>
           </div>

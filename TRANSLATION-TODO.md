@@ -42,24 +42,21 @@ change.
   `accept|reject|reset`, document type `ordner|seite|pdf` →
   `folder|page|file`. Migration `lib/db/migrations/0010_sloppy_kang.sql`
   uses `ALTER TYPE ... RENAME VALUE` (preserves data).
+- Shared workspace types and helpers renamed:
+  `DokumentKnoten` → `DocumentNode`, `DokumentTyp` → `DocumentType`,
+  `OffenerTab` → `OpenTab`, `dokumentTabKey` → `documentTabKey`, tab
+  discriminator `kind: "dokument"` → `"document"` (other kinds stay
+  glossary). `WorkspaceFrame` props `baum`/`benutzerName`/`initialDokumentId`
+  → `tree`/`userName`/`initialDocumentId`. JSON payload key for the
+  document tree fetch (`/api/documents` GET) `baum` → `tree`, and the
+  mock-data export `dokumentBaum` → `documentTree`.
 
 ## Remaining work
 
-### 1. Shared workspace types and component-internal helpers
+### 1. File renames
 
-- `lib/workspace/types.ts`: `DokumentKnoten` → `DocumentNode`,
-  `DokumentTyp` → `DocumentType`, `OffenerTab` → `OpenTab`.
-- `components/workspace/workspace-context.tsx`: tab discriminator
-  `kind: "dokument" | "klasse" | "bereich" | "kompetenz" | "anwendungsbereich"`
-  — change `"dokument"` to `"document"`; the rest are glossary, keep them.
-  Plus `dokumentTabKey` → `documentTabKey`.
-- `components/workspace/workspace-frame.tsx` props: `baum` → `tree`,
-  `benutzerName` → `userName`, `initialDokumentId` → `initialDocumentId`
-  (and the call site in `app/(app)/workspace/layout.tsx`).
-
-### 2. File renames
-
-After (2), rename component files where they aren't glossary:
+After the type renames above, rename component files where they aren't
+glossary:
 
 - `components/workspace/link-vorschlaege.tsx` → `link-suggestions.tsx`
 - `components/workspace/material-uebersicht.tsx` → `material-overview.tsx`
@@ -69,12 +66,12 @@ Keep the glossary-named files: `lehrplan-backlinks.tsx`,
 `anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`,
 `material-linker.tsx`.
 
-### 3. Leftover comments / minor locals
+### 2. Leftover comments / minor locals
 
 `lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
 still have stray German comments and a few German local variables.
 
-### 4. Out of scope
+### 3. Out of scope
 
 `services/extractor/` (Python) keeps the contract field names
 `seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the

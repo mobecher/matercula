@@ -12,13 +12,13 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   const user = await getSessionUser(sessionId);
   if (!user) redirect("/login");
 
-  const [baum, lehrplaene] = await Promise.all([
+  const [tree, lehrplaene] = await Promise.all([
     loadDocumentTreeForUser(user.id),
     loadLehrplanSidebar(),
   ]);
 
   return (
-    <WorkspaceFrame baum={baum} lehrplaene={lehrplaene} benutzerName={user.name}>
+    <WorkspaceFrame tree={tree} lehrplaene={lehrplaene} userName={user.name}>
       {children}
     </WorkspaceFrame>
   );

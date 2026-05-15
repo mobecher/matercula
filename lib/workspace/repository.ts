@@ -2,11 +2,11 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { type Document, documents } from "@/lib/db/schema/documents";
 import { materialien } from "@/lib/db/schema/materials";
-import type { DokumentKnoten } from "@/lib/workspace/types";
+import type { DocumentNode } from "@/lib/workspace/types";
 
 export async function loadDocumentTreeForUser(
   ownerId: string,
-): Promise<DokumentKnoten[]> {
+): Promise<DocumentNode[]> {
   const alle = await db
     .select()
     .from(documents)
@@ -16,8 +16,8 @@ export async function loadDocumentTreeForUser(
   return buildTree(alle);
 }
 
-function buildTree(zeilen: Document[]): DokumentKnoten[] {
-  const nachId = new Map<string, DokumentKnoten & { _parent: string | null }>();
+function buildTree(zeilen: Document[]): DocumentNode[] {
+  const nachId = new Map<string, DocumentNode & { _parent: string | null }>();
   for (const z of zeilen) {
     nachId.set(z.id, {
       id: z.id,
@@ -31,7 +31,7 @@ function buildTree(zeilen: Document[]): DokumentKnoten[] {
     });
   }
 
-  const wurzeln: DokumentKnoten[] = [];
+  const wurzeln: DocumentNode[] = [];
   for (const knoten of nachId.values()) {
     if (knoten._parent && nachId.has(knoten._parent)) {
       const eltern = nachId.get(knoten._parent);

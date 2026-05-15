@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { DokumentKnoten } from "@/lib/workspace/types";
+import type { DocumentNode } from "@/lib/workspace/types";
 import { useWorkspace } from "./workspace-context";
 
 export interface LinkedDocument {
@@ -252,7 +252,7 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
   );
 }
 
-function collectPages(nodes: DokumentKnoten[]): Array<{
+function collectPages(nodes: DocumentNode[]): Array<{
   id: string;
   title: string;
   icon: string | null;
@@ -264,7 +264,7 @@ function collectPages(nodes: DokumentKnoten[]): Array<{
     icon: string | null;
     type: "page" | "file";
   }> = [];
-  function walk(ns: DokumentKnoten[]) {
+  function walk(ns: DocumentNode[]) {
     for (const n of ns) {
       if (n.type === "page" || n.type === "file") {
         out.push({

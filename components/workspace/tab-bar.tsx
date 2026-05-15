@@ -74,7 +74,7 @@ function describeTab(
   tab: WorkspaceTab,
   findNode: ReturnType<typeof useWorkspace>["findNode"],
 ): { label: string; icon: string } | null {
-  if (tab.kind === "dokument") {
+  if (tab.kind === "document") {
     const doc = findNode(tab.documentId);
     if (!doc) return null;
     return { label: doc.title, icon: doc.icon ?? "📄" };

@@ -1,6 +1,6 @@
-import type { DokumentKnoten } from "./types";
+import type { DocumentNode } from "./types";
 
-export const dokumentBaum: DokumentKnoten[] = [
+export const documentTree: DocumentNode[] = [
   {
     id: "wb-deutsch",
     title: "Deutsch",
@@ -106,10 +106,10 @@ export const dokumentBaum: DokumentKnoten[] = [
 ];
 
 export function findDocument(
-  baum: DokumentKnoten[],
+  tree: DocumentNode[],
   id: string,
-): DokumentKnoten | undefined {
-  for (const knoten of baum) {
+): DocumentNode | undefined {
+  for (const knoten of tree) {
     if (knoten.id === id) return knoten;
     if (knoten.children) {
       const treffer = findDocument(knoten.children, id);
