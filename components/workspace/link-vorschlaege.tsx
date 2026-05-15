@@ -195,21 +195,21 @@ export function LinkVorschlaege({
                     >
                       {v.zielCode}
                     </button>
-                    <button
-                      className="text-left font-medium text-neutral-900 hover:underline"
-                      onClick={() =>
-                        v.zielTyp === "kompetenz"
-                          ? openKompetenzTab(v.zielId, v.zielTitel)
-                          : openAnwendungsbereichTab(v.zielId, v.zielTitel)
-                      }
-                      type="button"
-                      title={v.zielPfad}
-                    >
-                      {v.zielTitel}
-                    </button>
                     <ConfidenceBadge value={v.confidence} />
                   </div>
-                  <p className="text-xs text-neutral-500">{v.zielPfad}</p>
+                  <button
+                    className="block w-full text-left font-medium text-neutral-900 hover:underline"
+                    onClick={() =>
+                      v.zielTyp === "kompetenz"
+                        ? openKompetenzTab(v.zielId, v.zielTitel)
+                        : openAnwendungsbereichTab(v.zielId, v.zielTitel)
+                    }
+                    type="button"
+                    title={v.zielPfad}
+                  >
+                    {v.zielTitel}
+                  </button>
+                  <p className="mt-0.5 text-xs text-neutral-500">{v.zielPfad}</p>
                   <p className="mt-1.5 text-sm text-neutral-700">
                     {v.begruendung}
                   </p>
@@ -258,9 +258,9 @@ export function LinkVorschlaege({
                   <span className="font-mono text-[10px] text-neutral-500">
                     {v.zielCode}
                   </span>
-                  <span className="text-neutral-700">{v.zielTitel}</span>
                   <ConfidenceBadge value={v.confidence} subtle />
                 </div>
+                <p className="mt-1 font-medium text-neutral-800">{v.zielTitel}</p>
                 {v.begruendung && (
                   <p className="mt-1 whitespace-pre-wrap text-neutral-600">
                     {v.begruendung}

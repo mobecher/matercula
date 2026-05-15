@@ -156,7 +156,11 @@ function mapRowToAnsicht(
     zielTyp: row.zielTyp,
     zielId: eintrag.id,
     zielCode: eintrag.code,
-    zielTitel: eintrag.titel,
+    // Bevorzugt die vollständige Beschreibung – `titel` ist eine gekürzte
+    // Überschrift (z. B. ein einzelnes Verb), während die ganze Kompetenz/
+    // der Anwendungsbereich in `beschreibung` steht. Für die Entscheidung
+    // im Vorschlags-Panel ist der volle Text deutlich nützlicher.
+    zielTitel: eintrag.beschreibung?.trim() || eintrag.titel,
     zielPfad: eintrag.pfad,
     confidence: row.confidence,
     begruendung: row.begruendung,
