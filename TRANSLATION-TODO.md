@@ -1,220 +1,114 @@
 # Translation TODO
 
-This file tracks German → English renames that are **deferred** because they
-cross the workspace boundary into shared types, API contracts, DB schema, or
-UI strings (which intentionally stay German).
+We are renaming everything German to English **except** the domain glossary
+from `CLAUDE.md`:
 
-The workspace components under `components/workspace/` were translated in the
-first pass:
+> `Lehrplan`, `Kompetenzbereich`, `Kompetenz`, `Deskriptor`, `Schulstufe`,
+> `Material`, `Tag` — these stay German in code, DB, and API payloads.
 
-- All German comments → English
-- `VerknuepftesDokument` → `LinkedDocument` (in `material-linker.tsx` and consumers)
-- `VorschlagAnsicht` → `SuggestionView` (in `link-vorschlaege.tsx`)
-- `UebersichtAntwort` → `OverviewResponse`, `VorschauChunk` → `PreviewChunk`
-- Component `LinkVorschlaege` → `LinkSuggestions`
-- Component `MaterialUebersicht` → `MaterialOverview`
-- Local German variables: `fehler` → `error`, `hinweis` → `notice`,
-  `loeschen` → `deleting`, `speichern` → `save`, `seiten` → `pages`,
-  `vorschlaege` → `suggestions`, `offene` → `openSuggestions`,
-  `entschieden` → `decided`, `vorschauOffen` → `previewOpen`,
-  `abgebrochen` → `aborted`, `collectSeiten` → `collectPages`
+UI strings stay German (they're shown to teachers).
 
-UI strings are intentionally **left in German** per `CLAUDE.md` (e.g.
-`aria-label="Verknüpfung entfernen"`, `placeholder="Material suchen…"`,
-button labels, error messages shown to teachers).
+API stability is **not** a concern (pre-production). Wire payload keys and
+route segments may be renamed — just update every consumer in the same
+change.
 
-## Second pass — `lib/` and `app/api/` function & variable names
+## Done
 
-The second pass renamed every German-named function, exported type, and
-local variable in `lib/` and `app/api/` that did **not** cross the
-DB-column / wire-payload boundary.
+- `CLAUDE.md` translated to English.
+- All German function names, types, and locals in `components/workspace/`,
+  `lib/`, `app/api/`, and `scripts/` renamed to English.
+- All German comments in those files translated.
+- See git history for the exact rename map; LSP-aware renames updated all
+  call sites.
 
-### Renamed (functions / methods)
+## Remaining work
 
-`lib/workspace/repository.ts`
+### 1. DB schema + migrations
 
-- `ladeDokumentBaumFuerBenutzer` → `loadDocumentTreeForUser`
-- `erstelleDokument` → `createDocument`
-- `aktualisiereDokument` → `updateDocument`
-- `loescheDokument` → `deleteDocument`
-- `baueBaum` → `buildTree`
-- `gehoertDokumentZuOwner` → `documentBelongsToOwner`
+Rename every German DB column / table that is **not** a glossary term, then
+generate a Drizzle migration and update all consumers in lockstep
+(`lib/db/schema/`, repository code, API routes, UI types).
 
-`lib/workspace/mock-data.ts`
+Examples (non-exhaustive):
 
-- `findeDokument` → `findDocument`
+- `titel` → `title`, `beschreibung` → `description`, `inhalt` → `content`,
+  `inhaltMarkdown` → `contentMarkdown`, `dateiname` → `fileName`,
+  `notiz` → `note`, `vorhanden` → `present`, `vorschau` → `preview`,
+  `schluessel` → `keys`, `pfad` → `path`, `seitenzahl` → `pageNumber`,
+  `abschnitt` → `section`, `anzahlChunks` → `chunkCount`,
+  `anzahlSeiten` → `pageCount`, `gesamtZeichen` → `totalChars`,
+  `begruendung` → `rationale`, `modell` → `model`,
+  `perspektive` → `perspective`, `uebergreifendeThemen` → `crossCuttingTopics`,
+  `aktion` → `action`, `zielTyp`/`zielId`/`zielCode`/`zielTitel`/`zielPfad` →
+  `targetType` / `targetId` / `targetCode` / `targetTitle` / `targetPath`,
+  `zusammenfassung` → `summary`, `dokumentId` → `documentId`,
+  `vorschlagId` → `suggestionId`.
+- Tables: `dokumente` → `documents`, `vorschlaege` → `suggestions`.
 
-`lib/curriculum/repository.ts`
+Keep glossary tables/columns: `lehrplan_versionen`, `kompetenzen`,
+`kompetenzbereiche`, `anwendungsbereiche`, `materialien`, `material_chunks`,
+`kompetenz_id`, `material_id`, `schulstufe`, etc.
 
-- `ladeAlleLehrplaene` → `loadAllLehrplaene`
-- `ladeLehrplanBySlug` → `loadLehrplanBySlug`
-- `ladeKlasseUebersicht` → `loadKlasseOverview`
-- `ladeKompetenzbereichDetail` → `loadKompetenzbereichDetail`
-- `ladeKompetenzDetail` → `loadKompetenzDetail`
-- `ladeAnwendungsbereichDetail` → `loadAnwendungsbereichDetail`
-- `ladeLehrplanSidebar` → `loadLehrplanSidebar`
+### 2. Wire JSON payloads + API route paths
 
-`lib/curriculum/links.ts`
+After (1), update every `NextResponse.json({...})` and Zod schema to use
+the new English keys, plus rename the German route segments where they
+aren't glossary:
 
-- `ladeLehrplanLinksFuerDokument` → `loadLehrplanLinksForDocument`
-- `ladeDokumenteFuerKompetenz` → `loadDocumentsForKompetenz`
-- `ladeDokumenteFuerAnwendungsbereich` → `loadDocumentsForAnwendungsbereich`
-- `verknuepfeKompetenz` → `linkKompetenz`
-- `loescheKompetenzVerknuepfung` → `deleteKompetenzLink`
-- `verknuepfeAnwendungsbereich` → `linkAnwendungsbereich`
-- `loescheAnwendungsbereichVerknuepfung` → `deleteAnwendungsbereichLink`
-- `syncVorschlagStatusFuerLink` → `syncSuggestionStatusForLink`
+- `/api/dokumente` → `/api/documents`
+- `/api/dokumente/[id]/vorschlaege` → `/api/documents/[id]/suggestions`
+- `/api/materialien/[id]/uebersicht` → `/api/materials/[id]/overview`
+  (glossary `Material` is German, but English plural `materials` is fine
+  for the route segment — bikeshed at rename time)
 
-`lib/curriculum/vorschlaege.ts`
+Keep glossary segments: `/api/kompetenzen`, `/api/kompetenzbereiche`,
+`/api/anwendungsbereiche`, `/api/lehrplaene`.
 
-- `ladeDokumentFuerVorschlaege` → `loadDocumentForSuggestions`
-- `ladeKurriculumKatalog` → `loadCurriculumCatalog`
-- `ladeVorschlaegeFuerDokument` → `loadSuggestionsForDocument`
-- `generiereVorschlaegeFuerDokument` → `generateSuggestionsForDocument`
-- `entscheideVorschlag` → `decideSuggestion`
-- `mapRowToAnsicht` → `mapRowToView`
+### 3. Enum / status string values
 
-`lib/curriculum/import.ts`
+Currently used over the wire and in the DB:
 
-- `ladeCurriculumKatalog` → `loadCurriculumCatalogFromDb`
-- `importiereCurriculum` → `importCurriculum`
+- suggestion status `"offen" | "akzeptiert" | "abgelehnt"` →
+  `"open" | "accepted" | "rejected"`
+- decide-suggestion action `"akzeptieren" | "ablehnen" | "zuruecksetzen"` →
+  `"accept" | "reject" | "reset"`
+- document type `"ordner" | "seite" | "pdf"` → `"folder" | "page" | "file"`
+  (the `pdf` value is misleadingly named; it really means "uploaded file")
 
-`lib/curriculum/dokument-inhalt.ts`
+Each requires a data migration plus updates in API + UI.
 
-- `dokumentInhaltFuerAi` → `documentContentForAi`
+### 4. Shared workspace types and component-internal helpers
 
-`lib/materials/repository.ts`
+- `lib/workspace/types.ts`: `DokumentKnoten` → `DocumentNode`,
+  `DokumentTyp` → `DocumentType`, `OffenerTab` → `OpenTab`.
+- `components/workspace/workspace-context.tsx`: tab discriminator
+  `kind: "dokument" | "klasse" | "bereich" | "kompetenz" | "anwendungsbereich"`
+  — change `"dokument"` to `"document"`; the rest are glossary, keep them.
+  Plus `dokumentTabKey` → `documentTabKey`.
+- `components/workspace/workspace-frame.tsx` props: `baum` → `tree`,
+  `benutzerName` → `userName`, `initialDokumentId` → `initialDocumentId`
+  (and the call site in `app/(app)/workspace/layout.tsx`).
 
-- `erstelleMaterial` → `createMaterial`
-- `ladeMaterial` → `loadMaterial`
-- `loescheMaterial` → `deleteMaterial`
-- `listeMaterialienFuerBenutzer` → `listMaterialsForUser`
+### 5. File renames
 
-`scripts/seed-dokumente.ts`
+After (4), rename component files where they aren't glossary:
 
-- `seedFuerBenutzer` → `seedForUser`
+- `components/workspace/link-vorschlaege.tsx` → `link-suggestions.tsx`
+- `components/workspace/material-uebersicht.tsx` → `material-overview.tsx`
 
-`app/api/materialien/route.ts`
-
-- `bereinigeDateiname` → `sanitizeFilename`
-- `ERLAUBTE_MIME_TYPES` → `ALLOWED_MIME_TYPES`
-
-`app/api/me/settings/route.ts`
-
-- `maskiere` → `mask`
-
-### Renamed (types / interfaces / classes)
-
-- `ErstelleDokumentEingabe` → `CreateDocumentInput`
-- `AktualisiereDokumentEingabe` → `UpdateDocumentInput`
-- `ErstelleMaterialEingabe` → `CreateMaterialInput`
-- `GenerierungsErgebnis` → `GenerationResult` (fields `grund` → `reason`,
-  `fehler` → `error`)
-- `VorschlagAnsicht` → `SuggestionView`
-- `KurriculumEintrag` → `CurriculumEntry`
-- `LehrplanUebersicht` → `LehrplanOverview`
-- `KlasseUebersicht` → `KlasseOverview`
-- `BenutzerAiSchluessel` → `UserAiKeys`
-- `FehlenderProviderSchluessel` → `MissingProviderKey`
-
-### Renamed (local variables in `app/api/`)
-
-- `ergebnis` → `result` (every route)
-- `idErgebnis` → `idResult`
-- `eingabe` → `input` (lib repository signatures)
-- `aktualisiert` → `updated`
-- `aenderungen` → `changes`
-- `geloescht` → `deleted`
-- `sichtbar` → `visible`
-- `erstelleSchema` → `createSchema`
-- `loeschenSchema` → `deleteSchema`
-- `verknuepfungSchema` → `linkSchema`
-- `allePagesUndLen` → `pagesAndLengths`
-- `seitenSet` → `pageSet`
-- `vorschauRows` → `previewRows`
-- `basis` → `base`
-
-All German doc/inline comments in touched files were translated to English.
-
-## Remaining (out-of-scope) renames
-
-### File names in `components/workspace/`
-
-None of these were renamed; tracked for a future pass:
-
-- `link-vorschlaege.tsx` → `link-suggestions.tsx`
-- `material-uebersicht.tsx` → `material-overview.tsx`
-
-(The file names containing glossary terms — `lehrplan-backlinks.tsx`,
+Keep the glossary-named files: `lehrplan-backlinks.tsx`,
 `kompetenz-tab-view.tsx`, `bereich-tab-view.tsx`,
-`anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`, `material-linker.tsx`
-— stay as-is.)
+`anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`,
+`material-linker.tsx`.
 
-### Shared workspace types in `lib/workspace/types.ts`
+### 6. Leftover comments / minor locals
 
-These are imported by `components/workspace/` and elsewhere. Renaming
-requires touching every consumer:
+`lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
+still have stray German comments and a few German local variables. Sweep
+them in the same pass as (1).
 
-- `DokumentKnoten` → `DocumentNode`
-- `DokumentTyp` → `DocumentType`
-- `OffenerTab` → `OpenTab`
-- German JSDoc on `inhalt` and `materialId` (kept as-is for now)
+### 7. Out of scope
 
-### `WorkspaceFrame` props
-
-`components/workspace/workspace-frame.tsx` is consumed by
-`app/(app)/workspace/layout.tsx`:
-
-- prop `baum` → `tree`
-- prop `benutzerName` → `userName`
-- prop `initialDokumentId` → `initialDocumentId`
-
-### `workspace-context.tsx` keys/helpers
-
-Used internally by sidebar/tab-bar — internal, but pervasive:
-
-- `dokumentTabKey` → `documentTabKey`
-- Tab discriminator `kind: "dokument"` → `kind: "document"` (touches every
-  branch in `tab-bar.tsx`, `document-view.tsx`, `workspace-context.tsx`)
-- `dokumentId` field on the dokument tab → `documentId`
-
-### Cross-cutting (DB / API / glossary-adjacent)
-
-These are intentionally deferred until a wider sweep across `lib/`, `app/api/`,
-schema, and migrations. They are part of the wire JSON contract or DB column
-names and renaming them requires changing the schema, migrations, and every
-consumer at the same time:
-
-- DB columns / wire payload keys still used in API responses and
-  `app/api/` routes: `titel`, `beschreibung`, `inhalt`, `inhaltMarkdown`,
-  `dateiname`, `notiz`, `vorhanden`, `vorschau`, `schluessel`, `dokument`,
-  `dokumente`, `kompetenzen`, `anwendungsbereiche`, `bereich`, `klasse`,
-  `kompetenz`, `anwendungsbereich`, `lehrplan`, `vorschlaege`, `vorschlag`,
-  `aktion`, `zielTyp`, `zielId`, `zielCode`, `zielTitel`, `zielPfad`,
-  `begruendung`, `modell`, `perspektive`, `uebergreifendeThemen`, `pfad`,
-  `seitenzahl`, `abschnitt`, `anzahlChunks`, `anzahlSeiten`, `gesamtZeichen`,
-  `statusReason`, `dokumentId`, `kompetenzId`, `anwendungsbereichId`,
-  `vorschlagId`, `materialId`, `parentId`
-- API route paths: `/api/dokumente/...`, `/api/lehrplaene/...`,
-  `/api/materialien/...`, `/api/kompetenzbereiche/...`,
-  `/api/anwendungsbereiche/...`, `/api/me/settings`, `vorschlaege` sub-routes,
-  `dokumente` sub-routes, `uebersicht` sub-route, `lehrplan-links` sub-route
-- Status enum values used over the wire: `"offen" | "akzeptiert" | "abgelehnt"`,
-  action values `"akzeptieren" | "ablehnen" | "zuruecksetzen"`
-- Document type enum value `"pdf"` (legacy name for "any uploaded file"),
-  `"seite"`, `"ordner"`
-
-### Other directories not yet touched
-
-- `lib/db/schema/` and DB migrations (touching this requires a coordinated
-  migration of every consumer above)
-- `lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/` (some German
-  comments and the occasional German local variable remain)
-- `tests/`
-- `services/extractor/` (Python, only kept-German fields are the contract
-  fields `seitenzahl`, `abschnitt`, etc. — see `CLAUDE.md`)
-
-### Domain glossary — never rename
-
-Per `CLAUDE.md`: `Lehrplan`, `Kompetenzbereich`, `Kompetenz`, `Deskriptor`,
-`Schulstufe`, `Material`, `Tag` stay German in code, DB, and API payloads.
+`services/extractor/` (Python) keeps the contract field names
+`seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the
+extractor↔worker contract, not user-facing JSON.
