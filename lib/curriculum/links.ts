@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { type Dokument, dokumente } from "@/lib/db/schema/dokumente";
 import {
@@ -8,7 +8,41 @@ import {
   lehrplaene,
   lehrplanKlassen,
 } from "@/lib/db/schema/lehrplan";
-import { dokumentAnwendungsbereichLinks, dokumentKompetenzLinks } from "@/lib/db/schema/links";
+import {
+  dokumentAnwendungsbereichLinks,
+  dokumentKompetenzLinks,
+  dokumentLinkVorschlaege,
+} from "@/lib/db/schema/links";
+
+/**
+ * Hält den Status passender KI-Vorschläge mit dem tatsächlichen Link-Stand
+ * synchron, wenn ein Link manuell angelegt oder entfernt wurde.
+ */
+async function syncVorschlagStatusFuerLink(args: {
+  dokumentId: string;
+  zielTyp: "kompetenz" | "anwendungsbereich";
+  zielId: string;
+  neuerStatus: "akzeptiert" | "offen";
+}): Promise<void> {
+  const zielFilter =
+    args.zielTyp === "kompetenz"
+      ? eq(dokumentLinkVorschlaege.kompetenzId, args.zielId)
+      : eq(dokumentLinkVorschlaege.anwendungsbereichId, args.zielId);
+  await db
+    .update(dokumentLinkVorschlaege)
+    .set({
+      status: args.neuerStatus,
+      decidedAt: args.neuerStatus === "akzeptiert" ? new Date() : null,
+    })
+    .where(
+      and(
+        eq(dokumentLinkVorschlaege.dokumentId, args.dokumentId),
+        eq(dokumentLinkVorschlaege.zielTyp, args.zielTyp),
+        zielFilter,
+        ne(dokumentLinkVorschlaege.status, args.neuerStatus),
+      ),
+    );
+}
 
 export interface VerknuepftesDokument {
   id: string;
@@ -187,6 +221,12 @@ export async function verknuepfeKompetenz(args: {
       notiz: args.notiz ?? null,
     })
     .onConflictDoNothing();
+  await syncVorschlagStatusFuerLink({
+    dokumentId: args.dokumentId,
+    zielTyp: "kompetenz",
+    zielId: args.kompetenzId,
+    neuerStatus: "akzeptiert",
+  });
   return true;
 }
 
@@ -210,6 +250,14 @@ export async function loescheKompetenzVerknuepfung(args: {
       ),
     )
     .returning({ id: dokumentKompetenzLinks.id });
+  if (result.length > 0) {
+    await syncVorschlagStatusFuerLink({
+      dokumentId: args.dokumentId,
+      zielTyp: "kompetenz",
+      zielId: args.kompetenzId,
+      neuerStatus: "offen",
+    });
+  }
   return result.length > 0;
 }
 
@@ -233,6 +281,12 @@ export async function verknuepfeAnwendungsbereich(args: {
       notiz: args.notiz ?? null,
     })
     .onConflictDoNothing();
+  await syncVorschlagStatusFuerLink({
+    dokumentId: args.dokumentId,
+    zielTyp: "anwendungsbereich",
+    zielId: args.anwendungsbereichId,
+    neuerStatus: "akzeptiert",
+  });
   return true;
 }
 
@@ -256,5 +310,13 @@ export async function loescheAnwendungsbereichVerknuepfung(args: {
       ),
     )
     .returning({ id: dokumentAnwendungsbereichLinks.id });
+  if (result.length > 0) {
+    await syncVorschlagStatusFuerLink({
+      dokumentId: args.dokumentId,
+      zielTyp: "anwendungsbereich",
+      zielId: args.anwendungsbereichId,
+      neuerStatus: "offen",
+    });
+  }
   return result.length > 0;
 }

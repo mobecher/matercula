@@ -14,8 +14,17 @@ interface PickerEntry {
   kind: LinkKind;
 }
 
-export function LehrplanBacklinks({ docId, reloadToken }: { docId: string; reloadToken?: number }) {
-  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
+export function LehrplanBacklinks({
+  docId,
+  reloadToken,
+  onLinksChanged,
+}: {
+  docId: string;
+  reloadToken?: number;
+  onLinksChanged?: () => void;
+}) {
+  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } =
+    useWorkspace();
   const [data, setData] = useState<DokumentLehrplanLinks | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -57,7 +66,10 @@ export function LehrplanBacklinks({ docId, reloadToken }: { docId: string; reloa
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ dokumentId: docId }),
       });
-      if (r.ok) await reload();
+      if (r.ok) {
+        await reload();
+        onLinksChanged?.();
+      }
     } finally {
       setBusy(false);
     }
@@ -75,7 +87,10 @@ export function LehrplanBacklinks({ docId, reloadToken }: { docId: string; reloa
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ dokumentId: docId }),
       });
-      if (r.ok) await reload();
+      if (r.ok) {
+        await reload();
+        onLinksChanged?.();
+      }
     } finally {
       setBusy(false);
     }

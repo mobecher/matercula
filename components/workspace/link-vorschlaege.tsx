@@ -53,9 +53,11 @@ const TYP_LABEL: Record<VorschlagAnsicht["zielTyp"], string> = {
 export function LinkVorschlaege({
   docId,
   onLinksChanged,
+  reloadToken,
 }: {
   docId: string;
   onLinksChanged?: () => void;
+  reloadToken?: number;
 }) {
   const { openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
   const [vorschlaege, setVorschlaege] = useState<VorschlagAnsicht[]>([]);
@@ -81,6 +83,13 @@ export function LinkVorschlaege({
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // Externe Änderungen (z. B. manuelles Verknüpfen in den Backlinks)
+  // triggern ein Reload, damit Status der Vorschläge konsistent bleibt.
+  useEffect(() => {
+    if (reloadToken === undefined) return;
+    void reload();
+  }, [reload, reloadToken]);
 
   async function generate() {
     setStatus("generating");
@@ -108,7 +117,10 @@ export function LinkVorschlaege({
     }
   }
 
-  async function decide(v: VorschlagAnsicht, aktion: "akzeptieren" | "ablehnen") {
+  async function decide(
+    v: VorschlagAnsicht,
+    aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen",
+  ) {
     setBusyId(v.id);
     try {
       const r = await fetch(`/api/dokumente/${docId}/vorschlaege/${v.id}`, {
@@ -119,7 +131,12 @@ export function LinkVorschlaege({
       if (!r.ok) return;
       const data = (await r.json()) as { vorschlag: VorschlagAnsicht };
       setVorschlaege((prev) => prev.map((p) => (p.id === v.id ? data.vorschlag : p)));
-      if (aktion === "akzeptieren") onLinksChanged?.();
+      // "akzeptieren" legt einen Link an, "zuruecksetzen" entfernt einen
+      // ggf. bereits angelegten Link – in beiden Fällen müssen die Backlinks
+      // refreshed werden.
+      if (aktion === "akzeptieren" || aktion === "zuruecksetzen") {
+        onLinksChanged?.();
+      }
     } finally {
       setBusyId(null);
     }
@@ -281,6 +298,17 @@ export function LinkVorschlaege({
                       type="button"
                     >
                       Annehmen
+                    </button>
+                  )}
+                  {v.status === "akzeptiert" && (
+                    <button
+                      className="shrink-0 rounded-md border border-neutral-300 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-50"
+                      disabled={busyId === v.id}
+                      onClick={() => void decide(v, "zuruecksetzen")}
+                      type="button"
+                      title="Verknüpfung entfernen und Vorschlag wieder als offen markieren"
+                    >
+                      Entfernen
                     </button>
                   )}
                 </div>

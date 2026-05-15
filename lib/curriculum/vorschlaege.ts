@@ -462,7 +462,7 @@ interface EntscheidungsEingabe {
   vorschlagId: string;
   dokumentId: string;
   ownerId: string;
-  aktion: "akzeptieren" | "ablehnen";
+  aktion: "akzeptieren" | "ablehnen" | "zuruecksetzen";
 }
 
 export interface EntscheidungsErgebnis {
@@ -518,12 +518,46 @@ export async function entscheideVorschlag(
         })
         .onConflictDoNothing();
     }
+  } else if (eingabe.aktion === "zuruecksetzen") {
+    // Vorschlag wird auf "offen" zurückgesetzt; falls bereits ein Link
+    // (durch früheres Akzeptieren) existiert, wird dieser entfernt, damit
+    // Vorschlags-Zustand und Link-Tabelle konsistent bleiben.
+    if (vorschlag.zielTyp === "kompetenz" && vorschlag.kompetenzId) {
+      await db
+        .delete(dokumentKompetenzLinks)
+        .where(
+          and(
+            eq(dokumentKompetenzLinks.dokumentId, eingabe.dokumentId),
+            eq(dokumentKompetenzLinks.kompetenzId, vorschlag.kompetenzId),
+          ),
+        );
+    } else if (
+      vorschlag.zielTyp === "anwendungsbereich" &&
+      vorschlag.anwendungsbereichId
+    ) {
+      await db
+        .delete(dokumentAnwendungsbereichLinks)
+        .where(
+          and(
+            eq(dokumentAnwendungsbereichLinks.dokumentId, eingabe.dokumentId),
+            eq(
+              dokumentAnwendungsbereichLinks.anwendungsbereichId,
+              vorschlag.anwendungsbereichId,
+            ),
+          ),
+        );
+    }
   }
 
-  const status = eingabe.aktion === "akzeptieren" ? "akzeptiert" : "abgelehnt";
+  const status =
+    eingabe.aktion === "akzeptieren"
+      ? "akzeptiert"
+      : eingabe.aktion === "ablehnen"
+        ? "abgelehnt"
+        : "offen";
   await db
     .update(dokumentLinkVorschlaege)
-    .set({ status, decidedAt: new Date() })
+    .set({ status, decidedAt: status === "offen" ? null : new Date() })
     .where(eq(dokumentLinkVorschlaege.id, eingabe.vorschlagId));
 
   const liste = await ladeVorschlaegeFuerDokument(eingabe.dokumentId, eingabe.ownerId);

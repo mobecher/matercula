@@ -78,6 +78,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState(doc.titel);
   const [backlinksReload, setBacklinksReload] = useState(0);
+  const [vorschlaegeReload, setVorschlaegeReload] = useState(0);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -155,9 +156,19 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         value={titleDraft}
       />
 
-      {doc.typ !== "ordner" && <LehrplanBacklinks docId={doc.id} reloadToken={backlinksReload} />}
+      {doc.typ !== "ordner" && (
+        <LehrplanBacklinks
+          docId={doc.id}
+          reloadToken={backlinksReload}
+          onLinksChanged={() => setVorschlaegeReload((t) => t + 1)}
+        />
+      )}
       {(doc.typ === "seite" || doc.typ === "pdf") && (
-        <LinkVorschlaege docId={doc.id} onLinksChanged={() => setBacklinksReload((t) => t + 1)} />
+        <LinkVorschlaege
+          docId={doc.id}
+          onLinksChanged={() => setBacklinksReload((t) => t + 1)}
+          reloadToken={vorschlaegeReload}
+        />
       )}
       {doc.typ === "pdf" && doc.materialId && (
         <MaterialUebersicht materialId={doc.materialId} />
