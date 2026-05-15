@@ -1,0 +1,142 @@
+name: Deploy
+
+# Automatische Deploys auf Fly.io.
+#
+# Jede der drei Apps (extractor, worker, web) wird nur dann neu deployt,
+# wenn sich Dateien geändert haben, die für sie relevant sind. So bleibt
+# ein Push, der z. B. nur den Markdown-Editor anfasst, schnell.
+#
+# Reihenfolge ist wichtig: extractor zuerst, dann worker (verbraucht den
+# Service), dann web. Die Jobs nutzen `needs:`, damit ein fehlgeschlagener
+# Extractor-Deploy keinen kaputten Worker hinterlässt.
+#
+# Voraussetzung: Repository-Secret `FLY_API_TOKEN` mit Deploy-Rechten für
+# alle drei Apps (am einfachsten ein Org-Token: `fly tokens create org`).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Welche Apps deployen"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - all
+          - extractor
+          - worker
+          - web
+
+concurrency:
+  group: fly-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      extractor: ${{ steps.filter.outputs.extractor }}
+      worker: ${{ steps.filter.outputs.worker }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            extractor:
+              - 'services/extractor/**'
+            worker:
+              - 'lib/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'Dockerfile'
+              - 'fly.worker.toml'
+            web:
+              - 'app/**'
+              - 'components/**'
+              - 'lib/**'
+              - 'public/**'
+              - 'scripts/**'
+              - 'data/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'next.config.ts'
+              - 'tsconfig.json'
+              - 'Dockerfile'
+              - 'fly.toml'
+
+  deploy-extractor:
+    needs: changes
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+        (inputs.target == 'all' || inputs.target == 'extractor') ||
+      github.event_name == 'push' && needs.changes.outputs.extractor == 'true' ||
+      github.event_name == 'workflow_dispatch' && inputs.target == 'auto' &&
+        needs.changes.outputs.extractor == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fly-deploy-extractor
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy -c services/extractor/fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-worker:
+    needs: [changes, deploy-extractor]
+    # `always()`-Block: Worker auch deployen, wenn der Extractor-Job
+    # geskippt wurde (kein Code-Change), aber nicht, wenn er fehlgeschlagen ist.
+    if: >-
+      always() &&
+      needs.deploy-extractor.result != 'failure' &&
+      (
+        github.event_name == 'workflow_dispatch' &&
+          (inputs.target == 'all' || inputs.target == 'worker') ||
+        github.event_name == 'push' && needs.changes.outputs.worker == 'true' ||
+        github.event_name == 'workflow_dispatch' && inputs.target == 'auto' &&
+          needs.changes.outputs.worker == 'true'
+      )
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fly-deploy-worker
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy -c fly.worker.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-web:
+    needs: [changes, deploy-extractor, deploy-worker]
+    if: >-
+      always() &&
+      needs.deploy-extractor.result != 'failure' &&
+      needs.deploy-worker.result != 'failure' &&
+      (
+        github.event_name == 'workflow_dispatch' &&
+          (inputs.target == 'all' || inputs.target == 'web') ||
+        github.event_name == 'push' && needs.changes.outputs.web == 'true' ||
+        github.event_name == 'workflow_dispatch' && inputs.target == 'auto' &&
+          needs.changes.outputs.web == 'true'
+      )
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fly-deploy-web
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy -c fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

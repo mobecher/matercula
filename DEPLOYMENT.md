@@ -59,3 +59,23 @@ fly ips release <ip> -a matercula-extractor
 Pro App nur die nötigen Secrets setzen — siehe `.env.example`. Der
 Extractor benötigt keinerlei Secrets; der Worker braucht `DATABASE_URL`,
 `S3_*`. Web-App braucht zusätzlich `AUTH_*`, AI-Provider-Keys.
+
+### Automatische Deploys via GitHub Actions
+
+`.github/workflows/deploy.yml` deployt bei jedem Push auf `main`
+automatisch nur die Apps, deren Quellen sich geändert haben
+(extractor → worker → web, in dieser Reihenfolge).
+
+**Setup (einmalig):**
+
+```bash
+# Org-weiten Deploy-Token erstellen (gilt für alle drei Apps).
+fly tokens create org
+```
+
+Den Token-Wert als GitHub-Secret `FLY_API_TOKEN` im Repo hinterlegen
+(`Settings → Secrets and variables → Actions → New repository secret`).
+
+**Manueller Trigger:** Im Actions-Tab den `Deploy`-Workflow per
+"Run workflow" starten und unter `target` `all` oder einen einzelnen
+App-Namen wählen.
