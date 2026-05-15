@@ -298,12 +298,12 @@ export function WorkspaceProvider({
 
   const addDocument = useCallback(
     async (parentId: string | null, type: DokumentTyp) => {
-      const title = type === "ordner" ? "Neuer Ordner" : "Neue Seite";
+      const title = type === "folder" ? "Neuer Ordner" : "Neue Seite";
       try {
         const result = await createDocument({ parentId, type, title });
         await refresh();
         const newId = result?.dokument?.id as string | undefined;
-        if (newId && type === "seite") {
+        if (newId && type === "page") {
           openDocument(newId, { preview: false });
         }
         return newId ?? null;
@@ -340,7 +340,7 @@ export function WorkspaceProvider({
         const title = file.name.replace(/\.[^.]+$/, "") || uploaded.name;
         const result = await createDocument({
           parentId,
-          type: "pdf",
+          type: "file",
           title,
           icon: iconForMime(mime),
           materialId: uploaded.id,

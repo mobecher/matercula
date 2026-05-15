@@ -26,7 +26,7 @@ function buildTree(zeilen: Document[]): DokumentKnoten[] {
       icon: z.icon ?? undefined,
       inhalt: z.contentMarkdown ?? undefined,
       materialId: z.materialId ?? undefined,
-      children: z.type === "ordner" ? [] : undefined,
+      children: z.type === "folder" ? [] : undefined,
       _parent: z.parentId,
     });
   }
@@ -56,7 +56,7 @@ function buildTree(zeilen: Document[]): DokumentKnoten[] {
 interface CreateDocumentInput {
   ownerId: string;
   parentId: string | null;
-  type: "ordner" | "seite" | "pdf";
+  type: "folder" | "page" | "file";
   title: string;
   icon?: string | null;
   contentMarkdown?: string | null;

@@ -158,7 +158,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
         <div className="flex gap-1">
           <button
             className="flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200"
-            onClick={() => void addDocument(null, "seite")}
+            onClick={() => void addDocument(null, "page")}
             type="button"
           >
             <DocumentPlusIcon aria-hidden className="h-4 w-4" />
@@ -166,7 +166,7 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           </button>
           <button
             className="flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200"
-            onClick={() => void addDocument(null, "ordner")}
+            onClick={() => void addDocument(null, "folder")}
             type="button"
           >
             <FolderIcon aria-hidden className="h-4 w-4" />
@@ -237,8 +237,8 @@ function TreeNode({ node, depth }: TreeNodeProps) {
     renameDocument,
     moveDocument,
   } = useWorkspace();
-  const isFolder = node.type === "ordner";
-  const isPdf = node.type === "pdf";
+  const isFolder = node.type === "folder";
+  const isPdf = node.type === "file";
   const folderPdfInputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(depth === 0);
   const [renaming, setRenaming] = useState(false);
@@ -275,7 +275,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
 
   async function handleDelete() {
     const label =
-      node.type === "ordner"
+      node.type === "folder"
         ? `Ordner „${node.title}“ und alle enthaltenen Seiten löschen?`
         : `Seite „${node.title}“ löschen?`;
     if (!confirm(label)) return;
@@ -427,7 +427,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                 label="Neue Seite"
                 onClick={async () => {
                   setOpen(true);
-                  await addDocument(node.id, "seite");
+                  await addDocument(node.id, "page");
                 }}
               >
                 ＋
@@ -436,7 +436,7 @@ function TreeNode({ node, depth }: TreeNodeProps) {
                 label="Neuer Unterordner"
                 onClick={async () => {
                   setOpen(true);
-                  await addDocument(node.id, "ordner");
+                  await addDocument(node.id, "folder");
                 }}
               >
                 <FolderPlusIcon aria-hidden className="h-4 w-4" />

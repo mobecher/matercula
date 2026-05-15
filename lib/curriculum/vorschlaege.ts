@@ -30,7 +30,7 @@ export interface SuggestionView {
   confidence: number;
   rationale: string;
   model: string;
-  status: "offen" | "akzeptiert" | "abgelehnt";
+  status: "open" | "accepted" | "rejected";
   createdAt: string;
   decidedAt: string | null;
 }
@@ -231,11 +231,11 @@ export interface GenerationResult {
 
 /**
  * Erzeugt mittels LLM neue Verknüpfungs-Vorschläge für das Document und
- * persistiert sie. Bestehende Vorschläge im Status `offen` werden zuvor
+ * persistiert sie. Bestehende Vorschläge im Status `open` werden zuvor
  * gelöscht; akzeptierte/abgelehnte bleiben als Audit-Spur erhalten.
  *
- * Unterstützt Text-Seiten (`type === "seite"`, Quelle: `contentMarkdown`)
- * sowie PDF-Dokumente (`type === "pdf"`, Quelle: extrahierte
+ * Unterstützt Text-Seiten (`type === "page"`, Quelle: `contentMarkdown`)
+ * sowie PDF-Dokumente (`type === "file"`, Quelle: extrahierte
  * `material_chunks` des verknüpften Materials).
  */
 export async function generateSuggestionsForDocument(
@@ -247,13 +247,13 @@ export async function generateSuggestionsForDocument(
   if (!doc) return null;
 
   let inhalt = "";
-  if (doc.type === "seite") {
+  if (doc.type === "page") {
     // BlockNote-JSON wird zu Klartext entpackt; Link-Karten und
     // YouTube-Einbettungen werden mit extern abgeholten Inhalten
     // (HTML-Plain-Text bzw. oEmbed-Titel) angereichert. Externe Fetches
     // scheitern weich, damit das Tagging trotzdem läuft.
     inhalt = (await documentContentForAi(doc.contentMarkdown)).trim();
-  } else if (doc.type === "pdf") {
+  } else if (doc.type === "file") {
     if (!doc.materialId) {
       return {
         ok: false,
@@ -449,7 +449,7 @@ Aufgabe:
     .where(
       and(
         eq(documentLinkSuggestions.documentId, documentId),
-        eq(documentLinkSuggestions.status, "offen"),
+        eq(documentLinkSuggestions.status, "open"),
       ),
     );
 
@@ -498,7 +498,7 @@ interface EntscheidungsEingabe {
   suggestionId: string;
   documentId: string;
   ownerId: string;
-  action: "akzeptieren" | "ablehnen" | "zuruecksetzen";
+  action: "accept" | "reject" | "reset";
 }
 
 export interface EntscheidungsErgebnis {
@@ -506,7 +506,7 @@ export interface EntscheidungsErgebnis {
 }
 
 /**
- * Markiert einen Vorschlag als akzeptiert oder abgelehnt. Beim Akzeptieren
+ * Markiert einen Vorschlag als accepted oder rejected. Beim Akzeptieren
  * wird zusätzlich der entsprechende manuelle Link in
  * `dokument_*_links` angelegt (idempotent).
  */
@@ -531,7 +531,7 @@ export async function decideSuggestion(
     .limit(1);
   if (!suggestion) return null;
 
-  if (eingabe.action === "akzeptieren") {
+  if (eingabe.action === "accept") {
     // Die KI-Begründung des Vorschlags wird als Notiz an der Verknüpfung
     // gespeichert, damit nachvollziehbar bleibt, warum der Link existiert.
     const note = suggestion.rationale?.trim() ? suggestion.rationale : null;
@@ -557,8 +557,8 @@ export async function decideSuggestion(
         })
         .onConflictDoNothing();
     }
-  } else if (eingabe.action === "zuruecksetzen") {
-    // Vorschlag wird auf "offen" zurückgesetzt; falls bereits ein Link
+  } else if (eingabe.action === "reset") {
+    // Vorschlag wird auf "open" zurückgesetzt; falls bereits ein Link
     // (durch früheres Akzeptieren) existiert, wird dieser entfernt, damit
     // Vorschlags-Zustand und Link-Tabelle konsistent bleiben.
     if (suggestion.targetType === "kompetenz" && suggestion.kompetenzId) {
@@ -589,14 +589,14 @@ export async function decideSuggestion(
   }
 
   const status =
-    eingabe.action === "akzeptieren"
-      ? "akzeptiert"
-      : eingabe.action === "ablehnen"
-        ? "abgelehnt"
-        : "offen";
+    eingabe.action === "accept"
+      ? "accepted"
+      : eingabe.action === "reject"
+        ? "rejected"
+        : "open";
   await db
     .update(documentLinkSuggestions)
-    .set({ status, decidedAt: status === "offen" ? null : new Date() })
+    .set({ status, decidedAt: status === "open" ? null : new Date() })
     .where(eq(documentLinkSuggestions.id, eingabe.suggestionId));
 
   const liste = await loadSuggestionsForDocument(

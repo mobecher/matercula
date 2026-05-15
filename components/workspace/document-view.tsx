@@ -113,7 +113,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
             type="button"
           >
             <span aria-hidden>
-              {doc.icon ?? (doc.type === "ordner" ? "📁" : doc.type === "pdf" ? "📕" : "📄")}
+              {doc.icon ?? (doc.type === "folder" ? "📁" : doc.type === "file" ? "📕" : "📄")}
             </span>
           </button>
           {iconPickerOpen && (
@@ -157,25 +157,25 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         value={titleDraft}
       />
 
-      {doc.type !== "ordner" && (
+      {doc.type !== "folder" && (
         <LehrplanBacklinks
           docId={doc.id}
           reloadToken={backlinksReload}
           onLinksChanged={() => setVorschlaegeReload((t) => t + 1)}
         />
       )}
-      {(doc.type === "seite" || doc.type === "pdf") && (
+      {(doc.type === "page" || doc.type === "file") && (
         <LinkSuggestions
           docId={doc.id}
           onLinksChanged={() => setBacklinksReload((t) => t + 1)}
           reloadToken={vorschlaegeReload}
         />
       )}
-      {doc.type === "pdf" && doc.materialId && <MaterialOverview materialId={doc.materialId} />}
+      {doc.type === "file" && doc.materialId && <MaterialOverview materialId={doc.materialId} />}
 
-      {doc.type === "ordner" ? (
+      {doc.type === "folder" ? (
         <FolderHint />
-      ) : doc.type === "pdf" ? (
+      ) : doc.type === "file" ? (
         <FileViewer materialId={doc.materialId} />
       ) : (
         <BlockEditor
@@ -199,7 +199,7 @@ interface MaterialMeta {
 /**
  * Renders the right preview/download experience for an uploaded material.
  *
- * The DB enum `documents.type === "pdf"` is the legacy name for
+ * The DB enum `documents.type === "file"` is the legacy name for
  * "this document points at a Material file" — it covers any uploaded
  * format now (PDF, DOCX, PPTX, images, …). Branching here decides:
  *   - PDF → inline iframe preview (Safari needs iframe, not <object>)

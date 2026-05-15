@@ -240,7 +240,7 @@ function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: 
                   }}
                   type="button"
                 >
-                  <span aria-hidden>{s.icon ?? (s.type === "pdf" ? "📕" : "📄")}</span>
+                  <span aria-hidden>{s.icon ?? (s.type === "file" ? "📕" : "📄")}</span>
                   <span className="min-w-0 flex-1 truncate">{s.title}</span>
                 </button>
               </li>
@@ -256,17 +256,17 @@ function collectPages(nodes: DokumentKnoten[]): Array<{
   id: string;
   title: string;
   icon: string | null;
-  type: "seite" | "pdf";
+  type: "page" | "file";
 }> {
   const out: Array<{
     id: string;
     title: string;
     icon: string | null;
-    type: "seite" | "pdf";
+    type: "page" | "file";
   }> = [];
   function walk(ns: DokumentKnoten[]) {
     for (const n of ns) {
-      if (n.type === "seite" || n.type === "pdf") {
+      if (n.type === "page" || n.type === "file") {
         out.push({
           id: n.id,
           title: n.title,

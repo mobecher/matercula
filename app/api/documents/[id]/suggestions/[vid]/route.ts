@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 const idSchema = z.string().uuid();
 const bodySchema = z.object({
-  action: z.enum(["akzeptieren", "ablehnen", "zuruecksetzen"]),
+  action: z.enum(["accept", "reject", "reset"]),
 });
 
 export async function PATCH(

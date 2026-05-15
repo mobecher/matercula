@@ -13,7 +13,7 @@ interface SuggestionView {
   confidence: number;
   rationale: string;
   model: string;
-  status: "offen" | "akzeptiert" | "abgelehnt";
+  status: "open" | "accepted" | "rejected";
   createdAt: string;
   decidedAt: string | null;
 }
@@ -21,15 +21,15 @@ interface SuggestionView {
 type FetchStatus = "idle" | "loading" | "generating" | "ready" | "error";
 
 const STATUS_LABEL: Record<SuggestionView["status"], string> = {
-  offen: "Offen",
-  akzeptiert: "Akzeptiert",
-  abgelehnt: "Abgelehnt",
+  open: "Offen",
+  accepted: "Akzeptiert",
+  rejected: "Abgelehnt",
 };
 
 const STATUS_BADGE: Record<SuggestionView["status"], string> = {
-  offen: "bg-amber-100 text-amber-800",
-  akzeptiert: "bg-emerald-100 text-emerald-800",
-  abgelehnt: "bg-neutral-200 text-neutral-600",
+  open: "bg-amber-100 text-amber-800",
+  accepted: "bg-emerald-100 text-emerald-800",
+  rejected: "bg-neutral-200 text-neutral-600",
 };
 
 const TYP_BADGE: Record<SuggestionView["targetType"], string> = {
@@ -119,7 +119,7 @@ export function LinkSuggestions({
 
   async function decide(
     v: SuggestionView,
-    action: "akzeptieren" | "ablehnen" | "zuruecksetzen",
+    action: "accept" | "reject" | "reset",
   ) {
     setBusyId(v.id);
     try {
@@ -133,9 +133,9 @@ export function LinkSuggestions({
       setSuggestions((prev) =>
         prev.map((p) => (p.id === v.id ? data.suggestion : p)),
       );
-      // "akzeptieren" creates a link, "zuruecksetzen" removes a previously
+      // "accept" creates a link, "reset" removes a previously
       // created link – in both cases the backlinks must be refreshed.
-      if (action === "akzeptieren" || action === "zuruecksetzen") {
+      if (action === "accept" || action === "reset") {
         onLinksChanged?.();
       }
     } finally {
@@ -143,8 +143,8 @@ export function LinkSuggestions({
     }
   }
 
-  const openSuggestions = suggestions.filter((v) => v.status === "offen");
-  const decided = suggestions.filter((v) => v.status !== "offen");
+  const openSuggestions = suggestions.filter((v) => v.status === "open");
+  const decided = suggestions.filter((v) => v.status !== "open");
   const generating = status === "generating";
 
   return (
@@ -156,7 +156,7 @@ export function LinkSuggestions({
           </span>
           {openSuggestions.length > 0 && (
             <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-              {openSuggestions.length} offen
+              {openSuggestions.length} open
             </span>
           )}
         </div>
@@ -238,7 +238,7 @@ export function LinkSuggestions({
                   <button
                     className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                     disabled={busyId === v.id}
-                    onClick={() => void decide(v, "akzeptieren")}
+                    onClick={() => void decide(v, "accept")}
                     type="button"
                   >
                     Übernehmen
@@ -246,7 +246,7 @@ export function LinkSuggestions({
                   <button
                     className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-50"
                     disabled={busyId === v.id}
-                    onClick={() => void decide(v, "ablehnen")}
+                    onClick={() => void decide(v, "reject")}
                     type="button"
                   >
                     Ablehnen
@@ -291,23 +291,23 @@ export function LinkSuggestions({
                       </p>
                     )}
                   </div>
-                  {v.status === "abgelehnt" && (
+                  {v.status === "rejected" && (
                     <button
                       className="shrink-0 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                       disabled={busyId === v.id}
-                      onClick={() => void decide(v, "akzeptieren")}
+                      onClick={() => void decide(v, "accept")}
                       type="button"
                     >
                       Annehmen
                     </button>
                   )}
-                  {v.status === "akzeptiert" && (
+                  {v.status === "accepted" && (
                     <button
                       className="shrink-0 rounded-md border border-neutral-300 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-50"
                       disabled={busyId === v.id}
-                      onClick={() => void decide(v, "zuruecksetzen")}
+                      onClick={() => void decide(v, "reset")}
                       type="button"
-                      title="Verknüpfung entfernen und Vorschlag wieder als offen markieren"
+                      title="Verknüpfung entfernen und Vorschlag wieder als open markieren"
                     >
                       Entfernen
                     </button>

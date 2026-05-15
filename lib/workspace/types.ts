@@ -1,4 +1,4 @@
-export type DokumentTyp = "ordner" | "seite" | "pdf";
+export type DokumentTyp = "folder" | "page" | "file";
 
 export interface DokumentKnoten {
   id: string;

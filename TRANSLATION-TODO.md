@@ -36,23 +36,16 @@ change.
   `anzahlChunks`/`anzahlSeiten`/`gesamtZeichen` →
   `chunkCount`/`pageCount`/`totalChars`, `vorschau` → `preview`,
   `schluessel` → `keys`, `vorhanden` → `present`.
+- Enum / status string values renamed (DB + API + UI):
+  suggestion status `offen|akzeptiert|abgelehnt` → `open|accepted|rejected`,
+  decide-suggestion action `akzeptieren|ablehnen|zuruecksetzen` →
+  `accept|reject|reset`, document type `ordner|seite|pdf` →
+  `folder|page|file`. Migration `lib/db/migrations/0010_sloppy_kang.sql`
+  uses `ALTER TYPE ... RENAME VALUE` (preserves data).
 
 ## Remaining work
 
-### 1. Enum / status string values
-
-Currently used over the wire and in the DB:
-
-- suggestion status `"offen" | "akzeptiert" | "abgelehnt"` →
-  `"open" | "accepted" | "rejected"`
-- decide-suggestion action `"akzeptieren" | "ablehnen" | "zuruecksetzen"` →
-  `"accept" | "reject" | "reset"`
-- document type `"ordner" | "seite" | "pdf"` → `"folder" | "page" | "file"`
-  (the `pdf` value is misleadingly named; it really means "uploaded file")
-
-Each requires a data migration plus updates in API + UI.
-
-### 2. Shared workspace types and component-internal helpers
+### 1. Shared workspace types and component-internal helpers
 
 - `lib/workspace/types.ts`: `DokumentKnoten` → `DocumentNode`,
   `DokumentTyp` → `DocumentType`, `OffenerTab` → `OpenTab`.
@@ -64,7 +57,7 @@ Each requires a data migration plus updates in API + UI.
   `benutzerName` → `userName`, `initialDokumentId` → `initialDocumentId`
   (and the call site in `app/(app)/workspace/layout.tsx`).
 
-### 3. File renames
+### 2. File renames
 
 After (2), rename component files where they aren't glossary:
 
@@ -76,12 +69,12 @@ Keep the glossary-named files: `lehrplan-backlinks.tsx`,
 `anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`,
 `material-linker.tsx`.
 
-### 4. Leftover comments / minor locals
+### 3. Leftover comments / minor locals
 
 `lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
 still have stray German comments and a few German local variables.
 
-### 5. Out of scope
+### 4. Out of scope
 
 `services/extractor/` (Python) keeps the contract field names
 `seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the

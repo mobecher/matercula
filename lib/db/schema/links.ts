@@ -85,8 +85,8 @@ export const documentAnwendungsbereichLinks = pgTable(
  *
  * - `targetType` switches between Kompetenz and Anwendungsbereich; the
  *   matching foreign-key field is filled, the other one is `null`.
- * - `status` holds the review state of the suggestion (offen / akzeptiert /
- *   abgelehnt). Accepted suggestions create a separate entry in
+ * - `status` holds the review state of the suggestion (open / accepted /
+ *   rejected). Accepted suggestions create a separate entry in
  *   `document_*_links`; the suggestion itself is kept for audit purposes.
  *   The string values stay German for now and will be migrated separately
  *   (see `TRANSLATION-TODO.md`).
@@ -95,9 +95,9 @@ export const documentAnwendungsbereichLinks = pgTable(
  * - `model` is the ID string of the used LLM (for reproducibility).
  */
 export const linkSuggestionStatusEnum = pgEnum("link_suggestion_status", [
-  "offen",
-  "akzeptiert",
-  "abgelehnt",
+  "open",
+  "accepted",
+  "rejected",
 ]);
 
 export const linkSuggestionTargetTypeEnum = pgEnum(
@@ -125,7 +125,7 @@ export const documentLinkSuggestions = pgTable(
     confidence: real("confidence").notNull(),
     rationale: text("rationale").notNull(),
     model: text("model").notNull(),
-    status: linkSuggestionStatusEnum("status").notNull().default("offen"),
+    status: linkSuggestionStatusEnum("status").notNull().default("open"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

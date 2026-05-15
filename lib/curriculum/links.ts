@@ -22,7 +22,7 @@ async function syncSuggestionStatusForLink(args: {
   documentId: string;
   targetType: "kompetenz" | "anwendungsbereich";
   zielId: string;
-  neuerStatus: "akzeptiert" | "offen";
+  neuerStatus: "accepted" | "open";
 }): Promise<void> {
   const zielFilter =
     args.targetType === "kompetenz"
@@ -32,7 +32,7 @@ async function syncSuggestionStatusForLink(args: {
     .update(documentLinkSuggestions)
     .set({
       status: args.neuerStatus,
-      decidedAt: args.neuerStatus === "akzeptiert" ? new Date() : null,
+      decidedAt: args.neuerStatus === "accepted" ? new Date() : null,
     })
     .where(
       and(
@@ -253,7 +253,7 @@ export async function linkKompetenz(args: {
     documentId: args.documentId,
     targetType: "kompetenz",
     zielId: args.kompetenzId,
-    neuerStatus: "akzeptiert",
+    neuerStatus: "accepted",
   });
   return true;
 }
@@ -288,7 +288,7 @@ export async function deleteKompetenzLink(args: {
       documentId: args.documentId,
       targetType: "kompetenz",
       zielId: args.kompetenzId,
-      neuerStatus: "offen",
+      neuerStatus: "open",
     });
   }
   return result.length > 0;
@@ -323,7 +323,7 @@ export async function linkAnwendungsbereich(args: {
     documentId: args.documentId,
     targetType: "anwendungsbereich",
     zielId: args.anwendungsbereichId,
-    neuerStatus: "akzeptiert",
+    neuerStatus: "accepted",
   });
   return true;
 }
@@ -361,7 +361,7 @@ export async function deleteAnwendungsbereichLink(args: {
       documentId: args.documentId,
       targetType: "anwendungsbereich",
       zielId: args.anwendungsbereichId,
-      neuerStatus: "offen",
+      neuerStatus: "open",
     });
   }
   return result.length > 0;

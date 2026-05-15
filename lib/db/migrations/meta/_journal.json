@@ -71,6 +71,13 @@
       "when": 1778884950377,
       "tag": "0009_lying_joseph",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778888318378,
+      "tag": "0010_sloppy_kang",
+      "breakpoints": true
     }
   ]
 }

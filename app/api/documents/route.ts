@@ -9,13 +9,13 @@ import {
 const createSchema = z
   .object({
     parentId: z.string().uuid().nullable().optional(),
-    type: z.enum(["ordner", "seite", "pdf"]),
+    type: z.enum(["folder", "page", "file"]),
     title: z.string().min(1).max(200),
     icon: z.string().max(8).nullable().optional(),
     contentMarkdown: z.string().nullable().optional(),
     materialId: z.string().uuid().nullable().optional(),
   })
-  .refine((value) => value.type !== "pdf" || !!value.materialId, {
+  .refine((value) => value.type !== "file" || !!value.materialId, {
     message: "materialId required for pdf documents",
     path: ["materialId"],
   });

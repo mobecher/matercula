@@ -12,7 +12,7 @@ import {
 import { users } from "./auth";
 import { materialien } from "./materials";
 
-export const documentTypeEnum = pgEnum("document_type", ["ordner", "seite", "pdf"]);
+export const documentTypeEnum = pgEnum("document_type", ["folder", "page", "file"]);
 
 /**
  * Hierarchical document tree in the Notion / Confluence style.
@@ -22,7 +22,7 @@ export const documentTypeEnum = pgEnum("document_type", ["ordner", "seite", "pdf
  *   between two siblings can be inserted).
  * - Content is stored as Markdown directly in `contentMarkdown`. A future
  *   migration to block-based content can be done additively.
- * - For file documents (`type = "pdf"`), `materialId` references the
+ * - For file documents (`type = "file"`), `materialId` references the
  *   uploaded material in `materialien`. Other types leave the field empty.
  * - Deleting a folder cascades to all children; moving is done by updating
  *   `parentId` + `sortOrder`.
