@@ -104,6 +104,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               <tr>
                 <th className="w-24 px-4 py-3 font-medium">Perspektive</th>
                 <th className="px-4 py-3 font-medium">Beschreibung</th>
+                <th className="w-16 px-4 py-3 text-right font-medium">Anzahl</th>
                 <th className="px-4 py-3 font-medium">Verknüpfte Materialien</th>
               </tr>
             </thead>
@@ -133,6 +134,9 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                       {k.beschreibung}
                     </button>
                   </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                    {k.dokumente.length}
+                  </td>
                   <td className="px-4 py-3">
                     <MaterialLinker
                       docs={k.dokumente}
@@ -145,7 +149,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               ))}
               {data.kompetenzen.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={3}>
+                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={4}>
                     Keine Kompetenzen hinterlegt.
                   </td>
                 </tr>
@@ -162,6 +166,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
             <thead className="bg-neutral-50 text-xs uppercase tracking-wider text-neutral-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Anwendungsbereich</th>
+                <th className="w-16 px-4 py-3 text-right font-medium">Anzahl</th>
                 <th className="px-4 py-3 font-medium">Verknüpfte Materialien</th>
               </tr>
             </thead>
@@ -182,6 +187,9 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                       {a.beschreibung ?? a.titel}
                     </button>
                   </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                    {a.dokumente.length}
+                  </td>
                   <td className="px-4 py-3">
                     <MaterialLinker
                       docs={a.dokumente}
@@ -194,7 +202,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               ))}
               {data.anwendungsbereiche.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={2}>
+                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={3}>
                     Keine Anwendungsbereiche hinterlegt.
                   </td>
                 </tr>
