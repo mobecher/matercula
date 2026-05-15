@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
+    "worker": "tsx scripts/worker.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -16,6 +17,7 @@
     "seed": "tsx scripts/seed-dev.ts",
     "seed:lehrplan": "tsx scripts/seed-curriculum.ts",
     "seed:dokumente": "tsx scripts/seed-dokumente.ts",
+    "test": "node --import tsx --test tests/node/*.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

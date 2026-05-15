@@ -23,11 +23,7 @@ import {
  * Daten werden vom App-Anbieter rigide gepflegt (Read-only für Lehrkräfte).
  */
 
-export const kompetenzPerspektiveEnum = pgEnum("kompetenz_perspektive", [
-  "T",
-  "G",
-  "I",
-]);
+export const kompetenzPerspektiveEnum = pgEnum("kompetenz_perspektive", ["T", "G", "I"]);
 
 export const lehrplaene = pgTable("lehrplaene", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -41,9 +37,7 @@ export const lehrplaene = pgTable("lehrplaene", {
   gueltigAb: timestamp("gueltig_ab", { withTimezone: true }),
   gueltigBis: timestamp("gueltig_bis", { withTimezone: true }),
   sortierung: integer("sortierung").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const lehrplanKlassen = pgTable(
@@ -59,10 +53,7 @@ export const lehrplanKlassen = pgTable(
     sortierung: integer("sortierung").notNull().default(0),
   },
   (t) => ({
-    uniqLehrplanKlasse: uniqueIndex("lehrplan_klassen_unique").on(
-      t.lehrplanId,
-      t.klasse,
-    ),
+    uniqLehrplanKlasse: uniqueIndex("lehrplan_klassen_unique").on(t.lehrplanId, t.klasse),
   }),
 );
 
@@ -79,10 +70,7 @@ export const kompetenzbereiche = pgTable(
     sortierung: integer("sortierung").notNull().default(0),
   },
   (t) => ({
-    uniqKlasseCode: uniqueIndex("kompetenzbereiche_klasse_code_unique").on(
-      t.klasseId,
-      t.code,
-    ),
+    uniqKlasseCode: uniqueIndex("kompetenzbereiche_klasse_code_unique").on(t.klasseId, t.code),
   }),
 );
 
@@ -98,10 +86,7 @@ export const kompetenzen = pgTable(
     beschreibung: text("beschreibung"),
     perspektive: kompetenzPerspektiveEnum("perspektive"),
     /** "Übergreifende Themen" wie Bildung, Berufsorientierung, Entrepreneurship, … */
-    uebergreifendeThemen: text("uebergreifende_themen")
-      .array()
-      .notNull()
-      .default([]),
+    uebergreifendeThemen: text("uebergreifende_themen").array().notNull().default([]),
     sortierung: integer("sortierung").notNull().default(0),
   },
   (t) => ({
@@ -122,10 +107,7 @@ export const anwendungsbereiche = pgTable(
     code: varchar("code", { length: 64 }).notNull(),
     titel: text("titel").notNull(),
     beschreibung: text("beschreibung"),
-    uebergreifendeThemen: text("uebergreifende_themen")
-      .array()
-      .notNull()
-      .default([]),
+    uebergreifendeThemen: text("uebergreifende_themen").array().notNull().default([]),
     sortierung: integer("sortierung").notNull().default(0),
   },
   (t) => ({
@@ -142,28 +124,22 @@ export const lehrplaeneRelations = relations(lehrplaene, ({ many }) => ({
   klassen: many(lehrplanKlassen),
 }));
 
-export const lehrplanKlassenRelations = relations(
-  lehrplanKlassen,
-  ({ one, many }) => ({
-    lehrplan: one(lehrplaene, {
-      fields: [lehrplanKlassen.lehrplanId],
-      references: [lehrplaene.id],
-    }),
-    kompetenzbereiche: many(kompetenzbereiche),
+export const lehrplanKlassenRelations = relations(lehrplanKlassen, ({ one, many }) => ({
+  lehrplan: one(lehrplaene, {
+    fields: [lehrplanKlassen.lehrplanId],
+    references: [lehrplaene.id],
   }),
-);
+  kompetenzbereiche: many(kompetenzbereiche),
+}));
 
-export const kompetenzbereicheRelations = relations(
-  kompetenzbereiche,
-  ({ one, many }) => ({
-    klasse: one(lehrplanKlassen, {
-      fields: [kompetenzbereiche.klasseId],
-      references: [lehrplanKlassen.id],
-    }),
-    kompetenzen: many(kompetenzen),
-    anwendungsbereiche: many(anwendungsbereiche),
+export const kompetenzbereicheRelations = relations(kompetenzbereiche, ({ one, many }) => ({
+  klasse: one(lehrplanKlassen, {
+    fields: [kompetenzbereiche.klasseId],
+    references: [lehrplanKlassen.id],
   }),
-);
+  kompetenzen: many(kompetenzen),
+  anwendungsbereiche: many(anwendungsbereiche),
+}));
 
 export const kompetenzenRelations = relations(kompetenzen, ({ one }) => ({
   kompetenzbereich: one(kompetenzbereiche, {
@@ -172,15 +148,12 @@ export const kompetenzenRelations = relations(kompetenzen, ({ one }) => ({
   }),
 }));
 
-export const anwendungsbereicheRelations = relations(
-  anwendungsbereiche,
-  ({ one }) => ({
-    kompetenzbereich: one(kompetenzbereiche, {
-      fields: [anwendungsbereiche.kompetenzbereichId],
-      references: [kompetenzbereiche.id],
-    }),
+export const anwendungsbereicheRelations = relations(anwendungsbereiche, ({ one }) => ({
+  kompetenzbereich: one(kompetenzbereiche, {
+    fields: [anwendungsbereiche.kompetenzbereichId],
+    references: [kompetenzbereiche.id],
   }),
-);
+}));
 
 // Types ---------------------------------------------------------------------
 
@@ -189,5 +162,4 @@ export type LehrplanKlasse = typeof lehrplanKlassen.$inferSelect;
 export type Kompetenzbereich = typeof kompetenzbereiche.$inferSelect;
 export type Kompetenz = typeof kompetenzen.$inferSelect;
 export type Anwendungsbereich = typeof anwendungsbereiche.$inferSelect;
-export type KompetenzPerspektive =
-  (typeof kompetenzPerspektiveEnum.enumValues)[number];
+export type KompetenzPerspektive = (typeof kompetenzPerspektiveEnum.enumValues)[number];

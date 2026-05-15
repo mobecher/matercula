@@ -5,11 +5,7 @@ import { getSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 import { ladeLehrplanSidebar } from "@/lib/curriculum/repository";
 import { ladeDokumentBaumFuerBenutzer } from "@/lib/workspace/repository";
 
-export default async function WorkspaceLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionId) redirect("/login");

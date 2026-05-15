@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { dokumente, type Dokument } from "@/lib/db/schema/dokumente";
+import { type Dokument, dokumente } from "@/lib/db/schema/dokumente";
 import {
   anwendungsbereiche,
   kompetenzbereiche,
@@ -8,10 +8,7 @@ import {
   lehrplaene,
   lehrplanKlassen,
 } from "@/lib/db/schema/lehrplan";
-import {
-  dokumentAnwendungsbereichLinks,
-  dokumentKompetenzLinks,
-} from "@/lib/db/schema/links";
+import { dokumentAnwendungsbereichLinks, dokumentKompetenzLinks } from "@/lib/db/schema/links";
 
 export interface VerknuepftesDokument {
   id: string;
@@ -58,10 +55,7 @@ export async function ladeLehrplanLinksFuerDokument(
     })
     .from(dokumentKompetenzLinks)
     .innerJoin(kompetenzen, eq(kompetenzen.id, dokumentKompetenzLinks.kompetenzId))
-    .innerJoin(
-      kompetenzbereiche,
-      eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId),
-    )
+    .innerJoin(kompetenzbereiche, eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId))
     .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
     .where(eq(dokumentKompetenzLinks.dokumentId, dokumentId))
@@ -82,10 +76,7 @@ export async function ladeLehrplanLinksFuerDokument(
       anwendungsbereiche,
       eq(anwendungsbereiche.id, dokumentAnwendungsbereichLinks.anwendungsbereichId),
     )
-    .innerJoin(
-      kompetenzbereiche,
-      eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId),
-    )
+    .innerJoin(kompetenzbereiche, eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId))
     .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
     .where(eq(dokumentAnwendungsbereichLinks.dokumentId, dokumentId))

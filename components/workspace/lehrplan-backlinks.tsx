@@ -1,10 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type {
-  DokumentLehrplanLink,
-  DokumentLehrplanLinks,
-} from "@/lib/curriculum/links";
+import type { DokumentLehrplanLink, DokumentLehrplanLinks } from "@/lib/curriculum/links";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import { useWorkspace } from "./workspace-context";
 
@@ -17,15 +14,8 @@ interface PickerEntry {
   kind: LinkKind;
 }
 
-export function LehrplanBacklinks({
-  docId,
-  reloadToken,
-}: {
-  docId: string;
-  reloadToken?: number;
-}) {
-  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } =
-    useWorkspace();
+export function LehrplanBacklinks({ docId, reloadToken }: { docId: string; reloadToken?: number }) {
+  const { lehrplaene, openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
   const [data, setData] = useState<DokumentLehrplanLinks | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -206,13 +196,7 @@ interface PickerButtonProps {
   busy: boolean;
 }
 
-function LehrplanPickerButton({
-  kind,
-  excludeIds,
-  lehrplaene,
-  onPick,
-  busy,
-}: PickerButtonProps) {
+function LehrplanPickerButton({ kind, excludeIds, lehrplaene, onPick, busy }: PickerButtonProps) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -238,10 +222,7 @@ function LehrplanPickerButton({
     };
   }, [open]);
 
-  const entries = useMemo(
-    () => collectEntries(lehrplaene, kind),
-    [lehrplaene, kind],
-  );
+  const entries = useMemo(() => collectEntries(lehrplaene, kind), [lehrplaene, kind]);
   const needle = filter.trim().toLowerCase();
   const filtered = entries.filter(
     (e) =>
@@ -267,11 +248,7 @@ function LehrplanPickerButton({
             <input
               className="w-full rounded border border-neutral-300 bg-white px-2 py-1 text-sm placeholder:text-neutral-400 focus:border-neutral-500 focus:outline-none"
               onChange={(e) => setFilter(e.target.value)}
-              placeholder={
-                kind === "kompetenz"
-                  ? "Kompetenz suchen…"
-                  : "Anwendungsbereich suchen…"
-              }
+              placeholder={kind === "kompetenz" ? "Kompetenz suchen…" : "Anwendungsbereich suchen…"}
               ref={inputRef}
               type="text"
               value={filter}
@@ -280,9 +257,7 @@ function LehrplanPickerButton({
           <ul className="max-h-72 overflow-y-auto py-1">
             {filtered.length === 0 && (
               <li className="px-3 py-2 text-xs text-neutral-500">
-                {entries.length === 0
-                  ? "Kein Lehrplan vorhanden."
-                  : "Keine passenden Einträge."}
+                {entries.length === 0 ? "Kein Lehrplan vorhanden." : "Keine passenden Einträge."}
               </li>
             )}
             {filtered.map((e) => (
@@ -308,18 +283,12 @@ function LehrplanPickerButton({
   );
 }
 
-function collectEntries(
-  lehrplaene: SidebarLehrplan[],
-  kind: LinkKind,
-): PickerEntry[] {
+function collectEntries(lehrplaene: SidebarLehrplan[], kind: LinkKind): PickerEntry[] {
   const out: PickerEntry[] = [];
   for (const lp of lehrplaene) {
     for (const klasse of lp.klassen) {
       for (const bereich of klasse.bereiche) {
-        const items =
-          kind === "kompetenz"
-            ? bereich.kompetenzen
-            : bereich.anwendungsbereiche;
+        const items = kind === "kompetenz" ? bereich.kompetenzen : bereich.anwendungsbereiche;
         const pfad = `${lp.titel} › ${klasse.titel} › ${bereich.titel}`;
         for (const it of items) {
           out.push({ id: it.id, titel: it.titel, pfad, kind });

@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { materialien, type Material } from "@/lib/db/schema/materials";
+import { type Material, materialien } from "@/lib/db/schema/materials";
 
 interface ErstelleMaterialEingabe {
   ownerId: string;
@@ -10,9 +10,7 @@ interface ErstelleMaterialEingabe {
   storageKey: string;
 }
 
-export async function erstelleMaterial(
-  eingabe: ErstelleMaterialEingabe,
-): Promise<Material> {
+export async function erstelleMaterial(eingabe: ErstelleMaterialEingabe): Promise<Material> {
   const [erstellt] = await db
     .insert(materialien)
     .values({
@@ -21,17 +19,15 @@ export async function erstelleMaterial(
       dateiname: eingabe.dateiname,
       mimeType: eingabe.mimeType,
       storageKey: eingabe.storageKey,
-      // Direktupload ohne KI-Pipeline gilt sofort als verfügbar.
-      status: "ready",
+      // Newly-uploaded materials enter the tagging pipeline immediately;
+      // the worker transitions status to `processing` → `ready`/`error`.
+      status: "uploaded",
     })
     .returning();
   return erstellt;
 }
 
-export async function ladeMaterial(
-  id: string,
-  ownerId: string,
-): Promise<Material | undefined> {
+export async function ladeMaterial(id: string, ownerId: string): Promise<Material | undefined> {
   const [zeile] = await db
     .select()
     .from(materialien)
@@ -40,10 +36,7 @@ export async function ladeMaterial(
   return zeile;
 }
 
-export async function loescheMaterial(
-  id: string,
-  ownerId: string,
-): Promise<Material | undefined> {
+export async function loescheMaterial(id: string, ownerId: string): Promise<Material | undefined> {
   const [geloescht] = await db
     .delete(materialien)
     .where(and(eq(materialien.id, id), eq(materialien.ownerId, ownerId)))
@@ -51,9 +44,7 @@ export async function loescheMaterial(
   return geloescht;
 }
 
-export async function listeMaterialienFuerBenutzer(
-  ownerId: string,
-): Promise<Material[]> {
+export async function listeMaterialienFuerBenutzer(ownerId: string): Promise<Material[]> {
   return db
     .select()
     .from(materialien)

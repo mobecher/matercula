@@ -17,11 +17,7 @@ interface AnwendungsbereichDetailData {
   dokumente: VerknuepftesDokument[];
 }
 
-export function AnwendungsbereichTabView({
-  anwendungsbereichId,
-}: {
-  anwendungsbereichId: string;
-}) {
+export function AnwendungsbereichTabView({ anwendungsbereichId }: { anwendungsbereichId: string }) {
   const { openKlasseTab, openBereichTab } = useWorkspace();
   const [data, setData] = useState<AnwendungsbereichDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,9 +51,7 @@ export function AnwendungsbereichTabView({
     );
   }
   if (!data) {
-    return (
-      <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>
-    );
+    return <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>;
   }
 
   return (
@@ -67,9 +61,7 @@ export function AnwendungsbereichTabView({
         <span className="mx-1">›</span>
         <button
           className="hover:text-neutral-900 hover:underline"
-          onClick={() =>
-            openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)
-          }
+          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)}
           type="button"
         >
           {data.klasse.titel}
@@ -84,13 +76,9 @@ export function AnwendungsbereichTabView({
         </button>
       </nav>
 
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {data.anwendungsbereich.titel}
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{data.anwendungsbereich.titel}</h1>
       {data.anwendungsbereich.beschreibung && (
-        <p className="mt-2 text-base text-neutral-800">
-          {data.anwendungsbereich.beschreibung}
-        </p>
+        <p className="mt-2 text-base text-neutral-800">{data.anwendungsbereich.beschreibung}</p>
       )}
 
       {data.anwendungsbereich.uebergreifendeThemen.length > 0 && (

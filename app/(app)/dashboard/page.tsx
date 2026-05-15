@@ -28,10 +28,7 @@ export default async function DashboardPage() {
         Arbeitsbereich öffnen
       </a>
       <form action="/api/auth/logout" method="post">
-        <button
-          className="rounded-md bg-neutral-900 px-4 py-2 text-white"
-          type="submit"
-        >
+        <button className="rounded-md bg-neutral-900 px-4 py-2 text-white" type="submit">
           Abmelden
         </button>
       </form>

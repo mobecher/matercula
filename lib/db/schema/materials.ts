@@ -27,6 +27,8 @@ export const materialien = pgTable("materialien", {
   mimeType: text("mime_type").notNull(),
   storageKey: text("storage_key").notNull(),
   status: materialStatusEnum("status").notNull().default("uploaded"),
+  // Optional human-readable error reason set when status === 'error'.
+  statusReason: text("status_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -42,7 +44,10 @@ export const materialChunks = pgTable(
     text: text("text").notNull(),
     seitenzahl: integer("seitenzahl"),
     abschnitt: text("abschnitt"),
-    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    // Nullable: extraction (step 1) inserts chunks without embeddings;
+    // the embedding step (step 2 of `tagMaterial`, not yet implemented)
+    // backfills this column.
+    embedding: vector("embedding", { dimensions: 1536 }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
@@ -52,3 +57,5 @@ export const materialChunks = pgTable(
 
 export type Material = typeof materialien.$inferSelect;
 export type NeuesMaterial = typeof materialien.$inferInsert;
+export type MaterialChunk = typeof materialChunks.$inferSelect;
+export type NeuerMaterialChunk = typeof materialChunks.$inferInsert;

@@ -42,11 +42,7 @@ const PERSPEKTIVE_BADGE: Record<string, string> = {
 };
 
 export function BereichTabView({ bereichId }: { bereichId: string }) {
-  const {
-    openKlasseTab,
-    openKompetenzTab,
-    openAnwendungsbereichTab,
-  } = useWorkspace();
+  const { openKlasseTab, openKompetenzTab, openAnwendungsbereichTab } = useWorkspace();
   const [data, setData] = useState<BereichData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -79,9 +75,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
     );
   }
   if (!data) {
-    return (
-      <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>
-    );
+    return <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>;
   }
 
   return (
@@ -91,25 +85,15 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
         <span className="mx-1">›</span>
         <button
           className="hover:text-neutral-900 hover:underline"
-          onClick={() =>
-            openKlasseTab(
-              data.lehrplan.slug,
-              data.klasse.klasse,
-              data.klasse.titel,
-            )
-          }
+          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)}
           type="button"
         >
           {data.klasse.titel}
         </button>
       </nav>
-      <h1 className="text-3xl font-semibold tracking-tight">
-        {data.bereich.titel}
-      </h1>
+      <h1 className="text-3xl font-semibold tracking-tight">{data.bereich.titel}</h1>
       {data.bereich.beschreibung && (
-        <p className="mt-2 text-sm text-neutral-600">
-          {data.bereich.beschreibung}
-        </p>
+        <p className="mt-2 text-sm text-neutral-600">{data.bereich.beschreibung}</p>
       )}
 
       <section className="mt-10">
@@ -120,9 +104,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               <tr>
                 <th className="w-24 px-4 py-3 font-medium">Perspektive</th>
                 <th className="px-4 py-3 font-medium">Beschreibung</th>
-                <th className="px-4 py-3 font-medium">
-                  Verknüpfte Materialien
-                </th>
+                <th className="px-4 py-3 font-medium">Verknüpfte Materialien</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white">
@@ -145,9 +127,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
                   <td className="px-4 py-3 text-neutral-800">
                     <button
                       className="text-left hover:underline"
-                      onClick={() =>
-                        openKompetenzTab(k.id, shortenForTab(k.beschreibung))
-                      }
+                      onClick={() => openKompetenzTab(k.id, shortenForTab(k.beschreibung))}
                       type="button"
                     >
                       {k.beschreibung}
@@ -165,10 +145,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               ))}
               {data.kompetenzen.length === 0 && (
                 <tr>
-                  <td
-                    className="px-4 py-6 text-center text-neutral-500"
-                    colSpan={3}
-                  >
+                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={3}>
                     Keine Kompetenzen hinterlegt.
                   </td>
                 </tr>
@@ -185,9 +162,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
             <thead className="bg-neutral-50 text-xs uppercase tracking-wider text-neutral-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Anwendungsbereich</th>
-                <th className="px-4 py-3 font-medium">
-                  Verknüpfte Materialien
-                </th>
+                <th className="px-4 py-3 font-medium">Verknüpfte Materialien</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 bg-white">
@@ -219,10 +194,7 @@ export function BereichTabView({ bereichId }: { bereichId: string }) {
               ))}
               {data.anwendungsbereiche.length === 0 && (
                 <tr>
-                  <td
-                    className="px-4 py-6 text-center text-neutral-500"
-                    colSpan={2}
-                  >
+                  <td className="px-4 py-6 text-center text-neutral-500" colSpan={2}>
                     Keine Anwendungsbereiche hinterlegt.
                   </td>
                 </tr>

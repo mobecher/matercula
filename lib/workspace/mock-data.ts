@@ -101,15 +101,11 @@ export const dokumentBaum: DokumentKnoten[] = [
     titel: "Schnelle Notizen",
     typ: "seite",
     icon: "✏️",
-    inhalt:
-      "# Schnelle Notizen\n\nSammelplatz für lose Ideen, Beobachtungen und To-Dos.",
+    inhalt: "# Schnelle Notizen\n\nSammelplatz für lose Ideen, Beobachtungen und To-Dos.",
   },
 ];
 
-export function findeDokument(
-  baum: DokumentKnoten[],
-  id: string,
-): DokumentKnoten | undefined {
+export function findeDokument(baum: DokumentKnoten[], id: string): DokumentKnoten | undefined {
   for (const knoten of baum) {
     if (knoten.id === id) return knoten;
     if (knoten.children) {

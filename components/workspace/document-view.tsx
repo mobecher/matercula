@@ -9,6 +9,7 @@ import { KlasseTabView } from "./klasse-tab-view";
 import { KompetenzTabView } from "./kompetenz-tab-view";
 import { LehrplanBacklinks } from "./lehrplan-backlinks";
 import { LinkVorschlaege } from "./link-vorschlaege";
+import { MaterialUebersicht } from "./material-uebersicht";
 import { useWorkspace } from "./workspace-context";
 
 const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
@@ -110,8 +111,7 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
             type="button"
           >
             <span aria-hidden>
-              {doc.icon ??
-                (doc.typ === "ordner" ? "📁" : doc.typ === "pdf" ? "📕" : "📄")}
+              {doc.icon ?? (doc.typ === "ordner" ? "📁" : doc.typ === "pdf" ? "📕" : "📄")}
             </span>
           </button>
           {iconPickerOpen && (
@@ -155,14 +155,12 @@ function DocumentEditor({ doc }: { doc: DokumentKnoten }) {
         value={titleDraft}
       />
 
-      {doc.typ !== "ordner" && (
-        <LehrplanBacklinks docId={doc.id} reloadToken={backlinksReload} />
+      {doc.typ !== "ordner" && <LehrplanBacklinks docId={doc.id} reloadToken={backlinksReload} />}
+      {(doc.typ === "seite" || doc.typ === "pdf") && (
+        <LinkVorschlaege docId={doc.id} onLinksChanged={() => setBacklinksReload((t) => t + 1)} />
       )}
-      {doc.typ === "seite" && (
-        <LinkVorschlaege
-          docId={doc.id}
-          onLinksChanged={() => setBacklinksReload((t) => t + 1)}
-        />
+      {doc.typ === "pdf" && doc.materialId && (
+        <MaterialUebersicht materialId={doc.materialId} />
       )}
 
       {doc.typ === "ordner" ? (

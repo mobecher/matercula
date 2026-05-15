@@ -16,10 +16,7 @@ const loeschenSchema = z.object({
   dokumentId: z.string().uuid(),
 });
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;
@@ -27,10 +24,7 @@ export async function GET(
   return NextResponse.json({ dokumente });
 }
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;
@@ -52,10 +46,7 @@ export async function POST(
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 
-export async function DELETE(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;

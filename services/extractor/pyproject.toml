@@ -1,0 +1,33 @@
+[project]
+name = "matercula-extractor"
+version = "0.1.0"
+description = "PDF/DOCX text extraction service for matercula (FastAPI + unstructured)."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi==0.115.6",
+  "uvicorn[standard]==0.32.1",
+  "pydantic==2.10.4",
+  "python-multipart==0.0.20",
+  # unstructured with PDF + DOCX extras only.
+  # Pinned: 0.16.x is the last stable line that works without onnxruntime/OCR
+  # when chunking via chunk_by_title and strategy="fast".
+  "unstructured[pdf,docx]==0.16.11",
+  # IMPORTANT: pin pdfminer.six explicitly. The legacy `pdfminer` package
+  # (no `.six`) is sometimes pulled in transitively and *shadows* the same
+  # `pdfminer` namespace, breaking `unstructured` with
+  #   ImportError: cannot import name 'PSSyntaxError' from 'pdfminer.pdfparser'
+  # The Dockerfile additionally `pip uninstall -y pdfminer` to be safe.
+  "pdfminer.six==20240706",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.3.4",
+  "httpx==0.28.1",
+  "reportlab==4.2.5",
+  "python-docx==1.1.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

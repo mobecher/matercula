@@ -32,7 +32,10 @@ export async function POST(request: Request) {
   const json = await request.json().catch(() => null);
   const ergebnis = erstelleSchema.safeParse(json);
   if (!ergebnis.success) {
-    return NextResponse.json({ error: "invalid_input", issues: ergebnis.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: "invalid_input", issues: ergebnis.error.issues },
+      { status: 400 },
+    );
   }
 
   const dokument = await erstelleDokument({

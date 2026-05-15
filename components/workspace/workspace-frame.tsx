@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "./sidebar";
-import { WorkspaceProvider } from "./workspace-context";
 import type { SidebarLehrplan } from "@/lib/curriculum/repository";
 import type { DokumentKnoten } from "@/lib/workspace/types";
+import { Sidebar } from "./sidebar";
+import { WorkspaceProvider } from "./workspace-context";
 
 interface WorkspaceFrameProps {
   baum: DokumentKnoten[];

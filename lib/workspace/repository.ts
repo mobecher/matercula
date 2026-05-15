@@ -57,7 +57,9 @@ interface ErstelleDokumentEingabe {
   materialId?: string | null;
 }
 
-export async function erstelleDokument(eingabe: ErstelleDokumentEingabe): Promise<Dokument | undefined> {
+export async function erstelleDokument(
+  eingabe: ErstelleDokumentEingabe,
+): Promise<Dokument | undefined> {
   if (eingabe.parentId && !(await gehoertDokumentZuOwner(eingabe.parentId, eingabe.ownerId))) {
     return undefined;
   }

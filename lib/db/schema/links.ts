@@ -29,9 +29,7 @@ export const materialKompetenzLinks = pgTable("material_kompetenz_links", {
   rationale: text("rationale").notNull(),
   sourceChunkIds: jsonb("source_chunk_ids").$type<string[]>().notNull(),
   generatedBy: text("generated_by").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 /** Manuell von Lehrkräften gepflegter Link Dokument ↔ Kompetenz. */
@@ -46,15 +44,10 @@ export const dokumentKompetenzLinks = pgTable(
       .notNull()
       .references(() => kompetenzen.id, { onDelete: "cascade" }),
     notiz: text("notiz"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
-    uniq: uniqueIndex("dokument_kompetenz_links_unique").on(
-      t.dokumentId,
-      t.kompetenzId,
-    ),
+    uniq: uniqueIndex("dokument_kompetenz_links_unique").on(t.dokumentId, t.kompetenzId),
   }),
 );
 
@@ -70,9 +63,7 @@ export const dokumentAnwendungsbereichLinks = pgTable(
       .notNull()
       .references(() => anwendungsbereiche.id, { onDelete: "cascade" }),
     notiz: text("notiz"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     uniq: uniqueIndex("dokument_anwendungsbereich_links_unique").on(

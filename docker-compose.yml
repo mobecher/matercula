@@ -82,11 +82,60 @@ services:
       AI_CHAT_MODEL: gpt-4o-mini
       AI_EMBEDDING_PROVIDER: openai
       AI_EMBEDDING_MODEL: text-embedding-3-small
+      EXTRACTOR_URL: http://extractor:8000
+      EXTRACTOR_TIMEOUT_MS: "120000"
     ports:
       - "3000:3000"
     networks:
       app_net:
         ipv4_address: 172.28.0.4
+
+  extractor:
+    build:
+      context: ./services/extractor
+      dockerfile: Dockerfile
+    # Internal-only: deliberately NO `ports:` mapping. The service must
+    # not be reachable from the host. Other services use `extractor:8000`
+    # over the compose network.
+    environment:
+      MAX_FILE_MB: "32"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    networks:
+      app_net:
+        ipv4_address: 172.28.0.5
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["pnpm", "worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      extractor:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@172.28.0.2:5432/matercula
+      S3_ENDPOINT: http://172.28.0.3:9000
+      S3_REGION: eu-central-1
+      S3_BUCKET: matercula
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_FORCE_PATH_STYLE: "true"
+      EXTRACTOR_URL: http://extractor:8000
+      EXTRACTOR_TIMEOUT_MS: "120000"
+    networks:
+      app_net:
+        ipv4_address: 172.28.0.6
 
 volumes:
   postgres_data:

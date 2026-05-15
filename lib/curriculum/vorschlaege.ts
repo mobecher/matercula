@@ -1,11 +1,7 @@
 import { generateObject, type LanguageModel } from "ai";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import {
-  type BenutzerAiSchluessel,
-  FehlenderProviderSchluessel,
-  getModel,
-} from "@/lib/ai";
+import { type BenutzerAiSchluessel, FehlenderProviderSchluessel, getModel } from "@/lib/ai";
 import { db } from "@/lib/db";
 import { dokumente } from "@/lib/db/schema/dokumente";
 import {
@@ -21,6 +17,7 @@ import {
   dokumentKompetenzLinks,
   dokumentLinkVorschlaege,
 } from "@/lib/db/schema/links";
+import { materialChunks, materialien } from "@/lib/db/schema/materials";
 
 export interface VorschlagAnsicht {
   id: string;
@@ -187,20 +184,12 @@ const llmAntwortSchema = z.object({
         zielTyp: z
           .string()
           .min(1)
-          .describe(
-            "Genau einer der Werte 'kompetenz' oder 'anwendungsbereich'.",
-          ),
+          .describe("Genau einer der Werte 'kompetenz' oder 'anwendungsbereich'."),
         code: z
           .string()
           .min(1)
-          .describe(
-            "Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'.",
-          ),
-        confidence: z
-          .number()
-          .min(0)
-          .max(1)
-          .describe("Sicherheitsmaß zwischen 0 und 1."),
+          .describe("Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'."),
+        confidence: z.number().min(0).max(1).describe("Sicherheitsmaß zwischen 0 und 1."),
         begruendung: z
           .string()
           .min(1)
@@ -224,8 +213,9 @@ export interface GenerierungsErgebnis {
  * persistiert sie. Bestehende Vorschläge im Status `offen` werden zuvor
  * gelöscht; akzeptierte/abgelehnte bleiben als Audit-Spur erhalten.
  *
- * PDF-Dokumente werden in dieser Stufe noch nicht unterstützt
- * (Text-Extraktion folgt später).
+ * Unterstützt Text-Seiten (`typ === "seite"`, Quelle: `inhaltMarkdown`)
+ * sowie PDF-Dokumente (`typ === "pdf"`, Quelle: extrahierte
+ * `material_chunks` des verknüpften Materials).
  */
 export async function generiereVorschlaegeFuerDokument(
   dokumentId: string,
@@ -235,17 +225,67 @@ export async function generiereVorschlaegeFuerDokument(
   const doc = await ladeDokumentFuerVorschlaege(dokumentId, ownerId);
   if (!doc) return null;
 
-  if (doc.typ !== "seite") {
+  let inhalt = "";
+  if (doc.typ === "seite") {
+    inhalt = (doc.inhaltMarkdown ?? "").trim();
+  } else if (doc.typ === "pdf") {
+    if (!doc.materialId) {
+      return {
+        ok: false,
+        grund: "kein_inhalt",
+        fehler: "Diesem PDF-Dokument ist keine Datei zugeordnet.",
+        vorschlaege: [],
+      };
+    }
+    const [mat] = await db
+      .select({ status: materialien.status, statusReason: materialien.statusReason })
+      .from(materialien)
+      .where(and(eq(materialien.id, doc.materialId), eq(materialien.ownerId, ownerId)))
+      .limit(1);
+    if (!mat) {
+      return {
+        ok: false,
+        grund: "kein_inhalt",
+        fehler: "Material nicht gefunden.",
+        vorschlaege: [],
+      };
+    }
+    if (mat.status === "uploaded" || mat.status === "processing") {
+      return {
+        ok: false,
+        grund: "kein_inhalt",
+        fehler:
+          "PDF wird noch verarbeitet. Bitte warten, bis die Textextraktion abgeschlossen ist.",
+        vorschlaege: [],
+      };
+    }
+    if (mat.status === "error") {
+      return {
+        ok: false,
+        grund: "kein_inhalt",
+        fehler:
+          mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
+        vorschlaege: [],
+      };
+    }
+    const chunks = await db
+      .select({ text: materialChunks.text })
+      .from(materialChunks)
+      .where(eq(materialChunks.materialId, doc.materialId))
+      .orderBy(asc(materialChunks.chunkIndex));
+    inhalt = chunks
+      .map((c) => c.text)
+      .join("\n\n")
+      .trim();
+  } else {
     return {
       ok: false,
       grund: "nicht_unterstuetzt",
-      fehler:
-        "Vorschläge sind aktuell nur für Text-Seiten verfügbar. PDF-Extraktion folgt.",
+      fehler: "Vorschläge sind für diesen Dokumenttyp nicht verfügbar.",
       vorschlaege: [],
     };
   }
 
-  const inhalt = (doc.inhaltMarkdown ?? "").trim();
   if (inhalt.length === 0) {
     return {
       ok: false,
@@ -323,8 +363,7 @@ Aufgabe:
     return {
       ok: false,
       grund: "ai_fehler",
-      fehler:
-        error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
+      fehler: error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
       vorschlaege: [],
     };
   }
@@ -334,9 +373,7 @@ Aufgabe:
     katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.code, e]),
   );
   const awbByCode = new Map(
-    katalog
-      .filter((e) => e.zielTyp === "anwendungsbereich")
-      .map((e) => [e.code, e]),
+    katalog.filter((e) => e.zielTyp === "anwendungsbereich").map((e) => [e.code, e]),
   );
 
   type AufgeloesterVorschlag = {
@@ -353,13 +390,9 @@ Aufgabe:
     // tolerieren wir Fälle, in denen das Modell den Typ verwechselt oder
     // statt des Typs noch einmal den Code liefert.
     const primaer =
-      typHinweis === "anwendungsbereich"
-        ? awbByCode.get(v.code)
-        : kompByCode.get(v.code);
+      typHinweis === "anwendungsbereich" ? awbByCode.get(v.code) : kompByCode.get(v.code);
     const sekundaer =
-      typHinweis === "anwendungsbereich"
-        ? kompByCode.get(v.code)
-        : awbByCode.get(v.code);
+      typHinweis === "anwendungsbereich" ? kompByCode.get(v.code) : awbByCode.get(v.code);
     const eintrag = primaer ?? sekundaer;
     if (!eintrag) continue;
     const dedupKey = `${eintrag.zielTyp}:${eintrag.id}`;
@@ -406,8 +439,7 @@ Aufgabe:
         dokumentId,
         zielTyp: a.eintrag.zielTyp,
         kompetenzId: a.eintrag.zielTyp === "kompetenz" ? a.eintrag.id : null,
-        anwendungsbereichId:
-          a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
+        anwendungsbereichId: a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
         confidence: a.confidence,
         begruendung: a.begruendung,
         modell: modellName,
@@ -418,8 +450,7 @@ Aufgabe:
     }
   }
 
-  const ansichten =
-    (await ladeVorschlaegeFuerDokument(dokumentId, ownerId)) ?? [];
+  const ansichten = (await ladeVorschlaegeFuerDokument(dokumentId, ownerId)) ?? [];
   return { ok: true, vorschlaege: ansichten };
 }
 

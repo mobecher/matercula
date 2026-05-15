@@ -8,14 +8,7 @@ interface TabBarProps {
 }
 
 export function TabBar({ sidebarOpen, onOpenSidebar }: TabBarProps) {
-  const {
-    openTabs,
-    activeTabKey,
-    findNode,
-    setActiveTab,
-    closeTab,
-    saveStatus,
-  } = useWorkspace();
+  const { openTabs, activeTabKey, findNode, setActiveTab, closeTab, saveStatus } = useWorkspace();
 
   return (
     <div className="flex h-10 shrink-0 items-stretch border-b border-neutral-200 bg-neutral-100">
@@ -32,9 +25,7 @@ export function TabBar({ sidebarOpen, onOpenSidebar }: TabBarProps) {
 
       <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
         {openTabs.length === 0 && (
-          <div className="flex items-center px-4 text-xs text-neutral-400">
-            Keine Tabs geöffnet
-          </div>
+          <div className="flex items-center px-4 text-xs text-neutral-400">Keine Tabs geöffnet</div>
         )}
         {openTabs.map((tab) => {
           const meta = describeTab(tab, findNode);
@@ -73,12 +64,8 @@ export function TabBar({ sidebarOpen, onOpenSidebar }: TabBarProps) {
 
       <div className="flex items-center px-3 text-xs text-neutral-500">
         {saveStatus === "saving" && <span>Wird gespeichert…</span>}
-        {saveStatus === "saved" && (
-          <span className="text-green-600">Gespeichert</span>
-        )}
-        {saveStatus === "error" && (
-          <span className="text-red-600">Speichern fehlgeschlagen</span>
-        )}
+        {saveStatus === "saved" && <span className="text-green-600">Gespeichert</span>}
+        {saveStatus === "error" && <span className="text-red-600">Speichern fehlgeschlagen</span>}
       </div>
     </div>
   );

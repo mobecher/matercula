@@ -51,16 +51,12 @@ export function KlasseTabView({ lehrplanSlug, klasseNr }: KlasseTabViewProps) {
     );
   }
   if (!data) {
-    return (
-      <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>
-    );
+    return <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>;
   }
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
-      <p className="text-xs uppercase tracking-wider text-neutral-500">
-        {data.lehrplan.titel}
-      </p>
+      <p className="text-xs uppercase tracking-wider text-neutral-500">{data.lehrplan.titel}</p>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight">{data.klasse.titel}</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Kompetenzbereiche im Lehrplan „{data.lehrplan.titel}“
@@ -88,9 +84,7 @@ export function KlasseTabView({ lehrplanSlug, klasseNr }: KlasseTabViewProps) {
                     {bereich.titel}
                   </button>
                 </td>
-                <td className="px-4 py-3 text-neutral-600">
-                  {bereich.beschreibung ?? "—"}
-                </td>
+                <td className="px-4 py-3 text-neutral-600">{bereich.beschreibung ?? "—"}</td>
                 <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
                   {kompetenzenAnzahl}
                 </td>

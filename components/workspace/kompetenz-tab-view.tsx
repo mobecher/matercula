@@ -63,9 +63,7 @@ export function KompetenzTabView({ kompetenzId }: { kompetenzId: string }) {
     );
   }
   if (!data) {
-    return (
-      <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>
-    );
+    return <div className="mx-auto max-w-5xl px-8 py-10 text-sm text-neutral-400">Lade…</div>;
   }
 
   return (
@@ -75,9 +73,7 @@ export function KompetenzTabView({ kompetenzId }: { kompetenzId: string }) {
         <span className="mx-1">›</span>
         <button
           className="hover:text-neutral-900 hover:underline"
-          onClick={() =>
-            openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)
-          }
+          onClick={() => openKlasseTab(data.lehrplan.slug, data.klasse.klasse, data.klasse.titel)}
           type="button"
         >
           {data.klasse.titel}
@@ -100,8 +96,7 @@ export function KompetenzTabView({ kompetenzId }: { kompetenzId: string }) {
             }`}
             title={PERSPEKTIVE_LABEL[data.kompetenz.perspektive]}
           >
-            {PERSPEKTIVE_LABEL[data.kompetenz.perspektive] ??
-              data.kompetenz.perspektive}
+            {PERSPEKTIVE_LABEL[data.kompetenz.perspektive] ?? data.kompetenz.perspektive}
           </span>
         )}
         <h1 className="text-2xl font-semibold tracking-tight">Kompetenz</h1>

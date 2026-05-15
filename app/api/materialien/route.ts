@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
+import { enqueueTagMaterial } from "@/lib/jobs/queue";
 import { erstelleMaterial } from "@/lib/materials/repository";
 import { uploadFile } from "@/lib/storage/s3";
 
@@ -40,15 +41,11 @@ function bereinigeDateiname(name: string): string {
 
 export async function POST(request: Request) {
   const user = await getRequestUser();
-  if (!user)
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("multipart/form-data")) {
-    return NextResponse.json(
-      { error: "expected_multipart" },
-      { status: 415 },
-    );
+    return NextResponse.json({ error: "expected_multipart" }, { status: 415 });
   }
 
   let formData: FormData;
@@ -66,18 +63,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "empty_file" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: "file_too_large", maxBytes: MAX_BYTES },
-      { status: 413 },
-    );
+    return NextResponse.json({ error: "file_too_large", maxBytes: MAX_BYTES }, { status: 413 });
   }
 
   const mimeType = file.type || "application/octet-stream";
   if (!ERLAUBTE_MIME_TYPES.has(mimeType)) {
-    return NextResponse.json(
-      { error: "unsupported_mime_type", mimeType },
-      { status: 415 },
-    );
+    return NextResponse.json({ error: "unsupported_mime_type", mimeType }, { status: 415 });
   }
 
   const id = randomUUID();
@@ -94,6 +85,18 @@ export async function POST(request: Request) {
     mimeType,
     storageKey,
   });
+
+  // Ordering matters: enqueue ONLY after the materialien row is committed.
+  // `erstelleMaterial` awaits its insert, so the row is durable here. If we
+  // enqueued earlier (or inside an open transaction) the worker could pick
+  // up the job and query for a row that doesn't exist yet.
+  // Best-effort: failure to enqueue should not break the upload itself —
+  // the row remains `uploaded` and a future re-trigger can pick it up.
+  try {
+    await enqueueTagMaterial({ materialId: material.id });
+  } catch (err) {
+    console.error("[materialien] enqueue tagMaterial failed", err);
+  }
 
   // Stabile interne URL → leitet beim Aufruf auf eine frische Signed-URL um.
   const url = `/api/materialien/${material.id}/download`;

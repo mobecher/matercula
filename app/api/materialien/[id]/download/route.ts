@@ -14,13 +14,11 @@ interface RouteContext {
 // authentifiziert und zeitlich begrenzt erfolgt.
 export async function GET(_request: Request, ctx: RouteContext) {
   const user = await getRequestUser();
-  if (!user)
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
   const material = await ladeMaterial(id, user.id);
-  if (!material)
-    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!material) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const url = await getSignedUrl(material.storageKey, 300);
   return NextResponse.redirect(url, 302);

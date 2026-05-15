@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   doublePrecision,
   index,
   pgEnum,
@@ -8,7 +9,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { type AnyPgColumn } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { materialien } from "./materials";
 

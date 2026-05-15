@@ -1,0 +1,21 @@
+app = 'matercula-worker'
+primary_region = 'fra'
+
+# Long-running pg-boss worker process. No HTTP service — it pulls jobs.
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[processes]
+  worker = 'pnpm worker'
+
+[env]
+  EXTRACTOR_URL = 'http://matercula-extractor.internal:8000'
+  EXTRACTOR_TIMEOUT_MS = '120000'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 512
+  processes = ['worker']

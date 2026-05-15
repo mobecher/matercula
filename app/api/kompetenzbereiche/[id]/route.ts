@@ -6,10 +6,7 @@ import {
 } from "@/lib/curriculum/links";
 import { ladeKompetenzbereichDetail } from "@/lib/curriculum/repository";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
@@ -19,9 +16,7 @@ export async function GET(
   const [kompDocs, appDocs] = await Promise.all([
     Promise.all(detail.kompetenzen.map((k) => ladeDokumenteFuerKompetenz(k.id, user.id))),
     Promise.all(
-      detail.anwendungsbereiche.map((a) =>
-        ladeDokumenteFuerAnwendungsbereich(a.id, user.id),
-      ),
+      detail.anwendungsbereiche.map((a) => ladeDokumenteFuerAnwendungsbereich(a.id, user.id)),
     ),
   ]);
 

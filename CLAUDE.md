@@ -29,10 +29,30 @@
 5. Passenden Playwright-Smoke-Test in `tests/` ergänzen.
 
 ## What's intentionally NOT built yet
-- KI-Tagging-Pipeline
-- Dokumentextraktion
+
+- KI-Tagging-Pipeline (Schritte 2 & 3 von `tagMaterial`: Embeddings, LLM-Tagging)
 - Markdown-Editor
 - Ausgereifte Page-Reference-Workflows
+
+## Extractor service
+
+- Einziger Python-Anteil im Stack: Python 3.12 + FastAPI + `unstructured`,
+  liegt in `/services/extractor/`.
+- Der Node-Worker ruft den Service über HTTP via `lib/extraction/client.ts`
+  auf. **Niemals inline im Worker extrahieren** — die Service-Grenze ist
+  bewusst gesetzt.
+- **Internal-only**: kein Host-Port in Compose, keine Public IP auf Fly.
+  Auf Fly läuft der Service ausschließlich im Private-Network (`.internal`).
+  Sicherheitsmodell ist Netzwerk-Isolation, deshalb keine Auth.
+- **Canonical chunk shape** (Vertrag, gespiegelt in
+  `lib/extraction/client.ts`):
+  `chunkIndex`, `text`, `seitenzahl`, `abschnitt`. Diese Feldnamen sind
+  Pflicht — Embedding und Tagging downstream hängen daran. Form ändern =
+  ganze Pipeline ändern.
+- DOCX hat **per Design `seitenzahl: null`** (genauso `meta.pageCount: null`)
+  — Word hat keine festen Seiten. Nicht "korrigieren".
+- Scanned-PDF-OCR ist absichtlich nicht unterstützt (kein Tesseract im
+  Image). `strategy="fast"` für PDFs, OCR ist out of scope.
 
 ## Common pitfalls
 - Übersetze `Kompetenz` im Code nicht in `Competence`.

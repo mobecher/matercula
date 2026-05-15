@@ -24,7 +24,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const json = await request.json().catch(() => null);
   const ergebnis = patchSchema.safeParse(json);
   if (!ergebnis.success) {
-    return NextResponse.json({ error: "invalid_input", issues: ergebnis.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: "invalid_input", issues: ergebnis.error.issues },
+      { status: 400 },
+    );
   }
 
   if (ergebnis.data.parentId === idErgebnis.data) {

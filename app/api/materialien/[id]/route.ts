@@ -11,13 +11,11 @@ interface RouteContext {
 
 export async function GET(_request: Request, ctx: RouteContext) {
   const user = await getRequestUser();
-  if (!user)
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
   const material = await ladeMaterial(id, user.id);
-  if (!material)
-    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!material) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   return NextResponse.json({
     id: material.id,
@@ -31,13 +29,11 @@ export async function GET(_request: Request, ctx: RouteContext) {
 
 export async function DELETE(_request: Request, ctx: RouteContext) {
   const user = await getRequestUser();
-  if (!user)
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
   const geloescht = await loescheMaterial(id, user.id);
-  if (!geloescht)
-    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!geloescht) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   // S3-Objekt entfernen. Fehler dabei nicht eskalieren – DB-Eintrag ist weg.
   try {

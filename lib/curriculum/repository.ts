@@ -1,14 +1,14 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
-  anwendungsbereiche,
   type Anwendungsbereich,
+  anwendungsbereiche,
   type Kompetenz,
   type Kompetenzbereich,
-  type Lehrplan,
-  type LehrplanKlasse,
   kompetenzbereiche,
   kompetenzen,
+  type Lehrplan,
+  type LehrplanKlasse,
   lehrplaene,
   lehrplanKlassen,
 } from "@/lib/db/schema/lehrplan";
@@ -19,12 +19,20 @@ export interface LehrplanUebersicht {
 }
 
 export async function ladeAlleLehrplaene(): Promise<LehrplanUebersicht[]> {
-  const plaene = await db.select().from(lehrplaene).orderBy(asc(lehrplaene.sortierung), asc(lehrplaene.titel));
+  const plaene = await db
+    .select()
+    .from(lehrplaene)
+    .orderBy(asc(lehrplaene.sortierung), asc(lehrplaene.titel));
   if (plaene.length === 0) return [];
   const klassen = await db
     .select()
     .from(lehrplanKlassen)
-    .where(inArray(lehrplanKlassen.lehrplanId, plaene.map((p) => p.id)))
+    .where(
+      inArray(
+        lehrplanKlassen.lehrplanId,
+        plaene.map((p) => p.id),
+      ),
+    )
     .orderBy(asc(lehrplanKlassen.sortierung));
   const byLp = new Map<string, LehrplanKlasse[]>();
   for (const k of klassen) {
@@ -77,15 +85,20 @@ export async function ladeKlasseUebersicht(
     return { lehrplan: lp, klasse, bereiche: [] };
   }
   const ids = bereiche.map((b) => b.id);
-  const komp = await db.select().from(kompetenzen).where(inArray(kompetenzen.kompetenzbereichId, ids));
+  const komp = await db
+    .select()
+    .from(kompetenzen)
+    .where(inArray(kompetenzen.kompetenzbereichId, ids));
   const apps = await db
     .select()
     .from(anwendungsbereiche)
     .where(inArray(anwendungsbereiche.kompetenzbereichId, ids));
   const kompCount = new Map<string, number>();
-  for (const k of komp) kompCount.set(k.kompetenzbereichId, (kompCount.get(k.kompetenzbereichId) ?? 0) + 1);
+  for (const k of komp)
+    kompCount.set(k.kompetenzbereichId, (kompCount.get(k.kompetenzbereichId) ?? 0) + 1);
   const appCount = new Map<string, number>();
-  for (const a of apps) appCount.set(a.kompetenzbereichId, (appCount.get(a.kompetenzbereichId) ?? 0) + 1);
+  for (const a of apps)
+    appCount.set(a.kompetenzbereichId, (appCount.get(a.kompetenzbereichId) ?? 0) + 1);
   return {
     lehrplan: lp,
     klasse,
@@ -146,14 +159,8 @@ export interface KompetenzDetail {
   kompetenz: Kompetenz;
 }
 
-export async function ladeKompetenzDetail(
-  kompetenzId: string,
-): Promise<KompetenzDetail | null> {
-  const [k] = await db
-    .select()
-    .from(kompetenzen)
-    .where(eq(kompetenzen.id, kompetenzId))
-    .limit(1);
+export async function ladeKompetenzDetail(kompetenzId: string): Promise<KompetenzDetail | null> {
+  const [k] = await db.select().from(kompetenzen).where(eq(kompetenzen.id, kompetenzId)).limit(1);
   if (!k) return null;
   const [bereich] = await db
     .select()
@@ -247,13 +254,23 @@ export async function ladeLehrplanSidebar(): Promise<SidebarLehrplan[]> {
   const klassen = await db
     .select()
     .from(lehrplanKlassen)
-    .where(inArray(lehrplanKlassen.lehrplanId, plaene.map((p) => p.id)))
+    .where(
+      inArray(
+        lehrplanKlassen.lehrplanId,
+        plaene.map((p) => p.id),
+      ),
+    )
     .orderBy(asc(lehrplanKlassen.sortierung));
   const bereiche = klassen.length
     ? await db
         .select()
         .from(kompetenzbereiche)
-        .where(inArray(kompetenzbereiche.klasseId, klassen.map((k) => k.id)))
+        .where(
+          inArray(
+            kompetenzbereiche.klasseId,
+            klassen.map((k) => k.id),
+          ),
+        )
         .orderBy(asc(kompetenzbereiche.sortierung))
     : [];
   const bereichIds = bereiche.map((b) => b.id);

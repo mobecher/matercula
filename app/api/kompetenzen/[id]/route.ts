@@ -3,10 +3,7 @@ import { getRequestUser } from "@/lib/auth/request";
 import { ladeDokumenteFuerKompetenz } from "@/lib/curriculum/links";
 import { ladeKompetenzDetail } from "@/lib/curriculum/repository";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;

@@ -20,12 +20,7 @@ interface MaterialLinkerProps {
   mode: "table" | "chips";
 }
 
-export function MaterialLinker({
-  endpoint,
-  docs,
-  onChange,
-  mode,
-}: MaterialLinkerProps) {
+export function MaterialLinker({ endpoint, docs, onChange, mode }: MaterialLinkerProps) {
   const { openDocument } = useWorkspace();
   const [busy, setBusy] = useState(false);
 
@@ -88,12 +83,7 @@ export function MaterialLinker({
             </button>
           </span>
         ))}
-        <PickerButton
-          busy={busy}
-          excludeIds={linkedIds}
-          label="+ Verknüpfen"
-          onPick={add}
-        />
+        <PickerButton busy={busy} excludeIds={linkedIds} label="+ Verknüpfen" onPick={add} />
       </div>
     );
   }
@@ -151,10 +141,7 @@ export function MaterialLinker({
             ))}
             {docs.length === 0 && (
               <tr>
-                <td
-                  className="px-4 py-6 text-center text-neutral-500"
-                  colSpan={4}
-                >
+                <td className="px-4 py-6 text-center text-neutral-500" colSpan={4}>
                   Noch keine Materialien verknüpft.
                 </td>
               </tr>
@@ -174,13 +161,7 @@ interface PickerButtonProps {
   variant?: "default" | "primary";
 }
 
-function PickerButton({
-  excludeIds,
-  onPick,
-  label,
-  busy,
-  variant = "default",
-}: PickerButtonProps) {
+function PickerButton({ excludeIds, onPick, label, busy, variant = "default" }: PickerButtonProps) {
   const { tree } = useWorkspace();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -210,9 +191,7 @@ function PickerButton({
   const seiten = useMemo(() => collectSeiten(tree), [tree]);
   const needle = filter.trim().toLowerCase();
   const filtered = seiten.filter(
-    (s) =>
-      !excludeIds.has(s.id) &&
-      (needle === "" || s.titel.toLowerCase().includes(needle)),
+    (s) => !excludeIds.has(s.id) && (needle === "" || s.titel.toLowerCase().includes(needle)),
   );
 
   const triggerCls =
@@ -261,9 +240,7 @@ function PickerButton({
                   }}
                   type="button"
                 >
-                  <span aria-hidden>
-                    {s.icon ?? (s.typ === "pdf" ? "📕" : "📄")}
-                  </span>
+                  <span aria-hidden>{s.icon ?? (s.typ === "pdf" ? "📕" : "📄")}</span>
                   <span className="min-w-0 flex-1 truncate">{s.titel}</span>
                 </button>
               </li>
@@ -275,9 +252,7 @@ function PickerButton({
   );
 }
 
-function collectSeiten(
-  nodes: DokumentKnoten[],
-): Array<{
+function collectSeiten(nodes: DokumentKnoten[]): Array<{
   id: string;
   titel: string;
   icon: string | null;

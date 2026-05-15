@@ -44,13 +44,7 @@ export default async function RegisterPage({
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Passwort</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                minLength={8}
-                required
-              />
+              <Input id="password" name="password" type="password" minLength={8} required />
               <p className="text-xs text-neutral-500">Mindestens 8 Zeichen.</p>
             </div>
             {message ? <p className="text-sm text-red-600">{message}</p> : null}
