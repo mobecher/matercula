@@ -10,7 +10,13 @@ primary_region = 'fra'
   worker = 'pnpm worker'
 
 [env]
-  EXTRACTOR_URL = 'http://matercula-extractor.internal:8000'
+  # IMPORTANT: must use `.flycast` (Fly proxy), not `.internal` (direct 6PN).
+  # `.internal` connects straight to the machine and does NOT trigger
+  # `auto_start_machines` on the extractor app — when the extractor is
+  # auto-stopped (no recent traffic) the request just fails with
+  # `fetch failed`. `.flycast` goes through the Fly proxy, which wakes a
+  # stopped machine on demand. See services/extractor/fly.toml.
+  EXTRACTOR_URL = 'http://matercula-extractor.flycast:8000'
   EXTRACTOR_TIMEOUT_MS = '120000'
 
 [[vm]]

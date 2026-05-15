@@ -6,9 +6,16 @@
  *            the `matercula-worker` app.
  */
 
+import { eq } from "drizzle-orm";
 import type PgBoss from "pg-boss";
+import { db } from "@/lib/db";
+import { materialien } from "@/lib/db/schema/materials";
 import type { TagMaterialPayload } from "@/lib/jobs/queue";
-import { getQueue, TAG_MATERIAL_JOB } from "@/lib/jobs/queue";
+import {
+  getQueue,
+  TAG_MATERIAL_JOB,
+  TAG_MATERIAL_RETRY_LIMIT,
+} from "@/lib/jobs/queue";
 import { handleTagMaterial } from "@/lib/jobs/tag-material";
 
 async function main(): Promise<void> {
@@ -18,10 +25,45 @@ async function main(): Promise<void> {
 
   await queue.work<TagMaterialPayload>(
     TAG_MATERIAL_JOB,
-    { batchSize: 1 },
-    async (jobs: PgBoss.Job<TagMaterialPayload>[]) => {
+    { batchSize: 1, includeMetadata: true },
+    async (jobs: PgBoss.JobWithMetadata<TagMaterialPayload>[]) => {
       for (const job of jobs) {
-        await handleTagMaterial(job.data);
+        try {
+          await handleTagMaterial(job.data);
+        } catch (err) {
+          // pg-boss retries until `retryLimit`; on the final attempt we'd
+          // otherwise leave the materialien row stuck in `processing`
+          // forever (the UI polls for any change). Persist a terminal
+          // `error` status so the user sees the failure and we re-throw
+          // so pg-boss still records the job as failed.
+          const isFinalAttempt =
+            (job.retryCount ?? 0) >= TAG_MATERIAL_RETRY_LIMIT;
+          if (isFinalAttempt) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error(
+              `[worker] tag-material exhausted retries for material ${job.data.materialId}: ${message}`,
+            );
+            try {
+              await db
+                .update(materialien)
+                .set({
+                  status: "error",
+                  statusReason: `worker:retries_exhausted:${message}`.slice(
+                    0,
+                    500,
+                  ),
+                  updatedAt: new Date(),
+                })
+                .where(eq(materialien.id, job.data.materialId));
+            } catch (updateErr) {
+              console.error(
+                "[worker] failed to mark material as error",
+                updateErr,
+              );
+            }
+          }
+          throw err;
+        }
       }
     },
   );

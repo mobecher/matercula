@@ -8,6 +8,13 @@ import PgBoss from "pg-boss";
 
 export const TAG_MATERIAL_JOB = "tag-material" as const;
 
+/**
+ * Number of retries pg-boss performs before a job is marked `failed`.
+ * Mirrored in the worker so the final attempt can persist a terminal
+ * status on the `materialien` row instead of leaving it in `processing`.
+ */
+export const TAG_MATERIAL_RETRY_LIMIT = 5 as const;
+
 export interface TagMaterialPayload {
   materialId: string;
 }
@@ -36,7 +43,7 @@ export async function enqueueTagMaterial(payload: TagMaterialPayload): Promise<s
   await queue.start();
   await queue.createQueue(TAG_MATERIAL_JOB);
   return queue.send(TAG_MATERIAL_JOB, payload, {
-    retryLimit: 5,
+    retryLimit: TAG_MATERIAL_RETRY_LIMIT,
     retryDelay: 30,
     retryBackoff: true,
   });
