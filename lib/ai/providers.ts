@@ -12,14 +12,14 @@ export type ProviderName = "openai" | "anthropic" | "deepseek";
  * Felder sind optional, weil Benutzer nur einen Teil der Provider
  * konfigurieren können.
  */
-export interface BenutzerAiSchluessel {
+export interface UserAiKeys {
   openaiApiKey?: string | null;
   anthropicApiKey?: string | null;
   deepseekApiKey?: string | null;
 }
 
 const getApiKeyForProvider = (
-  schluessel: BenutzerAiSchluessel | undefined,
+  schluessel: UserAiKeys | undefined,
   provider: ProviderName,
 ): string | null => {
   switch (provider) {
@@ -32,7 +32,7 @@ const getApiKeyForProvider = (
   }
 };
 
-export class FehlenderProviderSchluessel extends Error {
+export class MissingProviderKey extends Error {
   constructor(public readonly provider: ProviderName) {
     super(
       `Für den Provider '${provider}' ist kein API-Schlüssel hinterlegt. Bitte in den Einstellungen ergänzen.`,
@@ -58,10 +58,10 @@ const getProviderClient = (
 export const getLanguageModelForProvider = (
   provider: ProviderName,
   model: string,
-  schluessel?: BenutzerAiSchluessel,
+  schluessel?: UserAiKeys,
 ): LanguageModel => {
   const apiKey = getApiKeyForProvider(schluessel, provider);
-  if (!apiKey) throw new FehlenderProviderSchluessel(provider);
+  if (!apiKey) throw new MissingProviderKey(provider);
   return getProviderClient(provider, apiKey)(model);
 };
 
@@ -81,24 +81,26 @@ const getTaskModel = (task: AiTask) => {
 };
 
 /**
- * Liefert ein konfiguriertes Modell für die gewünschte Aufgabe.
+ * Returns a configured model for the desired task.
  *
- * `schluessel` enthält die pro-Benutzer hinterlegten API-Keys; ohne
- * passenden Schlüssel wirft die Funktion `FehlenderProviderSchluessel`.
+ * `keys` contains the per-user stored API keys; without a matching key the
+ * function throws `MissingProviderKey`.
  */
 export const getModel = (
   task: AiTask,
-  schluessel?: BenutzerAiSchluessel,
+  schluessel?: UserAiKeys,
 ): LanguageModel | EmbeddingModel<string> => {
   const provider = getTaskProvider(task);
   const model = getTaskModel(task);
 
   if (task === "embedding") {
     if (provider !== "openai") {
-      throw new Error(`Embedding provider '${provider}' is not supported in this scaffold.`);
+      throw new Error(
+        `Embedding provider '${provider}' is not supported in this scaffold.`,
+      );
     }
     const apiKey = getApiKeyForProvider(schluessel, "openai");
-    if (!apiKey) throw new FehlenderProviderSchluessel("openai");
+    if (!apiKey) throw new MissingProviderKey("openai");
     return createOpenAI({ apiKey }).embedding(model);
   }
   return getLanguageModelForProvider(provider, model, schluessel);
@@ -109,7 +111,7 @@ export const getModel = (
  * hinterlegt hat.
  */
 export const getConfiguredProvidersForUser = (
-  schluessel: BenutzerAiSchluessel | undefined,
+  schluessel: UserAiKeys | undefined,
 ): ProviderName[] => {
   return (["openai", "anthropic", "deepseek"] as const).filter((p) =>
     Boolean(getApiKeyForProvider(schluessel, p)),

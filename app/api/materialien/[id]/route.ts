@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
-import { ladeMaterial, loescheMaterial } from "@/lib/materials/repository";
+import { loadMaterial, deleteMaterial } from "@/lib/materials/repository";
 import { deleteFile } from "@/lib/storage/s3";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ export async function GET(_request: Request, ctx: RouteContext) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
-  const material = await ladeMaterial(id, user.id);
+  const material = await loadMaterial(id, user.id);
   if (!material) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   return NextResponse.json({
@@ -29,15 +29,17 @@ export async function GET(_request: Request, ctx: RouteContext) {
 
 export async function DELETE(_request: Request, ctx: RouteContext) {
   const user = await getRequestUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
-  const geloescht = await loescheMaterial(id, user.id);
-  if (!geloescht) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const deleted = await deleteMaterial(id, user.id);
+  if (!deleted)
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  // S3-Objekt entfernen. Fehler dabei nicht eskalieren – DB-Eintrag ist weg.
+  // Remove the S3 object. Don't escalate failures — the DB row is already gone.
   try {
-    await deleteFile(geloescht.storageKey);
+    await deleteFile(deleted.storageKey);
   } catch {
     // best-effort
   }

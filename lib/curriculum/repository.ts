@@ -13,12 +13,12 @@ import {
   lehrplanKlassen,
 } from "@/lib/db/schema/lehrplan";
 
-export interface LehrplanUebersicht {
+export interface LehrplanOverview {
   lehrplan: Lehrplan;
   klassen: LehrplanKlasse[];
 }
 
-export async function ladeAlleLehrplaene(): Promise<LehrplanUebersicht[]> {
+export async function loadAllLehrplaene(): Promise<LehrplanOverview[]> {
   const plaene = await db
     .select()
     .from(lehrplaene)
@@ -43,8 +43,14 @@ export async function ladeAlleLehrplaene(): Promise<LehrplanUebersicht[]> {
   return plaene.map((lp) => ({ lehrplan: lp, klassen: byLp.get(lp.id) ?? [] }));
 }
 
-export async function ladeLehrplanBySlug(slug: string): Promise<LehrplanUebersicht | null> {
-  const [lp] = await db.select().from(lehrplaene).where(eq(lehrplaene.slug, slug)).limit(1);
+export async function loadLehrplanBySlug(
+  slug: string,
+): Promise<LehrplanOverview | null> {
+  const [lp] = await db
+    .select()
+    .from(lehrplaene)
+    .where(eq(lehrplaene.slug, slug))
+    .limit(1);
   if (!lp) return null;
   const klassen = await db
     .select()
@@ -54,7 +60,7 @@ export async function ladeLehrplanBySlug(slug: string): Promise<LehrplanUebersic
   return { lehrplan: lp, klassen };
 }
 
-export interface KlasseUebersicht {
+export interface KlasseOverview {
   lehrplan: Lehrplan;
   klasse: LehrplanKlasse;
   bereiche: Array<{
@@ -64,11 +70,15 @@ export interface KlasseUebersicht {
   }>;
 }
 
-export async function ladeKlasseUebersicht(
+export async function loadKlasseOverview(
   lehrplanSlug: string,
   klasseNr: number,
-): Promise<KlasseUebersicht | null> {
-  const [lp] = await db.select().from(lehrplaene).where(eq(lehrplaene.slug, lehrplanSlug)).limit(1);
+): Promise<KlasseOverview | null> {
+  const [lp] = await db
+    .select()
+    .from(lehrplaene)
+    .where(eq(lehrplaene.slug, lehrplanSlug))
+    .limit(1);
   if (!lp) return null;
   const allKlassen = await db
     .select()
@@ -95,10 +105,16 @@ export async function ladeKlasseUebersicht(
     .where(inArray(anwendungsbereiche.kompetenzbereichId, ids));
   const kompCount = new Map<string, number>();
   for (const k of komp)
-    kompCount.set(k.kompetenzbereichId, (kompCount.get(k.kompetenzbereichId) ?? 0) + 1);
+    kompCount.set(
+      k.kompetenzbereichId,
+      (kompCount.get(k.kompetenzbereichId) ?? 0) + 1,
+    );
   const appCount = new Map<string, number>();
   for (const a of apps)
-    appCount.set(a.kompetenzbereichId, (appCount.get(a.kompetenzbereichId) ?? 0) + 1);
+    appCount.set(
+      a.kompetenzbereichId,
+      (appCount.get(a.kompetenzbereichId) ?? 0) + 1,
+    );
   return {
     lehrplan: lp,
     klasse,
@@ -118,7 +134,7 @@ export interface KompetenzbereichDetail {
   anwendungsbereiche: Anwendungsbereich[];
 }
 
-export async function ladeKompetenzbereichDetail(
+export async function loadKompetenzbereichDetail(
   bereichId: string,
 ): Promise<KompetenzbereichDetail | null> {
   const [bereich] = await db
@@ -149,7 +165,13 @@ export async function ladeKompetenzbereichDetail(
     .from(anwendungsbereiche)
     .where(eq(anwendungsbereiche.kompetenzbereichId, bereich.id))
     .orderBy(asc(anwendungsbereiche.sortierung));
-  return { lehrplan: lp, klasse, bereich, kompetenzen: komp, anwendungsbereiche: apps };
+  return {
+    lehrplan: lp,
+    klasse,
+    bereich,
+    kompetenzen: komp,
+    anwendungsbereiche: apps,
+  };
 }
 
 export interface KompetenzDetail {
@@ -159,8 +181,14 @@ export interface KompetenzDetail {
   kompetenz: Kompetenz;
 }
 
-export async function ladeKompetenzDetail(kompetenzId: string): Promise<KompetenzDetail | null> {
-  const [k] = await db.select().from(kompetenzen).where(eq(kompetenzen.id, kompetenzId)).limit(1);
+export async function loadKompetenzDetail(
+  kompetenzId: string,
+): Promise<KompetenzDetail | null> {
+  const [k] = await db
+    .select()
+    .from(kompetenzen)
+    .where(eq(kompetenzen.id, kompetenzId))
+    .limit(1);
   if (!k) return null;
   const [bereich] = await db
     .select()
@@ -190,7 +218,7 @@ export interface AnwendungsbereichDetail {
   anwendungsbereich: Anwendungsbereich;
 }
 
-export async function ladeAnwendungsbereichDetail(
+export async function loadAnwendungsbereichDetail(
   anwendungsbereichId: string,
 ): Promise<AnwendungsbereichDetail | null> {
   const [a] = await db
@@ -248,8 +276,11 @@ export interface SidebarLehrplan {
  * Liefert eine kompakte Baumstruktur für die Sidebar:
  * Lehrplan → Klassen → Kompetenzbereiche.
  */
-export async function ladeLehrplanSidebar(): Promise<SidebarLehrplan[]> {
-  const plaene = await db.select().from(lehrplaene).orderBy(asc(lehrplaene.titel));
+export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {
+  const plaene = await db
+    .select()
+    .from(lehrplaene)
+    .orderBy(asc(lehrplaene.titel));
   if (plaene.length === 0) return [];
   const klassen = await db
     .select()

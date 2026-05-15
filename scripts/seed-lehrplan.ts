@@ -1,9 +1,9 @@
-import { importiereCurriculum } from "@/lib/curriculum/import";
+import { importCurriculum } from "@/lib/curriculum/import";
 import { sqlClient } from "@/lib/db";
 
 async function main() {
   console.log("Importiere alle Lehrpläne aus data/lehrplan/curriculum.json …");
-  const ergebnisse = await importiereCurriculum();
+  const ergebnisse = await importCurriculum();
   for (const e of ergebnisse) {
     console.log(`✓ ${e.titel} (slug=${e.slug})`);
     for (const k of e.klassen) {

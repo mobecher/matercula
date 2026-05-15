@@ -2,17 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
 import {
-  ladeDokumenteFuerKompetenz,
-  loescheKompetenzVerknuepfung,
-  verknuepfeKompetenz,
+  loadDocumentsForKompetenz,
+  deleteKompetenzLink,
+  linkKompetenz,
 } from "@/lib/curriculum/links";
 
-const verknuepfungSchema = z.object({
+const linkSchema = z.object({
   dokumentId: z.string().uuid(),
   notiz: z.string().max(500).optional(),
 });
 
-const loeschenSchema = z.object({
+const deleteSchema = z.object({
   dokumentId: z.string().uuid(),
 });
 
@@ -20,7 +20,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;
-  const dokumente = await ladeDokumenteFuerKompetenz(id, user.id);
+  const dokumente = await loadDocumentsForKompetenz(id, user.id);
   return NextResponse.json({ dokumente });
 }
 
@@ -29,14 +29,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;
   const json = await request.json().catch(() => null);
-  const result = verknuepfungSchema.safeParse(json);
+  const result = linkSchema.safeParse(json);
   if (!result.success) {
     return NextResponse.json(
       { error: "invalid_input", issues: result.error.issues },
       { status: 400 },
     );
   }
-  const ok = await verknuepfeKompetenz({
+  const ok = await linkKompetenz({
     dokumentId: result.data.dokumentId,
     kompetenzId: id,
     ownerId: user.id,
@@ -51,14 +51,14 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await context.params;
   const json = await request.json().catch(() => null);
-  const result = loeschenSchema.safeParse(json);
+  const result = deleteSchema.safeParse(json);
   if (!result.success) {
     return NextResponse.json(
       { error: "invalid_input", issues: result.error.issues },
       { status: 400 },
     );
   }
-  const ok = await loescheKompetenzVerknuepfung({
+  const ok = await deleteKompetenzLink({
     dokumentId: result.data.dokumentId,
     kompetenzId: id,
     ownerId: user.id,

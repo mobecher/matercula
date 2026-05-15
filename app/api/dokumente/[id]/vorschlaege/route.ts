@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
 import {
-  generiereVorschlaegeFuerDokument,
-  ladeVorschlaegeFuerDokument,
+  generateSuggestionsForDocument,
+  loadSuggestionsForDocument,
 } from "@/lib/curriculum/vorschlaege";
 
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
-  const vorschlaege = await ladeVorschlaegeFuerDokument(parsed.data, user.id);
+  const vorschlaege = await loadSuggestionsForDocument(parsed.data, user.id);
   if (vorschlaege === null) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
@@ -26,8 +26,8 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
 }
 
 /**
- * Triggert eine neue LLM-Auswertung des Dokuments und ersetzt offene
- * Vorschläge. Antwortet mit der aktuellen Vorschlagsliste.
+ * Triggers a new LLM evaluation of the document and replaces any open
+ * suggestions. Responds with the current suggestion list.
  */
 export async function POST(_req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
@@ -37,23 +37,23 @@ export async function POST(_req: Request, context: { params: Promise<{ id: strin
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
-  const ergebnis = await generiereVorschlaegeFuerDokument(parsed.data, user.id, {
+  const result = await generateSuggestionsForDocument(parsed.data, user.id, {
     openaiApiKey: user.openaiApiKey,
     anthropicApiKey: user.anthropicApiKey,
     deepseekApiKey: user.deepseekApiKey,
   });
-  if (ergebnis === null) {
+  if (result === null) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  if (!ergebnis.ok) {
+  if (!result.ok) {
     return NextResponse.json(
       {
-        error: ergebnis.grund ?? "ai_fehler",
-        message: ergebnis.fehler,
-        vorschlaege: ergebnis.vorschlaege,
+        error: result.reason ?? "ai_fehler",
+        message: result.error,
+        vorschlaege: result.vorschlaege,
       },
       { status: 422 },
     );
   }
-  return NextResponse.json({ vorschlaege: ergebnis.vorschlaege });
+  return NextResponse.json({ vorschlaege: result.vorschlaege });
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
-import { entscheideVorschlag } from "@/lib/curriculum/vorschlaege";
+import { decideSuggestion } from "@/lib/curriculum/vorschlaege";
 
 export const runtime = "nodejs";
 
@@ -30,14 +30,14 @@ export async function PATCH(
       { status: 400 },
     );
   }
-  const ergebnis = await entscheideVorschlag({
+  const result = await decideSuggestion({
     dokumentId: dok.data,
     vorschlagId: vorschlag.data,
     ownerId: user.id,
     aktion: body.data.aktion,
   });
-  if (!ergebnis) {
+  if (!result) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  return NextResponse.json(ergebnis);
+  return NextResponse.json(result);
 }

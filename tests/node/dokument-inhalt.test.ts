@@ -6,7 +6,7 @@
  */
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { dokumentInhaltFuerAi } from "../../lib/curriculum/dokument-inhalt";
+import { documentContentForAi } from "../../lib/curriculum/dokument-inhalt";
 import { htmlToPlainText } from "../../lib/web/fetch-page";
 
 describe("htmlToPlainText", () => {
@@ -41,13 +41,13 @@ describe("htmlToPlainText", () => {
 describe("dokumentInhaltFuerAi", () => {
   it("returns legacy markdown content unchanged", async () => {
     const md = "# Titel\n\nAbsatz mit Text.";
-    assert.equal(await dokumentInhaltFuerAi(md), md);
+    assert.equal(await documentContentForAi(md), md);
   });
 
   it("returns empty string for empty/null input", async () => {
-    assert.equal(await dokumentInhaltFuerAi(null), "");
-    assert.equal(await dokumentInhaltFuerAi(""), "");
-    assert.equal(await dokumentInhaltFuerAi("   "), "");
+    assert.equal(await documentContentForAi(null), "");
+    assert.equal(await documentContentForAi(""), "");
+    assert.equal(await documentContentForAi("   "), "");
   });
 
   it("walks BlockNote JSON and extracts inline text", async () => {
@@ -65,7 +65,7 @@ describe("dokumentInhaltFuerAi", () => {
         ],
       },
     ];
-    const out = await dokumentInhaltFuerAi(JSON.stringify(blocks));
+    const out = await documentContentForAi(JSON.stringify(blocks));
     assert.match(out, /Lehrplan-Notizen/);
     assert.match(out, /Erste Zeile mit Fortsetzung\./);
   });
@@ -81,7 +81,7 @@ describe("dokumentInhaltFuerAi", () => {
         },
       },
     ];
-    const out = await dokumentInhaltFuerAi(JSON.stringify(blocks), {
+    const out = await documentContentForAi(JSON.stringify(blocks), {
       fetchPageImpl: async () => ({
         url: "https://example.com/article",
         title: "Live Title",
@@ -109,7 +109,7 @@ describe("dokumentInhaltFuerAi", () => {
         },
       },
     ];
-    const out = await dokumentInhaltFuerAi(JSON.stringify(blocks), {
+    const out = await documentContentForAi(JSON.stringify(blocks), {
       fetchPageImpl: async () => {
         throw new Error("boom");
       },
@@ -126,7 +126,7 @@ describe("dokumentInhaltFuerAi", () => {
         props: { url: "https://youtu.be/dQw4w9WgXcQ", videoId: "dQw4w9WgXcQ" },
       },
     ];
-    const out = await dokumentInhaltFuerAi(JSON.stringify(blocks), {
+    const out = await documentContentForAi(JSON.stringify(blocks), {
       fetchPageImpl: async () => {
         throw new Error("should not fetch");
       },
@@ -154,7 +154,7 @@ describe("dokumentInhaltFuerAi", () => {
       },
     ];
     let called = false;
-    const out = await dokumentInhaltFuerAi(JSON.stringify(blocks), {
+    const out = await documentContentForAi(JSON.stringify(blocks), {
       fetchExternals: false,
       fetchPageImpl: async () => {
         called = true;
@@ -172,7 +172,7 @@ describe("dokumentInhaltFuerAi", () => {
 
   it("returns raw text on broken JSON", async () => {
     const broken = "[not json";
-    const out = await dokumentInhaltFuerAi(broken);
+    const out = await documentContentForAi(broken);
     assert.equal(out, broken);
   });
 });

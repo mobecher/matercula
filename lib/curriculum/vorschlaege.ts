@@ -1,7 +1,7 @@
 import { generateObject, type LanguageModel } from "ai";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { type BenutzerAiSchluessel, FehlenderProviderSchluessel, getModel } from "@/lib/ai";
+import { type UserAiKeys, MissingProviderKey, getModel } from "@/lib/ai";
 import { db } from "@/lib/db";
 import { dokumente } from "@/lib/db/schema/dokumente";
 import {
@@ -18,9 +18,9 @@ import {
   dokumentLinkVorschlaege,
 } from "@/lib/db/schema/links";
 import { materialChunks, materialien } from "@/lib/db/schema/materials";
-import { dokumentInhaltFuerAi } from "./dokument-inhalt";
+import { documentContentForAi } from "./dokument-inhalt";
 
-export interface VorschlagAnsicht {
+export interface SuggestionView {
   id: string;
   zielTyp: "kompetenz" | "anwendungsbereich";
   zielId: string;
@@ -39,7 +39,7 @@ const MAX_DOKUMENT_ZEICHEN = 20_000;
 const MAX_VORSCHLAEGE = 10;
 
 /** Liefert das Dokument inkl. Markdown-Inhalt für den angemeldeten Nutzer. */
-async function ladeDokumentFuerVorschlaege(dokumentId: string, ownerId: string) {
+async function loadDocumentForSuggestions(dokumentId: string, ownerId: string) {
   const [doc] = await db
     .select()
     .from(dokumente)
@@ -48,7 +48,7 @@ async function ladeDokumentFuerVorschlaege(dokumentId: string, ownerId: string) 
   return doc ?? null;
 }
 
-interface KurriculumEintrag {
+interface CurriculumEntry {
   zielTyp: "kompetenz" | "anwendungsbereich";
   id: string;
   code: string;
@@ -57,7 +57,7 @@ interface KurriculumEintrag {
   pfad: string;
 }
 
-async function ladeKurriculumKatalog(): Promise<KurriculumEintrag[]> {
+async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
   const kompRows = await db
     .select({
       id: kompetenzen.id,
@@ -69,8 +69,14 @@ async function ladeKurriculumKatalog(): Promise<KurriculumEintrag[]> {
       lehrplanTitel: lehrplaene.titel,
     })
     .from(kompetenzen)
-    .innerJoin(kompetenzbereiche, eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId))
-    .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
+    .innerJoin(
+      kompetenzbereiche,
+      eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId),
+    )
+    .innerJoin(
+      lehrplanKlassen,
+      eq(lehrplanKlassen.id, kompetenzbereiche.klasseId),
+    )
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
     .orderBy(asc(kompetenzen.code));
 
@@ -85,12 +91,18 @@ async function ladeKurriculumKatalog(): Promise<KurriculumEintrag[]> {
       lehrplanTitel: lehrplaene.titel,
     })
     .from(anwendungsbereiche)
-    .innerJoin(kompetenzbereiche, eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId))
-    .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
+    .innerJoin(
+      kompetenzbereiche,
+      eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId),
+    )
+    .innerJoin(
+      lehrplanKlassen,
+      eq(lehrplanKlassen.id, kompetenzbereiche.klasseId),
+    )
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
     .orderBy(asc(anwendungsbereiche.code));
 
-  const ausKomp: KurriculumEintrag[] = kompRows.map((r) => ({
+  const ausKomp: CurriculumEntry[] = kompRows.map((r) => ({
     zielTyp: "kompetenz",
     id: r.id,
     code: r.code,
@@ -98,7 +110,7 @@ async function ladeKurriculumKatalog(): Promise<KurriculumEintrag[]> {
     beschreibung: r.beschreibung,
     pfad: `${r.lehrplanTitel} › ${r.klasseTitel} › ${r.bereichTitel}`,
   }));
-  const ausAwb: KurriculumEintrag[] = awbRows.map((r) => ({
+  const ausAwb: CurriculumEntry[] = awbRows.map((r) => ({
     zielTyp: "anwendungsbereich",
     id: r.id,
     code: r.code,
@@ -113,11 +125,11 @@ async function ladeKurriculumKatalog(): Promise<KurriculumEintrag[]> {
  * Listet alle gespeicherten Vorschläge für ein Dokument auf, inklusive
  * Anzeigeinformationen (Code, Titel, Pfad, Status).
  */
-export async function ladeVorschlaegeFuerDokument(
+export async function loadSuggestionsForDocument(
   dokumentId: string,
   ownerId: string,
-): Promise<VorschlagAnsicht[] | null> {
-  const doc = await ladeDokumentFuerVorschlaege(dokumentId, ownerId);
+): Promise<SuggestionView[] | null> {
+  const doc = await loadDocumentForSuggestions(dokumentId, ownerId);
   if (!doc) return null;
 
   const rows = await db
@@ -127,22 +139,26 @@ export async function ladeVorschlaegeFuerDokument(
     .orderBy(desc(dokumentLinkVorschlaege.confidence));
   if (rows.length === 0) return [];
 
-  const katalog = await ladeKurriculumKatalog();
-  const kompById = new Map(katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.id, e]));
+  const katalog = await loadCurriculumCatalog();
+  const kompById = new Map(
+    katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.id, e]),
+  );
   const awbById = new Map(
-    katalog.filter((e) => e.zielTyp === "anwendungsbereich").map((e) => [e.id, e]),
+    katalog
+      .filter((e) => e.zielTyp === "anwendungsbereich")
+      .map((e) => [e.id, e]),
   );
 
   return rows
-    .map((row) => mapRowToAnsicht(row, kompById, awbById))
-    .filter((v): v is VorschlagAnsicht => v !== null);
+    .map((row) => mapRowToView(row, kompById, awbById))
+    .filter((v): v is SuggestionView => v !== null);
 }
 
-function mapRowToAnsicht(
+function mapRowToView(
   row: DokumentLinkVorschlag,
-  kompById: Map<string, KurriculumEintrag>,
-  awbById: Map<string, KurriculumEintrag>,
-): VorschlagAnsicht | null {
+  kompById: Map<string, CurriculumEntry>,
+  awbById: Map<string, CurriculumEntry>,
+): SuggestionView | null {
   const eintrag =
     row.zielTyp === "kompetenz"
       ? row.kompetenzId
@@ -206,11 +222,11 @@ const llmAntwortSchema = z.object({
     .max(MAX_VORSCHLAEGE),
 });
 
-export interface GenerierungsErgebnis {
+export interface GenerationResult {
   ok: boolean;
-  grund?: "kein_inhalt" | "nicht_unterstuetzt" | "keine_treffer" | "ai_fehler";
-  fehler?: string;
-  vorschlaege: VorschlagAnsicht[];
+  reason?: "kein_inhalt" | "nicht_unterstuetzt" | "keine_treffer" | "ai_fehler";
+  error?: string;
+  vorschlaege: SuggestionView[];
 }
 
 /**
@@ -222,12 +238,12 @@ export interface GenerierungsErgebnis {
  * sowie PDF-Dokumente (`typ === "pdf"`, Quelle: extrahierte
  * `material_chunks` des verknüpften Materials).
  */
-export async function generiereVorschlaegeFuerDokument(
+export async function generateSuggestionsForDocument(
   dokumentId: string,
   ownerId: string,
-  schluessel: BenutzerAiSchluessel,
-): Promise<GenerierungsErgebnis | null> {
-  const doc = await ladeDokumentFuerVorschlaege(dokumentId, ownerId);
+  schluessel: UserAiKeys,
+): Promise<GenerationResult | null> {
+  const doc = await loadDocumentForSuggestions(dokumentId, ownerId);
   if (!doc) return null;
 
   let inhalt = "";
@@ -236,34 +252,42 @@ export async function generiereVorschlaegeFuerDokument(
     // YouTube-Einbettungen werden mit extern abgeholten Inhalten
     // (HTML-Plain-Text bzw. oEmbed-Titel) angereichert. Externe Fetches
     // scheitern weich, damit das Tagging trotzdem läuft.
-    inhalt = (await dokumentInhaltFuerAi(doc.inhaltMarkdown)).trim();
+    inhalt = (await documentContentForAi(doc.inhaltMarkdown)).trim();
   } else if (doc.typ === "pdf") {
     if (!doc.materialId) {
       return {
         ok: false,
-        grund: "kein_inhalt",
-        fehler: "Diesem PDF-Dokument ist keine Datei zugeordnet.",
+        reason: "kein_inhalt",
+        error: "Diesem PDF-Dokument ist keine Datei zugeordnet.",
         vorschlaege: [],
       };
     }
     const [mat] = await db
-      .select({ status: materialien.status, statusReason: materialien.statusReason })
+      .select({
+        status: materialien.status,
+        statusReason: materialien.statusReason,
+      })
       .from(materialien)
-      .where(and(eq(materialien.id, doc.materialId), eq(materialien.ownerId, ownerId)))
+      .where(
+        and(
+          eq(materialien.id, doc.materialId),
+          eq(materialien.ownerId, ownerId),
+        ),
+      )
       .limit(1);
     if (!mat) {
       return {
         ok: false,
-        grund: "kein_inhalt",
-        fehler: "Material nicht gefunden.",
+        reason: "kein_inhalt",
+        error: "Material nicht gefunden.",
         vorschlaege: [],
       };
     }
     if (mat.status === "uploaded" || mat.status === "processing") {
       return {
         ok: false,
-        grund: "kein_inhalt",
-        fehler:
+        reason: "kein_inhalt",
+        error:
           "PDF wird noch verarbeitet. Bitte warten, bis die Textextraktion abgeschlossen ist.",
         vorschlaege: [],
       };
@@ -271,8 +295,8 @@ export async function generiereVorschlaegeFuerDokument(
     if (mat.status === "error") {
       return {
         ok: false,
-        grund: "kein_inhalt",
-        fehler: mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
+        reason: "kein_inhalt",
+        error: mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
         vorschlaege: [],
       };
     }
@@ -288,8 +312,8 @@ export async function generiereVorschlaegeFuerDokument(
   } else {
     return {
       ok: false,
-      grund: "nicht_unterstuetzt",
-      fehler: "Vorschläge sind für diesen Dokumenttyp nicht verfügbar.",
+      reason: "nicht_unterstuetzt",
+      error: "Vorschläge sind für diesen Dokumenttyp nicht verfügbar.",
       vorschlaege: [],
     };
   }
@@ -297,18 +321,18 @@ export async function generiereVorschlaegeFuerDokument(
   if (inhalt.length === 0) {
     return {
       ok: false,
-      grund: "kein_inhalt",
-      fehler: "Das Dokument enthält keinen Text, der analysiert werden könnte.",
+      reason: "kein_inhalt",
+      error: "Das Dokument enthält keinen Text, der analysiert werden könnte.",
       vorschlaege: [],
     };
   }
 
-  const katalog = await ladeKurriculumKatalog();
+  const katalog = await loadCurriculumCatalog();
   if (katalog.length === 0) {
     return {
       ok: false,
-      grund: "keine_treffer",
-      fehler: "Es ist noch kein Lehrplan eingespielt.",
+      reason: "keine_treffer",
+      error: "Es ist noch kein Lehrplan eingespielt.",
       vorschlaege: [],
     };
   }
@@ -320,9 +344,9 @@ export async function generiereVorschlaegeFuerDokument(
   } catch (error) {
     return {
       ok: false,
-      grund: "ai_fehler",
-      fehler:
-        error instanceof FehlenderProviderSchluessel
+      reason: "ai_fehler",
+      error:
+        error instanceof MissingProviderKey
           ? error.message
           : error instanceof Error
             ? error.message
@@ -370,8 +394,8 @@ Aufgabe:
   } catch (error) {
     return {
       ok: false,
-      grund: "ai_fehler",
-      fehler: error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
+      reason: "ai_fehler",
+      error: error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
       vorschlaege: [],
     };
   }
@@ -381,11 +405,13 @@ Aufgabe:
     katalog.filter((e) => e.zielTyp === "kompetenz").map((e) => [e.code, e]),
   );
   const awbByCode = new Map(
-    katalog.filter((e) => e.zielTyp === "anwendungsbereich").map((e) => [e.code, e]),
+    katalog
+      .filter((e) => e.zielTyp === "anwendungsbereich")
+      .map((e) => [e.code, e]),
   );
 
   type AufgeloesterVorschlag = {
-    eintrag: KurriculumEintrag;
+    eintrag: CurriculumEntry;
     confidence: number;
     begruendung: string;
   };
@@ -398,9 +424,13 @@ Aufgabe:
     // tolerieren wir Fälle, in denen das Modell den Typ verwechselt oder
     // statt des Typs noch einmal den Code liefert.
     const primaer =
-      typHinweis === "anwendungsbereich" ? awbByCode.get(v.code) : kompByCode.get(v.code);
+      typHinweis === "anwendungsbereich"
+        ? awbByCode.get(v.code)
+        : kompByCode.get(v.code);
     const sekundaer =
-      typHinweis === "anwendungsbereich" ? kompByCode.get(v.code) : awbByCode.get(v.code);
+      typHinweis === "anwendungsbereich"
+        ? kompByCode.get(v.code)
+        : awbByCode.get(v.code);
     const eintrag = primaer ?? sekundaer;
     if (!eintrag) continue;
     const dedupKey = `${eintrag.zielTyp}:${eintrag.id}`;
@@ -447,7 +477,8 @@ Aufgabe:
         dokumentId,
         zielTyp: a.eintrag.zielTyp,
         kompetenzId: a.eintrag.zielTyp === "kompetenz" ? a.eintrag.id : null,
-        anwendungsbereichId: a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
+        anwendungsbereichId:
+          a.eintrag.zielTyp === "anwendungsbereich" ? a.eintrag.id : null,
         confidence: a.confidence,
         begruendung: a.begruendung,
         modell: modellName,
@@ -458,7 +489,8 @@ Aufgabe:
     }
   }
 
-  const ansichten = (await ladeVorschlaegeFuerDokument(dokumentId, ownerId)) ?? [];
+  const ansichten =
+    (await loadSuggestionsForDocument(dokumentId, ownerId)) ?? [];
   return { ok: true, vorschlaege: ansichten };
 }
 
@@ -470,7 +502,7 @@ interface EntscheidungsEingabe {
 }
 
 export interface EntscheidungsErgebnis {
-  vorschlag: VorschlagAnsicht;
+  vorschlag: SuggestionView;
 }
 
 /**
@@ -478,10 +510,13 @@ export interface EntscheidungsErgebnis {
  * wird zusätzlich der entsprechende manuelle Link in
  * `dokument_*_links` angelegt (idempotent).
  */
-export async function entscheideVorschlag(
+export async function decideSuggestion(
   eingabe: EntscheidungsEingabe,
 ): Promise<EntscheidungsErgebnis | null> {
-  const doc = await ladeDokumentFuerVorschlaege(eingabe.dokumentId, eingabe.ownerId);
+  const doc = await loadDocumentForSuggestions(
+    eingabe.dokumentId,
+    eingabe.ownerId,
+  );
   if (!doc) return null;
 
   const [vorschlag] = await db
@@ -509,7 +544,10 @@ export async function entscheideVorschlag(
           notiz,
         })
         .onConflictDoNothing();
-    } else if (vorschlag.zielTyp === "anwendungsbereich" && vorschlag.anwendungsbereichId) {
+    } else if (
+      vorschlag.zielTyp === "anwendungsbereich" &&
+      vorschlag.anwendungsbereichId
+    ) {
       await db
         .insert(dokumentAnwendungsbereichLinks)
         .values({
@@ -532,13 +570,19 @@ export async function entscheideVorschlag(
             eq(dokumentKompetenzLinks.kompetenzId, vorschlag.kompetenzId),
           ),
         );
-    } else if (vorschlag.zielTyp === "anwendungsbereich" && vorschlag.anwendungsbereichId) {
+    } else if (
+      vorschlag.zielTyp === "anwendungsbereich" &&
+      vorschlag.anwendungsbereichId
+    ) {
       await db
         .delete(dokumentAnwendungsbereichLinks)
         .where(
           and(
             eq(dokumentAnwendungsbereichLinks.dokumentId, eingabe.dokumentId),
-            eq(dokumentAnwendungsbereichLinks.anwendungsbereichId, vorschlag.anwendungsbereichId),
+            eq(
+              dokumentAnwendungsbereichLinks.anwendungsbereichId,
+              vorschlag.anwendungsbereichId,
+            ),
           ),
         );
     }
@@ -555,7 +599,10 @@ export async function entscheideVorschlag(
     .set({ status, decidedAt: status === "offen" ? null : new Date() })
     .where(eq(dokumentLinkVorschlaege.id, eingabe.vorschlagId));
 
-  const liste = await ladeVorschlaegeFuerDokument(eingabe.dokumentId, eingabe.ownerId);
+  const liste = await loadSuggestionsForDocument(
+    eingabe.dokumentId,
+    eingabe.ownerId,
+  );
   const aktualisiert = liste?.find((v) => v.id === eingabe.vorschlagId);
   if (!aktualisiert) return null;
   return { vorschlag: aktualisiert };

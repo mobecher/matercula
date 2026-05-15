@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
-import { ladeKlasseUebersicht } from "@/lib/curriculum/repository";
+import { loadKlasseOverview } from "@/lib/curriculum/repository";
 
 export async function GET(
   _req: Request,
@@ -13,7 +13,7 @@ export async function GET(
   if (!Number.isFinite(klasseNr)) {
     return NextResponse.json({ error: "invalid_klasse" }, { status: 400 });
   }
-  const data = await ladeKlasseUebersicht(slug, klasseNr);
+  const data = await loadKlasseOverview(slug, klasseNr);
   if (!data) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json(data);
 }

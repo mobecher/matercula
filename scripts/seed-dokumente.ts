@@ -5,8 +5,12 @@ import { dokumente } from "@/lib/db/schema/dokumente";
 import { dokumentBaum } from "@/lib/workspace/mock-data";
 import type { DokumentKnoten } from "@/lib/workspace/types";
 
-async function seedFuerBenutzer(email: string) {
-  const [benutzer] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+async function seedForUser(email: string) {
+  const [benutzer] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
   if (!benutzer) {
     console.warn(`Benutzer ${email} nicht gefunden – wird übersprungen.`);
     return;
@@ -22,7 +26,11 @@ async function seedFuerBenutzer(email: string) {
     return;
   }
 
-  async function insertKnoten(knoten: DokumentKnoten, parentId: string | null, sortierung: number) {
+  async function insertKnoten(
+    knoten: DokumentKnoten,
+    parentId: string | null,
+    sortierung: number,
+  ) {
     const [eingefuegt] = await db
       .insert(dokumente)
       .values({
@@ -55,8 +63,8 @@ async function seedFuerBenutzer(email: string) {
 }
 
 async function main() {
-  await seedFuerBenutzer("admin@example.com");
-  await seedFuerBenutzer("teacher@example.com");
+  await seedForUser("admin@example.com");
+  await seedForUser("teacher@example.com");
   await sqlClient.end();
 }
 

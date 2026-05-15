@@ -1,22 +1,26 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
 import {
-  ladeDokumenteFuerAnwendungsbereich,
-  ladeDokumenteFuerKompetenz,
+  loadDocumentsForAnwendungsbereich,
+  loadDocumentsForKompetenz,
 } from "@/lib/curriculum/links";
-import { ladeKompetenzbereichDetail } from "@/lib/curriculum/repository";
+import { loadKompetenzbereichDetail } from "@/lib/curriculum/repository";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await params;
-  const detail = await ladeKompetenzbereichDetail(id);
+  const detail = await loadKompetenzbereichDetail(id);
   if (!detail) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const [kompDocs, appDocs] = await Promise.all([
-    Promise.all(detail.kompetenzen.map((k) => ladeDokumenteFuerKompetenz(k.id, user.id))),
     Promise.all(
-      detail.anwendungsbereiche.map((a) => ladeDokumenteFuerAnwendungsbereich(a.id, user.id)),
+      detail.kompetenzen.map((k) => loadDocumentsForKompetenz(k.id, user.id)),
+    ),
+    Promise.all(
+      detail.anwendungsbereiche.map((a) =>
+        loadDocumentsForAnwendungsbereich(a.id, user.id),
+      ),
     ),
   ]);
 

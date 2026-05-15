@@ -54,7 +54,7 @@ export interface DokumentInhaltOptions {
  * Wandelt den persistierten Dokumenten-Inhalt in einen für das LLM
  * geeigneten Klartext um. Liefert immer einen String (ggf. leer).
  */
-export async function dokumentInhaltFuerAi(
+export async function documentContentForAi(
   rawContent: string | null | undefined,
   opts: DokumentInhaltOptions = {},
 ): Promise<string> {
@@ -83,7 +83,8 @@ export async function dokumentInhaltFuerAi(
   // Erst alle externen Quellen einsammeln, dann parallel fetchen, danach
   // den Text linear zusammensetzen. So bleibt die Reihenfolge stabil und
   // wir vermeiden seriellen Wartepunkten pro Block.
-  const linkCards: Array<{ url: string; title: string; description: string }> = [];
+  const linkCards: Array<{ url: string; title: string; description: string }> =
+    [];
   const youtubeUrls: string[] = [];
   collectExternals(blocks, linkCards, youtubeUrls);
 
@@ -110,7 +111,10 @@ export async function dokumentInhaltFuerAi(
 
   const linkLookup = new Map<string, ExternalPage | null>();
   for (const r of linkResults) linkLookup.set(r.card.url, r.page);
-  const youtubeLookup = new Map<string, Awaited<ReturnType<typeof fetchYoutubeMeta>>>();
+  const youtubeLookup = new Map<
+    string,
+    Awaited<ReturnType<typeof fetchYoutubeMeta>>
+  >();
   for (const r of youtubeResults) youtubeLookup.set(r.url, r.meta);
 
   const ctx = { externalCharsRemaining: MAX_TOTAL_EXTERNAL_CHARS };

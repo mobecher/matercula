@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth/request";
 import { enqueueTagMaterial } from "@/lib/jobs/queue";
-import { erstelleMaterial } from "@/lib/materials/repository";
+import { createMaterial } from "@/lib/materials/repository";
 import { uploadFile } from "@/lib/storage/s3";
 
 // Direktupload aus dem BlockNote-Editor. Erwartet `multipart/form-data`
@@ -14,7 +14,7 @@ const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
 
 // Mirror of `SUPPORTED_MIME_TYPES` in lib/extraction/client.ts and
 // `SUPPORTED_MIMES` in services/extractor/app/extraction.py. Keep in sync.
-const ERLAUBTE_MIME_TYPES = new Set<string>([
+const ALLOWED_MIME_TYPES = new Set<string>([
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -48,15 +48,16 @@ const ERLAUBTE_MIME_TYPES = new Set<string>([
   "image/heic",
 ]);
 
-function bereinigeDateiname(name: string): string {
-  // Auf Basisnamen reduzieren und kritische Zeichen entfernen.
-  const basis = name.split(/[\\/]/).pop() ?? "datei";
-  return basis.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 200) || "datei";
+function sanitizeFilename(name: string): string {
+  // Reduce to the basename and strip critical characters.
+  const base = name.split(/[\\/]/).pop() ?? "datei";
+  return base.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 200) || "datei";
 }
 
 export async function POST(request: Request) {
   const user = await getRequestUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("multipart/form-data")) {
@@ -78,22 +79,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "empty_file" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "file_too_large", maxBytes: MAX_BYTES }, { status: 413 });
+    return NextResponse.json(
+      { error: "file_too_large", maxBytes: MAX_BYTES },
+      { status: 413 },
+    );
   }
 
   const mimeType = file.type || "application/octet-stream";
-  if (!ERLAUBTE_MIME_TYPES.has(mimeType)) {
-    return NextResponse.json({ error: "unsupported_mime_type", mimeType }, { status: 415 });
+  if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+    return NextResponse.json(
+      { error: "unsupported_mime_type", mimeType },
+      { status: 415 },
+    );
   }
 
   const id = randomUUID();
-  const dateiname = bereinigeDateiname(file.name);
+  const dateiname = sanitizeFilename(file.name);
   const storageKey = `materials/${user.id}/${id}/${dateiname}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
   await uploadFile(storageKey, buffer, mimeType);
 
-  const material = await erstelleMaterial({
+  const material = await createMaterial({
     ownerId: user.id,
     titel: dateiname,
     dateiname,
@@ -102,7 +109,7 @@ export async function POST(request: Request) {
   });
 
   // Ordering matters: enqueue ONLY after the materialien row is committed.
-  // `erstelleMaterial` awaits its insert, so the row is durable here. If we
+  // `createMaterial` awaits its insert, so the row is durable here. If we
   // enqueued earlier (or inside an open transaction) the worker could pick
   // up the job and query for a row that doesn't exist yet.
   // Best-effort: failure to enqueue should not break the upload itself —

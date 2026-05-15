@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 import { z } from "zod";
 import {
-  type BenutzerAiSchluessel,
+  type UserAiKeys,
   getConfiguredProvidersForUser,
   getLanguageModelForProvider,
 } from "@/lib/ai";
@@ -25,7 +25,7 @@ export async function GET() {
   const user = await getRequestUser();
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
 
-  const schluessel: BenutzerAiSchluessel = {
+  const schluessel: UserAiKeys = {
     openaiApiKey: user.openaiApiKey,
     anthropicApiKey: user.anthropicApiKey,
     deepseekApiKey: user.deepseekApiKey,

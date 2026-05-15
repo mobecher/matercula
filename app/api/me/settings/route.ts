@@ -8,18 +8,19 @@ import { users } from "@/lib/db/schema/auth";
 export const runtime = "nodejs";
 
 /**
- * Liefert maskierte Status-Informationen zu den hinterlegten API-Schlüsseln.
- * Der Klartext wird nie an den Client gesendet.
+ * Returns masked status info about the stored API keys. The plaintext is
+ * never sent to the client.
  */
-function maskiere(value: string | null | undefined): {
+function mask(value: string | null | undefined): {
   vorhanden: boolean;
   vorschau: string | null;
 } {
   if (!value) return { vorhanden: false, vorschau: null };
   const trimmed = value.trim();
   if (!trimmed) return { vorhanden: false, vorschau: null };
-  const sichtbar = trimmed.length <= 8 ? trimmed.slice(0, 2) : trimmed.slice(0, 4);
-  return { vorhanden: true, vorschau: `${sichtbar}…${trimmed.slice(-2)}` };
+  const visible =
+    trimmed.length <= 8 ? trimmed.slice(0, 2) : trimmed.slice(0, 4);
+  return { vorhanden: true, vorschau: `${visible}…${trimmed.slice(-2)}` };
 }
 
 export async function GET() {
@@ -29,19 +30,19 @@ export async function GET() {
     name: user.name,
     email: user.email,
     schluessel: {
-      openai: maskiere(user.openaiApiKey),
-      anthropic: maskiere(user.anthropicApiKey),
-      deepseek: maskiere(user.deepseekApiKey),
+      openai: mask(user.openaiApiKey),
+      anthropic: mask(user.anthropicApiKey),
+      deepseek: mask(user.deepseekApiKey),
     },
   });
 }
 
 /**
- * Aktualisiert die hinterlegten API-Schlüssel.
+ * Updates the stored API keys.
  *
- * - Felder, die nicht mitgesendet werden, bleiben unverändert.
- * - Ein leerer String ('') löscht den jeweiligen Schlüssel.
- * - Ein nicht-leerer String setzt einen neuen Schlüssel.
+ * - Fields that are not sent are left unchanged.
+ * - An empty string ('') deletes the respective key.
+ * - A non-empty string sets a new key.
  */
 const patchSchema = z.object({
   openaiApiKey: z.string().max(500).optional(),
@@ -62,30 +63,30 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const aenderungen: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
+  const changes: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
   if (parsed.data.openaiApiKey !== undefined) {
-    aenderungen.openaiApiKey = parsed.data.openaiApiKey.trim() || null;
+    changes.openaiApiKey = parsed.data.openaiApiKey.trim() || null;
   }
   if (parsed.data.anthropicApiKey !== undefined) {
-    aenderungen.anthropicApiKey = parsed.data.anthropicApiKey.trim() || null;
+    changes.anthropicApiKey = parsed.data.anthropicApiKey.trim() || null;
   }
   if (parsed.data.deepseekApiKey !== undefined) {
-    aenderungen.deepseekApiKey = parsed.data.deepseekApiKey.trim() || null;
+    changes.deepseekApiKey = parsed.data.deepseekApiKey.trim() || null;
   }
 
-  const [aktualisiert] = await db
+  const [updated] = await db
     .update(users)
-    .set(aenderungen)
+    .set(changes)
     .where(eq(users.id, user.id))
     .returning();
 
   return NextResponse.json({
-    name: aktualisiert.name,
-    email: aktualisiert.email,
+    name: updated.name,
+    email: updated.email,
     schluessel: {
-      openai: maskiere(aktualisiert.openaiApiKey),
-      anthropic: maskiere(aktualisiert.anthropicApiKey),
-      deepseek: maskiere(aktualisiert.deepseekApiKey),
+      openai: mask(updated.openaiApiKey),
+      anthropic: mask(updated.anthropicApiKey),
+      deepseek: mask(updated.deepseekApiKey),
     },
   });
 }

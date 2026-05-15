@@ -105,7 +105,7 @@ function curriculumFolder(): string {
   return path.join(process.cwd(), "data", "lehrplan");
 }
 
-export async function ladeCurriculumKatalog(
+export async function loadCurriculumCatalogFromDb(
   fileName: string = DEFAULT_CURRICULUM_FILE,
 ): Promise<CurriculumKatalog> {
   const file = path.join(curriculumFolder(), fileName);
@@ -299,7 +299,7 @@ async function importLehrplan(
  * Importiert die in `auswahl` benannten Fächer/Klassen aus der Quelldatei.
  * Wenn `auswahl` leer ist, wird ALLES importiert.
  */
-export async function importiereCurriculum(
+export async function importCurriculum(
   auswahl: ImportAuswahl[] = [],
   fileName: string = DEFAULT_CURRICULUM_FILE,
 ): Promise<ImportErgebnis[]> {
@@ -316,7 +316,8 @@ export async function importiereCurriculum(
     if (!importAlles && !auswahlByFach.has(fachKey)) continue;
     const slug = slugify(fachKey);
     const sel = auswahlByFach.get(fachKey);
-    const klassenFilter = sel?.klassen && sel.klassen.length > 0 ? new Set(sel.klassen) : null;
+    const klassenFilter =
+      sel?.klassen && sel.klassen.length > 0 ? new Set(sel.klassen) : null;
     const ergebnis = await importLehrplan(slug, lp, klassenFilter);
     ergebnis.fachKey = fachKey;
     ergebnisse.push(ergebnis);

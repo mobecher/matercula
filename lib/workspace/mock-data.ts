@@ -105,11 +105,14 @@ export const dokumentBaum: DokumentKnoten[] = [
   },
 ];
 
-export function findeDokument(baum: DokumentKnoten[], id: string): DokumentKnoten | undefined {
+export function findDocument(
+  baum: DokumentKnoten[],
+  id: string,
+): DokumentKnoten | undefined {
   for (const knoten of baum) {
     if (knoten.id === id) return knoten;
     if (knoten.children) {
-      const treffer = findeDokument(knoten.children, id);
+      const treffer = findDocument(knoten.children, id);
       if (treffer) return treffer;
     }
   }

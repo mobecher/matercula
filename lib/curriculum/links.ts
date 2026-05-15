@@ -18,7 +18,7 @@ import {
  * Hält den Status passender KI-Vorschläge mit dem tatsächlichen Link-Stand
  * synchron, wenn ein Link manuell angelegt oder entfernt wurde.
  */
-async function syncVorschlagStatusFuerLink(args: {
+async function syncSuggestionStatusForLink(args: {
   dokumentId: string;
   zielTyp: "kompetenz" | "anwendungsbereich";
   zielId: string;
@@ -66,7 +66,7 @@ export interface DokumentLehrplanLinks {
 }
 
 /** Reverse-Lookup: zu welchen Kompetenzen/Anwendungsbereichen gehört das Dokument? */
-export async function ladeLehrplanLinksFuerDokument(
+export async function loadLehrplanLinksForDocument(
   dokumentId: string,
   ownerId: string,
 ): Promise<DokumentLehrplanLinks | null> {
@@ -88,9 +88,18 @@ export async function ladeLehrplanLinksFuerDokument(
       createdAt: dokumentKompetenzLinks.createdAt,
     })
     .from(dokumentKompetenzLinks)
-    .innerJoin(kompetenzen, eq(kompetenzen.id, dokumentKompetenzLinks.kompetenzId))
-    .innerJoin(kompetenzbereiche, eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId))
-    .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
+    .innerJoin(
+      kompetenzen,
+      eq(kompetenzen.id, dokumentKompetenzLinks.kompetenzId),
+    )
+    .innerJoin(
+      kompetenzbereiche,
+      eq(kompetenzbereiche.id, kompetenzen.kompetenzbereichId),
+    )
+    .innerJoin(
+      lehrplanKlassen,
+      eq(lehrplanKlassen.id, kompetenzbereiche.klasseId),
+    )
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
     .where(eq(dokumentKompetenzLinks.dokumentId, dokumentId))
     .orderBy(asc(dokumentKompetenzLinks.createdAt));
@@ -108,10 +117,19 @@ export async function ladeLehrplanLinksFuerDokument(
     .from(dokumentAnwendungsbereichLinks)
     .innerJoin(
       anwendungsbereiche,
-      eq(anwendungsbereiche.id, dokumentAnwendungsbereichLinks.anwendungsbereichId),
+      eq(
+        anwendungsbereiche.id,
+        dokumentAnwendungsbereichLinks.anwendungsbereichId,
+      ),
     )
-    .innerJoin(kompetenzbereiche, eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId))
-    .innerJoin(lehrplanKlassen, eq(lehrplanKlassen.id, kompetenzbereiche.klasseId))
+    .innerJoin(
+      kompetenzbereiche,
+      eq(kompetenzbereiche.id, anwendungsbereiche.kompetenzbereichId),
+    )
+    .innerJoin(
+      lehrplanKlassen,
+      eq(lehrplanKlassen.id, kompetenzbereiche.klasseId),
+    )
     .innerJoin(lehrplaene, eq(lehrplaene.id, lehrplanKlassen.lehrplanId))
     .where(eq(dokumentAnwendungsbereichLinks.dokumentId, dokumentId))
     .orderBy(asc(dokumentAnwendungsbereichLinks.createdAt));
@@ -132,7 +150,7 @@ export async function ladeLehrplanLinksFuerDokument(
   };
 }
 
-export async function ladeDokumenteFuerKompetenz(
+export async function loadDocumentsForKompetenz(
   kompetenzId: string,
   ownerId: string,
 ): Promise<VerknuepftesDokument[]> {
@@ -169,14 +187,19 @@ export async function ladeDokumenteFuerKompetenz(
     .filter((x): x is VerknuepftesDokument => x !== null);
 }
 
-export async function ladeDokumenteFuerAnwendungsbereich(
+export async function loadDocumentsForAnwendungsbereich(
   anwendungsbereichId: string,
   ownerId: string,
 ): Promise<VerknuepftesDokument[]> {
   const links = await db
     .select()
     .from(dokumentAnwendungsbereichLinks)
-    .where(eq(dokumentAnwendungsbereichLinks.anwendungsbereichId, anwendungsbereichId))
+    .where(
+      eq(
+        dokumentAnwendungsbereichLinks.anwendungsbereichId,
+        anwendungsbereichId,
+      ),
+    )
     .orderBy(asc(dokumentAnwendungsbereichLinks.createdAt));
   if (links.length === 0) return [];
   const docs = await db
@@ -201,7 +224,7 @@ export async function ladeDokumenteFuerAnwendungsbereich(
     .filter((x): x is VerknuepftesDokument => x !== null);
 }
 
-export async function verknuepfeKompetenz(args: {
+export async function linkKompetenz(args: {
   dokumentId: string;
   kompetenzId: string;
   ownerId: string;
@@ -210,7 +233,12 @@ export async function verknuepfeKompetenz(args: {
   const [doc] = await db
     .select({ id: dokumente.id })
     .from(dokumente)
-    .where(and(eq(dokumente.id, args.dokumentId), eq(dokumente.ownerId, args.ownerId)))
+    .where(
+      and(
+        eq(dokumente.id, args.dokumentId),
+        eq(dokumente.ownerId, args.ownerId),
+      ),
+    )
     .limit(1);
   if (!doc) return false;
   await db
@@ -221,7 +249,7 @@ export async function verknuepfeKompetenz(args: {
       notiz: args.notiz ?? null,
     })
     .onConflictDoNothing();
-  await syncVorschlagStatusFuerLink({
+  await syncSuggestionStatusForLink({
     dokumentId: args.dokumentId,
     zielTyp: "kompetenz",
     zielId: args.kompetenzId,
@@ -230,7 +258,7 @@ export async function verknuepfeKompetenz(args: {
   return true;
 }
 
-export async function loescheKompetenzVerknuepfung(args: {
+export async function deleteKompetenzLink(args: {
   dokumentId: string;
   kompetenzId: string;
   ownerId: string;
@@ -238,7 +266,12 @@ export async function loescheKompetenzVerknuepfung(args: {
   const [doc] = await db
     .select({ id: dokumente.id })
     .from(dokumente)
-    .where(and(eq(dokumente.id, args.dokumentId), eq(dokumente.ownerId, args.ownerId)))
+    .where(
+      and(
+        eq(dokumente.id, args.dokumentId),
+        eq(dokumente.ownerId, args.ownerId),
+      ),
+    )
     .limit(1);
   if (!doc) return false;
   const result = await db
@@ -251,7 +284,7 @@ export async function loescheKompetenzVerknuepfung(args: {
     )
     .returning({ id: dokumentKompetenzLinks.id });
   if (result.length > 0) {
-    await syncVorschlagStatusFuerLink({
+    await syncSuggestionStatusForLink({
       dokumentId: args.dokumentId,
       zielTyp: "kompetenz",
       zielId: args.kompetenzId,
@@ -261,7 +294,7 @@ export async function loescheKompetenzVerknuepfung(args: {
   return result.length > 0;
 }
 
-export async function verknuepfeAnwendungsbereich(args: {
+export async function linkAnwendungsbereich(args: {
   dokumentId: string;
   anwendungsbereichId: string;
   ownerId: string;
@@ -270,7 +303,12 @@ export async function verknuepfeAnwendungsbereich(args: {
   const [doc] = await db
     .select({ id: dokumente.id })
     .from(dokumente)
-    .where(and(eq(dokumente.id, args.dokumentId), eq(dokumente.ownerId, args.ownerId)))
+    .where(
+      and(
+        eq(dokumente.id, args.dokumentId),
+        eq(dokumente.ownerId, args.ownerId),
+      ),
+    )
     .limit(1);
   if (!doc) return false;
   await db
@@ -281,7 +319,7 @@ export async function verknuepfeAnwendungsbereich(args: {
       notiz: args.notiz ?? null,
     })
     .onConflictDoNothing();
-  await syncVorschlagStatusFuerLink({
+  await syncSuggestionStatusForLink({
     dokumentId: args.dokumentId,
     zielTyp: "anwendungsbereich",
     zielId: args.anwendungsbereichId,
@@ -290,7 +328,7 @@ export async function verknuepfeAnwendungsbereich(args: {
   return true;
 }
 
-export async function loescheAnwendungsbereichVerknuepfung(args: {
+export async function deleteAnwendungsbereichLink(args: {
   dokumentId: string;
   anwendungsbereichId: string;
   ownerId: string;
@@ -298,7 +336,12 @@ export async function loescheAnwendungsbereichVerknuepfung(args: {
   const [doc] = await db
     .select({ id: dokumente.id })
     .from(dokumente)
-    .where(and(eq(dokumente.id, args.dokumentId), eq(dokumente.ownerId, args.ownerId)))
+    .where(
+      and(
+        eq(dokumente.id, args.dokumentId),
+        eq(dokumente.ownerId, args.ownerId),
+      ),
+    )
     .limit(1);
   if (!doc) return false;
   const result = await db
@@ -306,12 +349,15 @@ export async function loescheAnwendungsbereichVerknuepfung(args: {
     .where(
       and(
         eq(dokumentAnwendungsbereichLinks.dokumentId, args.dokumentId),
-        eq(dokumentAnwendungsbereichLinks.anwendungsbereichId, args.anwendungsbereichId),
+        eq(
+          dokumentAnwendungsbereichLinks.anwendungsbereichId,
+          args.anwendungsbereichId,
+        ),
       ),
     )
     .returning({ id: dokumentAnwendungsbereichLinks.id });
   if (result.length > 0) {
-    await syncVorschlagStatusFuerLink({
+    await syncSuggestionStatusForLink({
       dokumentId: args.dokumentId,
       zielTyp: "anwendungsbereich",
       zielId: args.anwendungsbereichId,

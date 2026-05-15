@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
-import { erstelleDokument, ladeDokumentBaumFuerBenutzer } from "@/lib/workspace/repository";
+import {
+  createDocument,
+  loadDocumentTreeForUser,
+} from "@/lib/workspace/repository";
 
-const erstelleSchema = z
+const createSchema = z
   .object({
     parentId: z.string().uuid().nullable().optional(),
     typ: z.enum(["ordner", "seite", "pdf"]),
@@ -21,7 +24,7 @@ export async function GET() {
   const user = await getRequestUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const baum = await ladeDokumentBaumFuerBenutzer(user.id);
+  const baum = await loadDocumentTreeForUser(user.id);
   return NextResponse.json({ baum });
 }
 
@@ -30,22 +33,22 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const json = await request.json().catch(() => null);
-  const ergebnis = erstelleSchema.safeParse(json);
-  if (!ergebnis.success) {
+  const result = createSchema.safeParse(json);
+  if (!result.success) {
     return NextResponse.json(
-      { error: "invalid_input", issues: ergebnis.error.issues },
+      { error: "invalid_input", issues: result.error.issues },
       { status: 400 },
     );
   }
 
-  const dokument = await erstelleDokument({
+  const dokument = await createDocument({
     ownerId: user.id,
-    parentId: ergebnis.data.parentId ?? null,
-    typ: ergebnis.data.typ,
-    titel: ergebnis.data.titel,
-    icon: ergebnis.data.icon ?? null,
-    inhaltMarkdown: ergebnis.data.inhaltMarkdown ?? null,
-    materialId: ergebnis.data.materialId ?? null,
+    parentId: result.data.parentId ?? null,
+    typ: result.data.typ,
+    titel: result.data.titel,
+    icon: result.data.icon ?? null,
+    inhaltMarkdown: result.data.inhaltMarkdown ?? null,
+    materialId: result.data.materialId ?? null,
   });
 
   if (!dokument) {

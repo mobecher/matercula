@@ -12,17 +12,22 @@ const idSchema = z.string().uuid();
 const PREVIEW_CHUNKS = 5;
 
 /**
- * Liefert eine Übersicht über das Material und den Stand der Extraktion:
- * Status, Anzahl Chunks/Seiten, Gesamtlänge sowie eine kleine Vorschau
- * der ersten Chunks für die UI ("Inhaltsübersicht").
+ * Returns an overview of the material and the state of extraction:
+ * status, number of chunks/pages, total length plus a small preview of
+ * the first chunks for the UI ("content overview").
  */
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
   const user = await getRequestUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+  if (!parsed.success)
+    return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
   const [mat] = await db
     .select({
@@ -37,11 +42,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       updatedAt: materialien.updatedAt,
     })
     .from(materialien)
-    .where(and(eq(materialien.id, parsed.data), eq(materialien.ownerId, user.id)))
+    .where(
+      and(eq(materialien.id, parsed.data), eq(materialien.ownerId, user.id)),
+    )
     .limit(1);
   if (!mat) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  // Aggregat: Anzahl Chunks und Summe der Textlänge.
+  // Aggregate: number of chunks.
   const [agg] = await db
     .select({
       anzahlChunks: count(),
@@ -49,22 +56,23 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     .from(materialChunks)
     .where(eq(materialChunks.materialId, mat.id));
 
-  // Distinct-Seiten und Gesamtzeichen separat – billiger als Window-Funktion.
-  const allePagesUndLen = await db
+  // Distinct pages and total characters separately — cheaper than a window
+  // function.
+  const pagesAndLengths = await db
     .select({
       seitenzahl: materialChunks.seitenzahl,
       laenge: materialChunks.text,
     })
     .from(materialChunks)
     .where(eq(materialChunks.materialId, mat.id));
-  const seitenSet = new Set<number>();
+  const pageSet = new Set<number>();
   let gesamtZeichen = 0;
-  for (const row of allePagesUndLen) {
-    if (row.seitenzahl != null) seitenSet.add(row.seitenzahl);
+  for (const row of pagesAndLengths) {
+    if (row.seitenzahl != null) pageSet.add(row.seitenzahl);
     gesamtZeichen += row.laenge.length;
   }
 
-  const vorschauRows = await db
+  const previewRows = await db
     .select({
       chunkIndex: materialChunks.chunkIndex,
       text: materialChunks.text,
@@ -87,13 +95,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     createdAt: mat.createdAt,
     updatedAt: mat.updatedAt,
     anzahlChunks: agg?.anzahlChunks ?? 0,
-    anzahlSeiten: seitenSet.size,
+    anzahlSeiten: pageSet.size,
     gesamtZeichen,
-    vorschau: vorschauRows.map((r) => ({
+    vorschau: previewRows.map((r) => ({
       chunkIndex: r.chunkIndex,
       seitenzahl: r.seitenzahl,
       abschnitt: r.abschnitt,
-      // 320-Zeichen-Snippet reicht für Listenanzeige.
+      // 320-character snippet is enough for the list view.
       text: r.text.length > 320 ? `${r.text.slice(0, 320).trimEnd()}…` : r.text,
     })),
   });

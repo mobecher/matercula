@@ -13,7 +13,7 @@
  */
 import { type EmbeddingModel, embedMany } from "ai";
 import { eq, inArray } from "drizzle-orm";
-import { FehlenderProviderSchluessel, getModel } from "@/lib/ai";
+import { MissingProviderKey, getModel } from "@/lib/ai";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema/auth";
 import { materialChunks } from "@/lib/db/schema/materials";
@@ -98,7 +98,7 @@ async function loadModelForOwner(ownerId: string): Promise<EmbeddingModel<string
       openaiApiKey: owner?.openaiApiKey ?? null,
     }) as EmbeddingModel<string>;
   } catch (err) {
-    if (err instanceof FehlenderProviderSchluessel) {
+    if (err instanceof MissingProviderKey) {
       throw new MissingEmbeddingKeyError(ownerId);
     }
     throw err;

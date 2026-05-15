@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
-import { ladeLehrplanLinksFuerDokument } from "@/lib/curriculum/links";
+import { loadLehrplanLinksForDocument } from "@/lib/curriculum/links";
 
 const idSchema = z.string().uuid();
 
@@ -13,7 +13,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
-  const links = await ladeLehrplanLinksFuerDokument(parsed.data, user.id);
+  const links = await loadLehrplanLinksForDocument(parsed.data, user.id);
   if (!links) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json(links);
 }
