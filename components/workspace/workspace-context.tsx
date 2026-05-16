@@ -70,20 +70,47 @@ interface WorkspaceContextValue {
   activeTab: WorkspaceTab | null;
   saveStatus: "idle" | "saving" | "saved" | "error";
   openDocument: (id: string, options?: { preview?: boolean }) => void;
-  openKlasseTab: (lehrplanSlug: string, klasseNr: number, title: string) => void;
-  openBereichTab: (bereichId: string, title: string) => void;
-  openKompetenzTab: (kompetenzId: string, title: string) => void;
-  openAnwendungsbereichTab: (anwendungsbereichId: string, title: string) => void;
+  openKlasseTab: (
+    lehrplanSlug: string,
+    klasseNr: number,
+    title: string,
+    options?: { preview?: boolean },
+  ) => void;
+  openBereichTab: (
+    bereichId: string,
+    title: string,
+    options?: { preview?: boolean },
+  ) => void;
+  openKompetenzTab: (
+    kompetenzId: string,
+    title: string,
+    options?: { preview?: boolean },
+  ) => void;
+  openAnwendungsbereichTab: (
+    anwendungsbereichId: string,
+    title: string,
+    options?: { preview?: boolean },
+  ) => void;
   closeTab: (key: string) => void;
   setActiveTab: (key: string) => void;
   promoteTab: (key: string) => void;
   renameDocument: (id: string, title: string) => Promise<void>;
   setIcon: (id: string, icon: string | null) => Promise<void>;
   saveContent: (id: string, content: string) => void;
-  addDocument: (parentId: string | null, type: DocumentType) => Promise<string | null>;
-  uploadFileDocument: (parentId: string | null, file: File) => Promise<string | null>;
+  addDocument: (
+    parentId: string | null,
+    type: DocumentType,
+  ) => Promise<string | null>;
+  uploadFileDocument: (
+    parentId: string | null,
+    file: File,
+  ) => Promise<string | null>;
   removeDocument: (id: string) => Promise<void>;
-  moveDocument: (id: string, parentId: string | null, position?: number) => Promise<void>;
+  moveDocument: (
+    id: string,
+    parentId: string | null,
+    position?: number,
+  ) => Promise<void>;
   findNode: (id: string) => DocumentNode | undefined;
   refresh: () => Promise<void>;
 }
@@ -180,50 +207,71 @@ export function WorkspaceProvider({
   }, []);
 
   const openKlasseTab = useCallback(
-    (lehrplanSlug: string, klasseNr: number, title: string) => {
-      upsertTab({
-        kind: "klasse",
-        key: klasseTabKey(lehrplanSlug, klasseNr),
-        lehrplanSlug,
-        klasseNr,
-        title,
-      });
+    (
+      lehrplanSlug: string,
+      klasseNr: number,
+      title: string,
+      options?: { preview?: boolean },
+    ) => {
+      upsertTab(
+        {
+          kind: "klasse",
+          key: klasseTabKey(lehrplanSlug, klasseNr),
+          lehrplanSlug,
+          klasseNr,
+          title,
+        },
+        { preview: options?.preview ?? true },
+      );
     },
     [upsertTab],
   );
 
   const openBereichTab = useCallback(
-    (bereichId: string, title: string) => {
-      upsertTab({
-        kind: "bereich",
-        key: bereichTabKey(bereichId),
-        bereichId,
-        title,
-      });
+    (bereichId: string, title: string, options?: { preview?: boolean }) => {
+      upsertTab(
+        {
+          kind: "bereich",
+          key: bereichTabKey(bereichId),
+          bereichId,
+          title,
+        },
+        { preview: options?.preview ?? true },
+      );
     },
     [upsertTab],
   );
 
   const openKompetenzTab = useCallback(
-    (kompetenzId: string, title: string) => {
-      upsertTab({
-        kind: "kompetenz",
-        key: kompetenzTabKey(kompetenzId),
-        kompetenzId,
-        title,
-      });
+    (kompetenzId: string, title: string, options?: { preview?: boolean }) => {
+      upsertTab(
+        {
+          kind: "kompetenz",
+          key: kompetenzTabKey(kompetenzId),
+          kompetenzId,
+          title,
+        },
+        { preview: options?.preview ?? true },
+      );
     },
     [upsertTab],
   );
 
   const openAnwendungsbereichTab = useCallback(
-    (anwendungsbereichId: string, title: string) => {
-      upsertTab({
-        kind: "anwendungsbereich",
-        key: anwendungsbereichTabKey(anwendungsbereichId),
-        anwendungsbereichId,
-        title,
-      });
+    (
+      anwendungsbereichId: string,
+      title: string,
+      options?: { preview?: boolean },
+    ) => {
+      upsertTab(
+        {
+          kind: "anwendungsbereich",
+          key: anwendungsbereichTabKey(anwendungsbereichId),
+          anwendungsbereichId,
+          title,
+        },
+        { preview: options?.preview ?? true },
+      );
     },
     [upsertTab],
   );
