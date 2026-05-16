@@ -50,28 +50,20 @@ change.
   → `tree`/`userName`/`initialDocumentId`. JSON payload key for the
   document tree fetch (`/api/documents` GET) `baum` → `tree`, and the
   mock-data export `dokumentBaum` → `documentTree`.
+- Component files renamed: `link-vorschlaege.tsx` → `link-suggestions.tsx`,
+  `material-uebersicht.tsx` → `material-overview.tsx`. Glossary-named
+  files kept (`lehrplan-backlinks.tsx`, `kompetenz-tab-view.tsx`,
+  `bereich-tab-view.tsx`, `anwendungsbereich-tab-view.tsx`,
+  `klasse-tab-view.tsx`, `material-linker.tsx`).
 
 ## Remaining work
 
-### 1. File renames
-
-After the type renames above, rename component files where they aren't
-glossary:
-
-- `components/workspace/link-vorschlaege.tsx` → `link-suggestions.tsx`
-- `components/workspace/material-uebersicht.tsx` → `material-overview.tsx`
-
-Keep the glossary-named files: `lehrplan-backlinks.tsx`,
-`kompetenz-tab-view.tsx`, `bereich-tab-view.tsx`,
-`anwendungsbereich-tab-view.tsx`, `klasse-tab-view.tsx`,
-`material-linker.tsx`.
-
-### 2. Leftover comments / minor locals
+### 1. Leftover comments / minor locals
 
 `lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
 still have stray German comments and a few German local variables.
 
-### 3. Out of scope
+### 2. Out of scope
 
 `services/extractor/` (Python) keeps the contract field names
 `seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the

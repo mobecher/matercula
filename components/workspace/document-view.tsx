@@ -8,8 +8,8 @@ import { BereichTabView } from "./bereich-tab-view";
 import { KlasseTabView } from "./klasse-tab-view";
 import { KompetenzTabView } from "./kompetenz-tab-view";
 import { LehrplanBacklinks } from "./lehrplan-backlinks";
-import { LinkSuggestions } from "./link-vorschlaege";
-import { MaterialOverview } from "./material-uebersicht";
+import { LinkSuggestions } from "./link-suggestions";
+import { MaterialOverview } from "./material-overview";
 import { iconForMime, useWorkspace } from "./workspace-context";
 
 const BlockEditor = dynamic(() => import("./block-editor").then((m) => m.BlockEditor), {
