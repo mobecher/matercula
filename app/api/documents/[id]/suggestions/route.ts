@@ -4,7 +4,7 @@ import { getRequestUser } from "@/lib/auth/request";
 import {
   generateSuggestionsForDocument,
   loadSuggestionsForDocument,
-} from "@/lib/curriculum/vorschlaege";
+} from "@/lib/curriculum/suggestions";
 
 export const runtime = "nodejs";
 
@@ -48,7 +48,7 @@ export async function POST(_req: Request, context: { params: Promise<{ id: strin
   if (!result.ok) {
     return NextResponse.json(
       {
-        error: result.reason ?? "ai_fehler",
+        error: result.reason ?? "ai_error",
         message: result.error,
         suggestions: result.suggestions,
       },

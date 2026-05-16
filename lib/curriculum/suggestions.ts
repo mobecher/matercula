@@ -18,7 +18,7 @@ import {
   documentLinkSuggestions,
 } from "@/lib/db/schema/links";
 import { materialChunks, materialien } from "@/lib/db/schema/materials";
-import { documentContentForAi } from "./dokument-inhalt";
+import { documentContentForAi } from "./document-content";
 
 export interface SuggestionView {
   id: string;
@@ -35,10 +35,10 @@ export interface SuggestionView {
   decidedAt: string | null;
 }
 
-const MAX_DOKUMENT_ZEICHEN = 20_000;
-const MAX_VORSCHLAEGE = 10;
+const MAX_DOCUMENT_CHARS = 20_000;
+const MAX_SUGGESTIONS = 10;
 
-/** Liefert das Document inkl. Markdown-Inhalt für den angemeldeten Nutzer. */
+/** Loads the document including markdown content for the signed-in user. */
 async function loadDocumentForSuggestions(documentId: string, ownerId: string) {
   const [doc] = await db
     .select()
@@ -122,7 +122,7 @@ async function loadCurriculumCatalog(): Promise<CurriculumEntry[]> {
 }
 
 /**
- * Listet alle gespeicherten Vorschläge für ein Document auf, inklusive
+ * Lists all stored suggestions for a document, including
  * Anzeigeinformationen (Code, Titel, Pfad, Status).
  */
 export async function loadSuggestionsForDocument(
@@ -139,12 +139,12 @@ export async function loadSuggestionsForDocument(
     .orderBy(desc(documentLinkSuggestions.confidence));
   if (rows.length === 0) return [];
 
-  const katalog = await loadCurriculumCatalog();
+  const catalog = await loadCurriculumCatalog();
   const kompById = new Map(
-    katalog.filter((e) => e.targetType === "kompetenz").map((e) => [e.id, e]),
+    catalog.filter((e) => e.targetType === "kompetenz").map((e) => [e.id, e]),
   );
   const awbById = new Map(
-    katalog
+    catalog
       .filter((e) => e.targetType === "anwendungsbereich")
       .map((e) => [e.id, e]),
   );
@@ -173,10 +173,10 @@ function mapRowToView(
     targetType: row.targetType,
     targetId: eintrag.id,
     targetCode: eintrag.code,
-    // Bevorzugt die vollständige Beschreibung – `title` ist eine gekürzte
-    // Überschrift (z. B. ein einzelnes Verb), während die ganze Kompetenz/
-    // der Anwendungsbereich in `description` steht. Für die Entscheidung
-    // im Vorschlags-Panel ist der volle Text deutlich nützlicher.
+    // Prefer the full description — `title` is a shortened heading
+    // (e.g. a single verb), while the full Kompetenz / Anwendungsbereich
+    // text lives in `description`. The full text is much more useful in
+    // the suggestion review panel.
     targetTitle: eintrag.description?.trim() || eintrag.title,
     targetPath: eintrag.path,
     confidence: row.confidence,
@@ -192,25 +192,34 @@ function mapRowToView(
  * Schema des LLM-Outputs.
  *
  * Wir lassen `targetType` bewusst als String zu (statt `z.enum([...])`), weil
- * Modelle gelegentlich den Code in dieses Feld schreiben oder ähnliche
- * Stringvarianten liefern. Die eigentliche Validierung erfolgt anschließend
- * gegen den Lehrplan-Katalog: nur Einträge, deren `code` zu einer Kompetenz
- * bzw. einem Anwendungsbereich passt, werden persistiert. So zerstört ein
- * einzelner ausgefranster Eintrag nicht die gesamte Antwort.
+ * We deliberately allow `targetType` as a plain string (instead of
+ * `z.enum([...])`) because models occasionally write the code into this
+ * field or return similar string variants. Actual validation happens
+ * afterwards against the Lehrplan catalog: only entries whose `code`
+ * matches a Kompetenz / Anwendungsbereich are persisted, so a single
+ * malformed entry doesn't destroy the whole response.
  */
-const llmAntwortSchema = z.object({
+const llmResponseSchema = z.object({
   suggestions: z
     .array(
       z.object({
         targetType: z
           .string()
           .min(1)
-          .describe("Genau einer der Werte 'kompetenz' oder 'anwendungsbereich'."),
+          .describe(
+            "Genau einer der Werte 'kompetenz' oder 'anwendungsbereich'.",
+          ),
         code: z
           .string()
           .min(1)
-          .describe("Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'."),
-        confidence: z.number().min(0).max(1).describe("Sicherheitsmaß zwischen 0 und 1."),
+          .describe(
+            "Exakter Code aus der Lehrplan-Liste, z. B. '1.1' oder 'A.2'.",
+          ),
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Sicherheitsmaß zwischen 0 und 1."),
         rationale: z
           .string()
           .min(1)
@@ -219,45 +228,45 @@ const llmAntwortSchema = z.object({
           ),
       }),
     )
-    .max(MAX_VORSCHLAEGE),
+    .max(MAX_SUGGESTIONS),
 });
 
 export interface GenerationResult {
   ok: boolean;
-  reason?: "kein_inhalt" | "nicht_unterstuetzt" | "keine_treffer" | "ai_fehler";
+  reason?: "no_content" | "unsupported" | "no_matches" | "ai_error";
   error?: string;
   suggestions: SuggestionView[];
 }
 
 /**
- * Erzeugt mittels LLM neue Verknüpfungs-Vorschläge für das Document und
- * persistiert sie. Bestehende Vorschläge im Status `open` werden zuvor
- * gelöscht; akzeptierte/abgelehnte bleiben als Audit-Spur erhalten.
+ * Generates new link suggestions for a document via the LLM and
+ * persists them. Existing suggestions in status `open` are deleted first;
+ * accepted/rejected suggestions are kept as an audit trail.
  *
- * Unterstützt Text-Seiten (`type === "page"`, Quelle: `contentMarkdown`)
- * sowie PDF-Dokumente (`type === "file"`, Quelle: extrahierte
- * `material_chunks` des verknüpften Materials).
+ * Supports text pages (`type === "page"`, source: `contentMarkdown`) as
+ * well as file documents (`type === "file"`, source: extracted
+ * `material_chunks` of the linked Material).
  */
 export async function generateSuggestionsForDocument(
   documentId: string,
   ownerId: string,
-  schluessel: UserAiKeys,
+  keys: UserAiKeys,
 ): Promise<GenerationResult | null> {
   const doc = await loadDocumentForSuggestions(documentId, ownerId);
   if (!doc) return null;
 
-  let inhalt = "";
+  let content = "";
   if (doc.type === "page") {
-    // BlockNote-JSON wird zu Klartext entpackt; Link-Karten und
-    // YouTube-Einbettungen werden mit extern abgeholten Inhalten
-    // (HTML-Plain-Text bzw. oEmbed-Titel) angereichert. Externe Fetches
-    // scheitern weich, damit das Tagging trotzdem läuft.
-    inhalt = (await documentContentForAi(doc.contentMarkdown)).trim();
+    // BlockNote JSON is unpacked into plain text; link cards and YouTube
+    // embeds are enriched with externally fetched content (HTML plain text
+    // and oEmbed title respectively). External fetches fail soft so that
+    // tagging still runs.
+    content = (await documentContentForAi(doc.contentMarkdown)).trim();
   } else if (doc.type === "file") {
     if (!doc.materialId) {
       return {
         ok: false,
-        reason: "kein_inhalt",
+        reason: "no_content",
         error: "Diesem PDF-Document ist keine Datei zugeordnet.",
         suggestions: [],
       };
@@ -278,7 +287,7 @@ export async function generateSuggestionsForDocument(
     if (!mat) {
       return {
         ok: false,
-        reason: "kein_inhalt",
+        reason: "no_content",
         error: "Material nicht gefunden.",
         suggestions: [],
       };
@@ -286,7 +295,7 @@ export async function generateSuggestionsForDocument(
     if (mat.status === "uploaded" || mat.status === "processing") {
       return {
         ok: false,
-        reason: "kein_inhalt",
+        reason: "no_content",
         error:
           "PDF wird noch verarbeitet. Bitte warten, bis die Textextraktion abgeschlossen ist.",
         suggestions: [],
@@ -295,7 +304,7 @@ export async function generateSuggestionsForDocument(
     if (mat.status === "error") {
       return {
         ok: false,
-        reason: "kein_inhalt",
+        reason: "no_content",
         error: mat.statusReason ?? "PDF konnte nicht verarbeitet werden.",
         suggestions: [],
       };
@@ -305,46 +314,46 @@ export async function generateSuggestionsForDocument(
       .from(materialChunks)
       .where(eq(materialChunks.materialId, doc.materialId))
       .orderBy(asc(materialChunks.chunkIndex));
-    inhalt = chunks
+    content = chunks
       .map((c) => c.text)
       .join("\n\n")
       .trim();
   } else {
     return {
       ok: false,
-      reason: "nicht_unterstuetzt",
+      reason: "unsupported",
       error: "Vorschläge sind für diesen Dokumenttyp nicht verfügbar.",
       suggestions: [],
     };
   }
 
-  if (inhalt.length === 0) {
+  if (content.length === 0) {
     return {
       ok: false,
-      reason: "kein_inhalt",
+      reason: "no_content",
       error: "Das Document enthält keinen Text, der analysiert werden könnte.",
       suggestions: [],
     };
   }
 
-  const katalog = await loadCurriculumCatalog();
-  if (katalog.length === 0) {
+  const catalog = await loadCurriculumCatalog();
+  if (catalog.length === 0) {
     return {
       ok: false,
-      reason: "keine_treffer",
+      reason: "no_matches",
       error: "Es ist noch kein Lehrplan eingespielt.",
       suggestions: [],
     };
   }
 
-  const modellName = process.env.AI_TAGGING_MODEL ?? "gpt-4o-mini";
+  const modelName = process.env.AI_TAGGING_MODEL ?? "gpt-4o-mini";
   let model: LanguageModel;
   try {
-    model = getModel("tagging", schluessel) as LanguageModel;
+    model = getModel("tagging", keys) as LanguageModel;
   } catch (error) {
     return {
       ok: false,
-      reason: "ai_fehler",
+      reason: "ai_error",
       error:
         error instanceof MissingProviderKey
           ? error.message
@@ -355,8 +364,8 @@ export async function generateSuggestionsForDocument(
     };
   }
 
-  const ausschnitt = inhalt.slice(0, MAX_DOKUMENT_ZEICHEN);
-  const katalogText = katalog
+  const excerpt = content.slice(0, MAX_DOCUMENT_CHARS);
+  const catalogText = catalog
     .map(
       (e) =>
         `- [${e.targetType}] ${e.code} | ${e.title}${
@@ -365,47 +374,47 @@ export async function generateSuggestionsForDocument(
     )
     .join("\n");
 
-  const systemPrompt = `Du bist ein didaktisch geschulter Assistent, der Unterrichtsmaterialien zu österreichischen Lehrplan-Kompetenzen und Anwendungsbereichen zuordnet. Antworte ausschließlich auf Deutsch. Wähle ausschließlich Codes, die exakt in der vorgegebenen Liste vorkommen. Gib nur Zuordnungen mit klarer fachlicher Passung an (max. ${MAX_VORSCHLAEGE}). Lass eher Vorschläge weg, als unsichere zu erfinden.`;
+  const systemPrompt = `Du bist ein didaktisch geschulter Assistent, der Unterrichtsmaterialien zu österreichischen Lehrplan-Kompetenzen und Anwendungsbereichen zuordnet. Antworte ausschließlich auf Deutsch. Wähle ausschließlich Codes, die exakt in der vorgegebenen Liste vorkommen. Gib nur Zuordnungen mit klarer fachlicher Passung an (max. ${MAX_SUGGESTIONS}). Lass eher Vorschläge weg, als unsichere zu erfinden.`;
 
   const userPrompt = `Dokumenttitel: ${doc.title}
 
 Materialinhalt (Markdown, ggf. gekürzt):
 """
-${ausschnitt}
+${excerpt}
 """
 
 Verfügbare Lehrplan-Einträge (targetType + Code + Titel + Beschreibung + Pfad):
-${katalogText}
+${catalogText}
 
 Aufgabe:
 - Bewerte, zu welchen Einträgen das Material inhaltlich passt.
 - Gib für jede Zuordnung den exakten Code, den Ziel-Typ ('kompetenz' oder 'anwendungsbereich'), eine Konfidenz (0..1) und eine kurze deutsche Begründung an.
-- Maximal ${MAX_VORSCHLAEGE} Vorschläge. Lieber wenige hochwertige als viele schwache.`;
+- Maximal ${MAX_SUGGESTIONS} Vorschläge. Lieber wenige hochwertige als viele schwache.`;
 
-  let llmAntwort: z.infer<typeof llmAntwortSchema>;
+  let llmResponse: z.infer<typeof llmResponseSchema>;
   try {
     const result = await generateObject({
       model,
-      schema: llmAntwortSchema,
+      schema: llmResponseSchema,
       system: systemPrompt,
       prompt: userPrompt,
     });
-    llmAntwort = result.object;
+    llmResponse = result.object;
   } catch (error) {
     return {
       ok: false,
-      reason: "ai_fehler",
+      reason: "ai_error",
       error: error instanceof Error ? error.message : "Unbekannter LLM-Fehler.",
       suggestions: [],
     };
   }
 
-  // Code → ID auflösen (nur Treffer im Katalog werden persistiert).
+  // Resolve code → ID (only matches in the catalog are persisted).
   const kompByCode = new Map(
-    katalog.filter((e) => e.targetType === "kompetenz").map((e) => [e.code, e]),
+    catalog.filter((e) => e.targetType === "kompetenz").map((e) => [e.code, e]),
   );
   const awbByCode = new Map(
-    katalog
+    catalog
       .filter((e) => e.targetType === "anwendungsbereich")
       .map((e) => [e.code, e]),
   );
@@ -417,11 +426,11 @@ Aufgabe:
   };
   const aufgeloest: AufgeloesterVorschlag[] = [];
   const gesehen = new Set<string>();
-  for (const v of llmAntwort.suggestions) {
+  for (const v of llmResponse.suggestions) {
     const typHinweis = v.targetType.trim().toLowerCase();
-    // Bevorzugt den vom Modell gelieferten Typ; fällt aber auf die jeweils
-    // andere Variante zurück, wenn der Code dort nachweisbar passt. Dadurch
-    // tolerieren wir Fälle, in denen das Modell den Typ verwechselt oder
+    // Prefer the type the model returned, but fall back to the other
+    // variant if the code matches there instead. This tolerates cases
+    // where the model swaps the type or
     // statt des Typs noch einmal den Code liefert.
     const primaer =
       typHinweis === "anwendungsbereich"
@@ -443,7 +452,7 @@ Aufgabe:
     });
   }
 
-  // Bestehende offene Vorschläge ersetzen; entschiedene bleiben erhalten.
+  // Replace existing open suggestions; decided ones are kept.
   await db
     .delete(documentLinkSuggestions)
     .where(
@@ -454,7 +463,7 @@ Aufgabe:
     );
 
   if (aufgeloest.length > 0) {
-    // Filtere Duplikate gegen bereits entschiedene Einträge.
+    // Filter out duplicates against already decided entries.
     const vorhandene = await db
       .select({
         targetType: documentLinkSuggestions.targetType,
@@ -472,7 +481,9 @@ Aufgabe:
     );
 
     const einzufuegen = aufgeloest
-      .filter((a) => !vorhandeneKey.has(`${a.eintrag.targetType}:${a.eintrag.id}`))
+      .filter(
+        (a) => !vorhandeneKey.has(`${a.eintrag.targetType}:${a.eintrag.id}`),
+      )
       .map((a) => ({
         documentId,
         targetType: a.eintrag.targetType,
@@ -481,7 +492,7 @@ Aufgabe:
           a.eintrag.targetType === "anwendungsbereich" ? a.eintrag.id : null,
         confidence: a.confidence,
         rationale: a.rationale,
-        model: modellName,
+        model: modelName,
       }));
 
     if (einzufuegen.length > 0) {
@@ -494,29 +505,25 @@ Aufgabe:
   return { ok: true, suggestions: ansichten };
 }
 
-interface EntscheidungsEingabe {
+interface DecisionInput {
   suggestionId: string;
   documentId: string;
   ownerId: string;
   action: "accept" | "reject" | "reset";
 }
 
-export interface EntscheidungsErgebnis {
+export interface DecisionResult {
   suggestion: SuggestionView;
 }
 
 /**
- * Markiert einen Vorschlag als accepted oder rejected. Beim Akzeptieren
- * wird zusätzlich der entsprechende manuelle Link in
- * `dokument_*_links` angelegt (idempotent).
+ * Marks a suggestion as accepted or rejected. On accept the matching
+ * manual link in `document_*_links` is also created (idempotent).
  */
 export async function decideSuggestion(
-  eingabe: EntscheidungsEingabe,
-): Promise<EntscheidungsErgebnis | null> {
-  const doc = await loadDocumentForSuggestions(
-    eingabe.documentId,
-    eingabe.ownerId,
-  );
+  input: DecisionInput,
+): Promise<DecisionResult | null> {
+  const doc = await loadDocumentForSuggestions(input.documentId, input.ownerId);
   if (!doc) return null;
 
   const [suggestion] = await db
@@ -524,22 +531,22 @@ export async function decideSuggestion(
     .from(documentLinkSuggestions)
     .where(
       and(
-        eq(documentLinkSuggestions.id, eingabe.suggestionId),
-        eq(documentLinkSuggestions.documentId, eingabe.documentId),
+        eq(documentLinkSuggestions.id, input.suggestionId),
+        eq(documentLinkSuggestions.documentId, input.documentId),
       ),
     )
     .limit(1);
   if (!suggestion) return null;
 
-  if (eingabe.action === "accept") {
-    // Die KI-Begründung des Vorschlags wird als Notiz an der Verknüpfung
-    // gespeichert, damit nachvollziehbar bleibt, warum der Link existiert.
+  if (input.action === "accept") {
+    // The AI rationale of the suggestion is stored as a note on the
+    // link, so it remains traceable why the link exists.
     const note = suggestion.rationale?.trim() ? suggestion.rationale : null;
     if (suggestion.targetType === "kompetenz" && suggestion.kompetenzId) {
       await db
         .insert(documentKompetenzLinks)
         .values({
-          documentId: eingabe.documentId,
+          documentId: input.documentId,
           kompetenzId: suggestion.kompetenzId,
           note,
         })
@@ -551,22 +558,22 @@ export async function decideSuggestion(
       await db
         .insert(documentAnwendungsbereichLinks)
         .values({
-          documentId: eingabe.documentId,
+          documentId: input.documentId,
           anwendungsbereichId: suggestion.anwendungsbereichId,
           note,
         })
         .onConflictDoNothing();
     }
-  } else if (eingabe.action === "reset") {
-    // Vorschlag wird auf "open" zurückgesetzt; falls bereits ein Link
-    // (durch früheres Akzeptieren) existiert, wird dieser entfernt, damit
-    // Vorschlags-Zustand und Link-Tabelle konsistent bleiben.
+  } else if (input.action === "reset") {
+    // Suggestion is reset to "open"; if a link already exists (from a
+    // previous accept) it is removed so the suggestion state and the
+    // link table stay consistent.
     if (suggestion.targetType === "kompetenz" && suggestion.kompetenzId) {
       await db
         .delete(documentKompetenzLinks)
         .where(
           and(
-            eq(documentKompetenzLinks.documentId, eingabe.documentId),
+            eq(documentKompetenzLinks.documentId, input.documentId),
             eq(documentKompetenzLinks.kompetenzId, suggestion.kompetenzId),
           ),
         );
@@ -578,7 +585,7 @@ export async function decideSuggestion(
         .delete(documentAnwendungsbereichLinks)
         .where(
           and(
-            eq(documentAnwendungsbereichLinks.documentId, eingabe.documentId),
+            eq(documentAnwendungsbereichLinks.documentId, input.documentId),
             eq(
               documentAnwendungsbereichLinks.anwendungsbereichId,
               suggestion.anwendungsbereichId,
@@ -589,23 +596,23 @@ export async function decideSuggestion(
   }
 
   const status =
-    eingabe.action === "accept"
+    input.action === "accept"
       ? "accepted"
-      : eingabe.action === "reject"
+      : input.action === "reject"
         ? "rejected"
         : "open";
   await db
     .update(documentLinkSuggestions)
     .set({ status, decidedAt: status === "open" ? null : new Date() })
-    .where(eq(documentLinkSuggestions.id, eingabe.suggestionId));
+    .where(eq(documentLinkSuggestions.id, input.suggestionId));
 
-  const liste = await loadSuggestionsForDocument(
-    eingabe.documentId,
-    eingabe.ownerId,
+  const list = await loadSuggestionsForDocument(
+    input.documentId,
+    input.ownerId,
   );
-  const aktualisiert = liste?.find((v) => v.id === eingabe.suggestionId);
-  if (!aktualisiert) return null;
-  return { suggestion: aktualisiert };
+  const updated = list?.find((v) => v.id === input.suggestionId);
+  if (!updated) return null;
+  return { suggestion: updated };
 }
 
 function truncate(value: string, max: number): string {

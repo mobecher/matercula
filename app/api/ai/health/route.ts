@@ -25,12 +25,12 @@ export async function GET() {
   const user = await getRequestUser();
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
 
-  const schluessel: UserAiKeys = {
+  const keys: UserAiKeys = {
     openaiApiKey: user.openaiApiKey,
     anthropicApiKey: user.anthropicApiKey,
     deepseekApiKey: user.deepseekApiKey,
   };
-  const configuredProviders = getConfiguredProvidersForUser(schluessel);
+  const configuredProviders = getConfiguredProvidersForUser(keys);
 
   if (configuredProviders.length === 0) {
     return Response.json(
@@ -56,7 +56,7 @@ export async function GET() {
     configuredProviders.map(async (provider) => {
       try {
         const modelName = process.env.AI_CHAT_MODEL ?? "gpt-4o-mini";
-        const model = getLanguageModelForProvider(provider, modelName, schluessel);
+        const model = getLanguageModelForProvider(provider, modelName, keys);
         await generateText({
           model,
           maxOutputTokens: 1,

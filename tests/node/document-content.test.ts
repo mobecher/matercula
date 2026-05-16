@@ -1,12 +1,12 @@
 /**
- * Tests für `dokumentInhaltFuerAi` und `htmlToPlainText`.
+ * Tests for `documentContentForAi` and `htmlToPlainText`.
  *
  * Es wird kein echtes Netz angesprochen – die Helper akzeptieren
  * Injection-Points (`fetchPageImpl`, `fetchYoutubeMetaImpl`).
  */
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { documentContentForAi } from "../../lib/curriculum/dokument-inhalt";
+import { documentContentForAi } from "../../lib/curriculum/document-content";
 import { htmlToPlainText } from "../../lib/web/fetch-page";
 
 describe("htmlToPlainText", () => {

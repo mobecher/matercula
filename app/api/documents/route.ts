@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const dokument = await createDocument({
+  const document = await createDocument({
     ownerId: user.id,
     parentId: result.data.parentId ?? null,
     type: result.data.type,
@@ -51,9 +51,9 @@ export async function POST(request: Request) {
     materialId: result.data.materialId ?? null,
   });
 
-  if (!dokument) {
+  if (!document) {
     return NextResponse.json({ error: "invalid_reference" }, { status: 400 });
   }
 
-  return NextResponse.json({ dokument }, { status: 201 });
+  return NextResponse.json({ document }, { status: 201 });
 }

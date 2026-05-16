@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   });
   if (!updated)
     return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return NextResponse.json({ dokument: updated });
+  return NextResponse.json({ document: updated });
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {

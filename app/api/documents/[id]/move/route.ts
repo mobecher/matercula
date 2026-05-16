@@ -34,5 +34,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     position: parsed.data.position,
   });
   if (!moved) return NextResponse.json({ error: "invalid_move" }, { status: 400 });
-  return NextResponse.json({ dokument: moved });
+  return NextResponse.json({ document: moved });
 }

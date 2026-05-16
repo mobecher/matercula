@@ -12,15 +12,15 @@ import {
 } from "@/lib/db/schema/lehrplan";
 
 /**
- * Curriculum-Import aus JSON-Quelldateien.
+ * Curriculum import from JSON source files.
  *
- * Datenformat (vgl. data/lehrplan/curriculum.json):
- *   { <Fachschluessel>: { title, years: { <klasse>: { title, competence_areas: [...] } } } }
+ * Data format (see data/lehrplan/curriculum.json):
+ *   { <subjectKey>: { title, years: { <klasse>: { title, competence_areas: [...] } } } }
  *
- * Eine Quelldatei kann mehrere Fächer enthalten. Pro Fach wird ein Lehrplan
- * mit dem Slug `slugify(fachKey)` angelegt (z. B. "Digitale_Grundbildung"
- * → "digitale-grundbildung"). Der Import ist idempotent: bereits vorhandene
- * Einträge (gleicher Slug/Code) werden übersprungen.
+ * A single source file may contain multiple subjects. For each subject one
+ * Lehrplan is created with the slug `slugify(subjectKey)` (e.g.
+ * "Digitale_Grundbildung" → "digitale-grundbildung"). The import is
+ * idempotent: existing entries (same slug/code) are skipped.
  */
 
 interface RawCompetency {
@@ -73,10 +73,10 @@ export function slugify(input: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Katalog (JSON-Quelle)
+// Catalog (JSON source)
 // ---------------------------------------------------------------------------
 
-export interface CurriculumKatalogKlasse {
+export interface CurriculumCatalogGrade {
   klasse: number;
   title: string;
   kompetenzbereicheAnzahl: number;
@@ -84,19 +84,19 @@ export interface CurriculumKatalogKlasse {
   anwendungsbereicheAnzahl: number;
 }
 
-export interface CurriculumKatalogFach {
+export interface CurriculumCatalogSubject {
   /** Schlüssel innerhalb der JSON-Datei (z. B. "Digitale_Grundbildung"). */
-  fachKey: string;
+  subjectKey: string;
   /** Stabiler Slug, unter dem dieser Lehrplan in der DB abgelegt wird. */
   slug: string;
   title: string;
-  klassen: CurriculumKatalogKlasse[];
+  klassen: CurriculumCatalogGrade[];
 }
 
-export interface CurriculumKatalog {
+export interface CurriculumCatalog {
   /** Quelldatei (Basename), aus der die Einträge stammen. */
-  quelle: string;
-  faecher: CurriculumKatalogFach[];
+  source: string;
+  subjects: CurriculumCatalogSubject[];
 }
 
 export const DEFAULT_CURRICULUM_FILE = "curriculum.json";
@@ -107,58 +107,60 @@ function curriculumFolder(): string {
 
 export async function loadCurriculumCatalogFromDb(
   fileName: string = DEFAULT_CURRICULUM_FILE,
-): Promise<CurriculumKatalog> {
+): Promise<CurriculumCatalog> {
   const file = path.join(curriculumFolder(), fileName);
   const raw = JSON.parse(await fs.readFile(file, "utf8")) as RawCurriculumFile;
   const entries = Object.entries(raw);
 
-  const faecher: CurriculumKatalogFach[] = entries.map(([fachKey, lp]) => {
-    const slug = slugify(fachKey);
-    const klassen: CurriculumKatalogKlasse[] = Object.entries(lp.years)
-      .map(([yearKey, year]) => {
-        const klasse = Number.parseInt(yearKey, 10);
-        if (!Number.isFinite(klasse)) return null;
-        let kompCount = 0;
-        let awbCount = 0;
-        for (const area of year.competence_areas) {
-          kompCount += area.competencies.length;
-          awbCount += area.applications.length;
-        }
-        return {
-          klasse,
-          title: year.title,
-          kompetenzbereicheAnzahl: year.competence_areas.length,
-          kompetenzenAnzahl: kompCount,
-          anwendungsbereicheAnzahl: awbCount,
-        } satisfies CurriculumKatalogKlasse;
-      })
-      .filter((k): k is CurriculumKatalogKlasse => k !== null)
-      .sort((a, b) => a.klasse - b.klasse);
-    return { fachKey, slug, title: lp.title, klassen };
-  });
+  const subjects: CurriculumCatalogSubject[] = entries.map(
+    ([subjectKey, lp]) => {
+      const slug = slugify(subjectKey);
+      const klassen: CurriculumCatalogGrade[] = Object.entries(lp.years)
+        .map(([yearKey, year]) => {
+          const klasse = Number.parseInt(yearKey, 10);
+          if (!Number.isFinite(klasse)) return null;
+          let kompCount = 0;
+          let awbCount = 0;
+          for (const area of year.competence_areas) {
+            kompCount += area.competencies.length;
+            awbCount += area.applications.length;
+          }
+          return {
+            klasse,
+            title: year.title,
+            kompetenzbereicheAnzahl: year.competence_areas.length,
+            kompetenzenAnzahl: kompCount,
+            anwendungsbereicheAnzahl: awbCount,
+          } satisfies CurriculumCatalogGrade;
+        })
+        .filter((k): k is CurriculumCatalogGrade => k !== null)
+        .sort((a, b) => a.klasse - b.klasse);
+      return { subjectKey, slug, title: lp.title, klassen };
+    },
+  );
 
-  return { quelle: fileName, faecher };
+  return { source: fileName, subjects };
 }
 
 // ---------------------------------------------------------------------------
-// Import in die Datenbank
+// Import into the database
 // ---------------------------------------------------------------------------
 
-export interface ImportAuswahl {
-  fachKey: string;
-  /** Wenn leer/`null`, werden alle vorhandenen Klassen importiert. */
+export interface ImportSelection {
+  subjectKey: string;
+  /** When empty/`null`, all available Klassen are imported. */
   klassen?: number[] | null;
 }
 
-export interface ImportErgebnis {
-  fachKey: string;
+export interface ImportResult {
+  subjectKey: string;
   slug: string;
   title: string;
   klassen: Array<{
     klasse: number;
     bereiche: number;
-    neueKompetenzen: number;
-    neueAnwendungsbereiche: number;
+    newKompetenzen: number;
+    newAnwendungsbereiche: number;
   }>;
 }
 
@@ -206,10 +208,10 @@ async function importLehrplan(
   slug: string,
   raw: RawLehrplan,
   klassenFilter: Set<number> | null,
-): Promise<ImportErgebnis> {
+): Promise<ImportResult> {
   const lp = await upsertLehrplan(slug, raw.title);
-  const ergebnis: ImportErgebnis = {
-    fachKey: raw.title,
+  const result: ImportResult = {
+    subjectKey: raw.title,
     slug,
     title: raw.title,
     klassen: [],
@@ -221,8 +223,8 @@ async function importLehrplan(
     if (klassenFilter && !klassenFilter.has(klasseNr)) continue;
 
     const klasse = await upsertKlasse(lp.id, klasseNr, year.title);
-    let neueKomp = 0;
-    let neueAwb = 0;
+    let newKomp = 0;
+    let newAwb = 0;
 
     let bereichSort = 0;
     for (const area of year.competence_areas) {
@@ -257,7 +259,7 @@ async function importLehrplan(
           crossCuttingTopics: [],
           sortOrder: kompSort,
         });
-        neueKomp += 1;
+        newKomp += 1;
       }
 
       const existingApp = await db
@@ -280,47 +282,47 @@ async function importLehrplan(
           crossCuttingTopics: [],
           sortOrder: appSort,
         });
-        neueAwb += 1;
+        newAwb += 1;
       }
     }
 
-    ergebnis.klassen.push({
+    result.klassen.push({
       klasse: klasseNr,
       bereiche: year.competence_areas.length,
-      neueKompetenzen: neueKomp,
-      neueAnwendungsbereiche: neueAwb,
+      newKompetenzen: newKomp,
+      newAnwendungsbereiche: newAwb,
     });
   }
 
-  return ergebnis;
+  return result;
 }
 
 /**
- * Importiert die in `auswahl` benannten Fächer/Klassen aus der Quelldatei.
- * Wenn `auswahl` leer ist, wird ALLES importiert.
+ * Imports the subjects/Klassen named in `selection` from the source file.
+ * If `selection` is empty, EVERYTHING is imported.
  */
 export async function importCurriculum(
-  auswahl: ImportAuswahl[] = [],
+  selection: ImportSelection[] = [],
   fileName: string = DEFAULT_CURRICULUM_FILE,
-): Promise<ImportErgebnis[]> {
+): Promise<ImportResult[]> {
   const file = path.join(curriculumFolder(), fileName);
   const raw = JSON.parse(await fs.readFile(file, "utf8")) as RawCurriculumFile;
   const entries = Object.entries(raw);
 
-  const auswahlByFach = new Map<string, ImportAuswahl>();
-  for (const a of auswahl) auswahlByFach.set(a.fachKey, a);
-  const importAlles = auswahl.length === 0;
+  const selectionBySubject = new Map<string, ImportSelection>();
+  for (const a of selection) selectionBySubject.set(a.subjectKey, a);
+  const importAlles = selection.length === 0;
 
-  const ergebnisse: ImportErgebnis[] = [];
-  for (const [fachKey, lp] of entries) {
-    if (!importAlles && !auswahlByFach.has(fachKey)) continue;
-    const slug = slugify(fachKey);
-    const sel = auswahlByFach.get(fachKey);
+  const results: ImportResult[] = [];
+  for (const [subjectKey, lp] of entries) {
+    if (!importAlles && !selectionBySubject.has(subjectKey)) continue;
+    const slug = slugify(subjectKey);
+    const sel = selectionBySubject.get(subjectKey);
     const klassenFilter =
       sel?.klassen && sel.klassen.length > 0 ? new Set(sel.klassen) : null;
-    const ergebnis = await importLehrplan(slug, lp, klassenFilter);
-    ergebnis.fachKey = fachKey;
-    ergebnisse.push(ergebnis);
+    const result = await importLehrplan(slug, lp, klassenFilter);
+    result.subjectKey = subjectKey;
+    results.push(result);
   }
-  return ergebnisse;
+  return results;
 }

@@ -7,7 +7,7 @@ export interface DocumentNode {
   icon?: string;
   children?: DocumentNode[];
   /** Markdown-like content — only relevant for `type === "page"`. */
-  inhalt?: string;
+  content?: string;
   /** Reference to the uploaded Material — only for `type === "file"`. */
   materialId?: string;
 }

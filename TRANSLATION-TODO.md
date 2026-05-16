@@ -55,15 +55,42 @@ change.
   files kept (`lehrplan-backlinks.tsx`, `kompetenz-tab-view.tsx`,
   `bereich-tab-view.tsx`, `anwendungsbereich-tab-view.tsx`,
   `klasse-tab-view.tsx`, `material-linker.tsx`).
+- Leftover comments and minor locals translated. Notable renames:
+  `lib/curriculum/vorschlaege.ts` → `suggestions.ts`;
+  `lib/curriculum/dokument-inhalt.ts` → `document-content.ts`;
+  `tests/node/dokument-inhalt.test.ts` → `document-content.test.ts`;
+  `scripts/seed-dokumente.ts` → `seed-documents.ts`;
+  `package.json` script `seed:dokumente` → `seed:documents`.
+  Identifiers: `MAX_VORSCHLAEGE` → `MAX_SUGGESTIONS`,
+  `MAX_DOKUMENT_ZEICHEN` → `MAX_DOCUMENT_CHARS`,
+  `llmAntwortSchema` → `llmResponseSchema`, `katalog`/`katalogText` →
+  `catalog`/`catalogText`, `modellName` → `modelName`,
+  `DokumentInhaltOptions` → `DocumentContentOptions`,
+  `EntscheidungsEingabe`/`EntscheidungsErgebnis` → `DecisionInput`/
+  `DecisionResult`, `ImportAuswahl`/`ImportErgebnis` → `ImportSelection`/
+  `ImportResult`, `CurriculumKatalog{,Fach,Klasse}` → `CurriculumCatalog{
+  ,Subject,Grade}`, `schluessel` → `keys`, `FehlenderProviderSchluessel`
+  (class name string) → `MissingProviderKey`, `inhalt` (DocumentNode
+  field) → `content`, JSON key `dokument` → `document`, drag MIME
+  `matercula-dokument-id` → `matercula-document-id`, repo locals
+  `zeilen`/`wurzeln`/`knoten`/`eltern`/`treffer`/`benutzer`/`eingabe`/
+  `aktualisiert`/`ausschnitt`/`liste`/`ergebnis(se)` → English equivalents.
+  Suggestion reason enum `kein_inhalt`/`nicht_unterstuetzt`/`keine_treffer`/
+  `ai_fehler` → `no_content`/`unsupported`/`no_matches`/`ai_error`.
+  German JSDoc and inline comments translated throughout `lib/curriculum/`,
+  `lib/ai/`, `lib/workspace/`, `lib/web/`, `tests/`, and `scripts/`.
+
+  **Intentionally kept German**: LLM system/user prompts and `.describe()`
+  field descriptions in `lib/curriculum/suggestions.ts` (the model is
+  required to answer in German); the `MissingProviderKey` constructor
+  message and other error messages surfaced verbatim in the UI; the
+  extractor wire contract fields `seitenzahl`/`abschnitt` and the inline
+  `[Eingebetteter Link: …]` / `[Eingebettetes YouTube-Video: …]` markers
+  injected into LLM input by `document-content.ts`.
 
 ## Remaining work
 
-### 1. Leftover comments / minor locals
-
-`lib/jobs/`, `lib/extraction/`, `lib/storage/`, `lib/web/`, and `tests/`
-still have stray German comments and a few German local variables.
-
-### 2. Out of scope
+### 1. Out of scope
 
 `services/extractor/` (Python) keeps the contract field names
 `seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the

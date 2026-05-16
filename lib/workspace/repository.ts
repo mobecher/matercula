@@ -16,41 +16,41 @@ export async function loadDocumentTreeForUser(
   return buildTree(alle);
 }
 
-function buildTree(zeilen: Document[]): DocumentNode[] {
-  const nachId = new Map<string, DocumentNode & { _parent: string | null }>();
-  for (const z of zeilen) {
-    nachId.set(z.id, {
+function buildTree(rows: Document[]): DocumentNode[] {
+  const byId = new Map<string, DocumentNode & { _parent: string | null }>();
+  for (const z of rows) {
+    byId.set(z.id, {
       id: z.id,
       title: z.title,
       type: z.type,
       icon: z.icon ?? undefined,
-      inhalt: z.contentMarkdown ?? undefined,
+      content: z.contentMarkdown ?? undefined,
       materialId: z.materialId ?? undefined,
       children: z.type === "folder" ? [] : undefined,
       _parent: z.parentId,
     });
   }
 
-  const wurzeln: DocumentNode[] = [];
-  for (const knoten of nachId.values()) {
-    if (knoten._parent && nachId.has(knoten._parent)) {
-      const eltern = nachId.get(knoten._parent);
-      if (!eltern) {
-        wurzeln.push(knoten);
+  const roots: DocumentNode[] = [];
+  for (const node of byId.values()) {
+    if (node._parent && byId.has(node._parent)) {
+      const parent = byId.get(node._parent);
+      if (!parent) {
+        roots.push(node);
         continue;
       }
-      eltern.children = eltern.children ?? [];
-      eltern.children.push(knoten);
+      parent.children = parent.children ?? [];
+      parent.children.push(node);
     } else {
-      wurzeln.push(knoten);
+      roots.push(node);
     }
   }
 
   // _parent vor der Auslieferung entfernen
-  for (const knoten of nachId.values()) {
-    delete (knoten as { _parent?: string | null })._parent;
+  for (const node of byId.values()) {
+    delete (node as { _parent?: string | null })._parent;
   }
-  return wurzeln;
+  return roots;
 }
 
 interface CreateDocumentInput {
@@ -167,14 +167,14 @@ export async function updateDocument(
   if (input.sortOrder !== undefined) aenderungen.sortOrder = input.sortOrder;
   aenderungen.updatedAt = new Date();
 
-  const [aktualisiert] = await db
+  const [updated] = await db
     .update(documents)
     .set(aenderungen)
     .where(
       and(eq(documents.id, input.id), eq(documents.ownerId, input.ownerId)),
     )
     .returning();
-  return aktualisiert;
+  return updated;
 }
 
 /**
@@ -216,11 +216,11 @@ export async function deleteDocument(
   id: string,
   ownerId: string,
 ): Promise<boolean> {
-  const ergebnis = await db
+  const deleted = await db
     .delete(documents)
     .where(and(eq(documents.id, id), eq(documents.ownerId, ownerId)))
     .returning({ id: documents.id });
-  return ergebnis.length > 0;
+  return deleted.length > 0;
 }
 
 interface MoveDocumentInput {

@@ -23,7 +23,7 @@ import {
   useWorkspace,
 } from "./workspace-context";
 
-const DRAG_MIME = "application/x-matercula-dokument-id";
+const DRAG_MIME = "application/x-matercula-document-id";
 
 // File-picker `accept` value for the upload buttons.
 // Mirrors the formats the extractor service understands

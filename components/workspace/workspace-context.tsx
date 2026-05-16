@@ -272,7 +272,7 @@ export function WorkspaceProvider({
   );
 
   const saveContent = useCallback((id: string, content: string) => {
-    setTree((prev) => mapTree(prev, id, (n) => ({ ...n, inhalt: content })));
+    setTree((prev) => mapTree(prev, id, (n) => ({ ...n, content: content })));
     // Editing promotes a preview tab to permanent.
     const key = documentTabKey(id);
     setOpenTabs((prev) =>
@@ -302,7 +302,7 @@ export function WorkspaceProvider({
       try {
         const result = await createDocument({ parentId, type, title });
         await refresh();
-        const newId = result?.dokument?.id as string | undefined;
+        const newId = result?.document?.id as string | undefined;
         if (newId && type === "page") {
           openDocument(newId, { preview: false });
         }
@@ -346,7 +346,7 @@ export function WorkspaceProvider({
           materialId: uploaded.id,
         });
         await refresh();
-        const newId = result?.dokument?.id as string | undefined;
+        const newId = result?.document?.id as string | undefined;
         if (newId) openDocument(newId, { preview: false });
         return newId ?? null;
       } catch {

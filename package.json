@@ -16,7 +16,7 @@
     "db:migrate": "drizzle-kit migrate",
     "seed": "tsx scripts/seed-dev.ts",
     "seed:lehrplan": "tsx scripts/seed-curriculum.ts",
-    "seed:dokumente": "tsx scripts/seed-dokumente.ts",
+    "seed:documents": "tsx scripts/seed-documents.ts",
     "test": "node --import tsx --test tests/node/*.test.ts",
     "test:e2e": "playwright test"
   },

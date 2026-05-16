@@ -273,7 +273,7 @@ export interface SidebarLehrplan {
 }
 
 /**
- * Liefert eine kompakte Baumstruktur für die Sidebar:
+ * Returns a compact tree structure for the sidebar:
  * Lehrplan → Klassen → Kompetenzbereiche.
  */
 export async function loadLehrplanSidebar(): Promise<SidebarLehrplan[]> {

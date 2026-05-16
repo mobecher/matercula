@@ -12,7 +12,7 @@ export const documentTree: DocumentNode[] = [
         title: "Jahresplanung 2025/26",
         type: "page",
         icon: "🗓️",
-        inhalt:
+        content:
           "# Jahresplanung Deutsch 2025/26\n\nÜberblick über die geplanten Themenbereiche, Kompetenzen und Lernzielkontrollen für das Schuljahr.\n\n## Kompetenzbereiche\n- Lesen\n- Schreiben\n- Sprechen\n- Sprachreflexion\n\n## Eckdaten\n- 4 Schularbeiten\n- 2 Lesetagebücher\n- 1 Projektwoche im April",
       },
       {
@@ -26,7 +26,7 @@ export const documentTree: DocumentNode[] = [
             title: "Lesestrategien",
             type: "page",
             icon: "🧠",
-            inhalt:
+            content:
               "# Lesestrategien\n\nSammlung von Methoden zur Förderung des sinnerfassenden Lesens.\n\n- 5-Schritt-Lesemethode\n- Markieren & Annotieren\n- Reziprokes Lesen",
           },
           {
@@ -34,7 +34,7 @@ export const documentTree: DocumentNode[] = [
             title: "Lesetagebuch-Vorlage",
             type: "page",
             icon: "📓",
-            inhalt:
+            content:
               "# Lesetagebuch\n\nVorlage für die Schüler:innen zur Begleitung der Lektüre.\n\n1. Buchtitel & Autor\n2. Inhaltszusammenfassung pro Kapitel\n3. Persönliche Bewertung",
           },
         ],
@@ -44,7 +44,7 @@ export const documentTree: DocumentNode[] = [
         title: "1. Schularbeit – Erörterung",
         type: "page",
         icon: "📝",
-        inhalt:
+        content:
           "# 1. Schularbeit\n\n**Thema:** Erörterung zu einem aktuellen gesellschaftlichen Thema.\n\n**Dauer:** 50 Minuten.\n\n**Bewertungsraster** siehe Anhang.",
       },
     ],
@@ -60,7 +60,7 @@ export const documentTree: DocumentNode[] = [
         title: "Bruchrechnen – Stundenbild",
         type: "page",
         icon: "🧮",
-        inhalt:
+        content:
           "# Stundenbild: Einführung Bruchrechnen\n\n## Lernziele\n- Brüche als Teile eines Ganzen erkennen\n- Brüche darstellen und benennen\n\n## Ablauf\n1. Pizza-Demonstration (10 min)\n2. Partnerarbeit mit Bruchstreifen (20 min)\n3. Sicherung im Plenum (15 min)",
       },
       {
@@ -68,7 +68,7 @@ export const documentTree: DocumentNode[] = [
         title: "Geometrie-Werkstatt",
         type: "page",
         icon: "📐",
-        inhalt:
+        content:
           "# Geometrie-Werkstatt\n\nStationenbetrieb mit 6 Stationen zu Flächen, Umfang und Konstruktion.",
       },
     ],
@@ -84,7 +84,7 @@ export const documentTree: DocumentNode[] = [
         title: "Elternabend – Tagesordnung",
         type: "page",
         icon: "👪",
-        inhalt:
+        content:
           "# Elternabend\n\n**Datum:** 18.09.2025, 19:00 Uhr\n\n## TOP\n1. Begrüßung\n2. Vorstellung des Klassenteams\n3. Schwerpunkte des Schuljahres\n4. Termine & Veranstaltungen\n5. Allfälliges",
       },
       {
@@ -92,7 +92,7 @@ export const documentTree: DocumentNode[] = [
         title: "Sitzplan",
         type: "page",
         icon: "🪑",
-        inhalt: "# Sitzplan\n\nAktueller Sitzplan der 3B – Stand September 2025.",
+        content: "# Sitzplan\n\nAktueller Sitzplan der 3B – Stand September 2025.",
       },
     ],
   },
@@ -101,7 +101,7 @@ export const documentTree: DocumentNode[] = [
     title: "Schnelle Notizen",
     type: "page",
     icon: "✏️",
-    inhalt: "# Schnelle Notizen\n\nSammelplatz für lose Ideen, Beobachtungen und To-Dos.",
+    content: "# Schnelle Notizen\n\nSammelplatz für lose Ideen, Beobachtungen und To-Dos.",
   },
 ];
 
@@ -109,11 +109,11 @@ export function findDocument(
   tree: DocumentNode[],
   id: string,
 ): DocumentNode | undefined {
-  for (const knoten of tree) {
-    if (knoten.id === id) return knoten;
-    if (knoten.children) {
-      const treffer = findDocument(knoten.children, id);
-      if (treffer) return treffer;
+  for (const node of tree) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const found = findDocument(node.children, id);
+      if (found) return found;
     }
   }
   return undefined;

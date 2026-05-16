@@ -180,7 +180,7 @@ function DocumentEditor({ doc }: { doc: DocumentNode }) {
       ) : (
         <BlockEditor
           docId={doc.id}
-          initialMarkdown={doc.inhalt ?? ""}
+          initialMarkdown={doc.content ?? ""}
           onChangeMarkdown={(markdown) => saveContent(doc.id, markdown)}
         />
       )}

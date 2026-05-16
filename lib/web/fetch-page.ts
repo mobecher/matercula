@@ -3,8 +3,8 @@
  *
  * Used by:
  *  - `app/api/og/route.ts` for link-card preview metadata.
- *  - `lib/curriculum/dokument-inhalt.ts` for inlining external page content
- *    into the LLM prompt when generating Vorschläge.
+ *  - `lib/curriculum/document-content.ts` for inlining external page content
+ *    into the LLM prompt when generating suggestions.
  *
  * Hardening:
  *  - Auth-gate is the caller's responsibility (this module is not exported

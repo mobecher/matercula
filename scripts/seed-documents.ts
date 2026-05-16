@@ -6,60 +6,60 @@ import { documentTree } from "@/lib/workspace/mock-data";
 import type { DocumentNode } from "@/lib/workspace/types";
 
 async function seedForUser(email: string) {
-  const [benutzer] = await db
+  const [userRow] = await db
     .select()
     .from(users)
     .where(eq(users.email, email))
     .limit(1);
-  if (!benutzer) {
-    console.warn(`Benutzer ${email} nicht gefunden – wird übersprungen.`);
+  if (!userRow) {
+    console.warn(`User ${email} not found – skipping.`);
     return;
   }
 
-  const [bestehend] = await db
+  const [existing] = await db
     .select({ id: documents.id })
     .from(documents)
-    .where(eq(documents.ownerId, benutzer.id))
+    .where(eq(documents.ownerId, userRow.id))
     .limit(1);
-  if (bestehend) {
-    console.log(`Dokumente für ${email} existieren bereits – übersprungen.`);
+  if (existing) {
+    console.log(`Documents for ${email} already exist – skipping.`);
     return;
   }
 
-  async function insertKnoten(
-    knoten: DocumentNode,
+  async function insertNode(
+    node: DocumentNode,
     parentId: string | null,
     sortOrder: number,
   ) {
-    const [eingefuegt] = await db
+    const [inserted] = await db
       .insert(documents)
       .values({
-        ownerId: benutzer.id,
+        ownerId: userRow.id,
         parentId,
-        type: knoten.type,
-        title: knoten.title,
-        icon: knoten.icon ?? null,
-        contentMarkdown: knoten.inhalt ?? null,
+        type: node.type,
+        title: node.title,
+        icon: node.icon ?? null,
+        contentMarkdown: node.content ?? null,
         sortOrder,
       })
       .returning({ id: documents.id });
 
-    if (knoten.children) {
+    if (node.children) {
       let i = 0;
-      for (const kind of knoten.children) {
-        await insertKnoten(kind, eingefuegt.id, (i + 1) * 1000);
+      for (const child of node.children) {
+        await insertNode(child, inserted.id, (i + 1) * 1000);
         i += 1;
       }
     }
   }
 
   let i = 0;
-  for (const wurzel of documentTree) {
-    await insertKnoten(wurzel, null, (i + 1) * 1000);
+  for (const root of documentTree) {
+    await insertNode(root, null, (i + 1) * 1000);
     i += 1;
   }
 
-  console.log(`Seed-Dokumente für ${email} erstellt.`);
+  console.log(`Seed documents for ${email} created.`);
 }
 
 async function main() {

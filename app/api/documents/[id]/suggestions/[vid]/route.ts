@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth/request";
-import { decideSuggestion } from "@/lib/curriculum/vorschlaege";
+import { decideSuggestion } from "@/lib/curriculum/suggestions";
 
 export const runtime = "nodejs";
 

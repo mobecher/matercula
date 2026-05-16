@@ -15,14 +15,14 @@ import {
 } from "@/lib/db/schema/links";
 
 /**
- * Hält den Status passender KI-Vorschläge mit dem tatsächlichen Link-Stand
+ * Keeps the status of matching AI suggestions in sync with the actual link
  * synchron, wenn ein Link manuell angelegt oder entfernt wurde.
  */
 async function syncSuggestionStatusForLink(args: {
   documentId: string;
   targetType: "kompetenz" | "anwendungsbereich";
   zielId: string;
-  neuerStatus: "accepted" | "open";
+  newStatus: "accepted" | "open";
 }): Promise<void> {
   const zielFilter =
     args.targetType === "kompetenz"
@@ -31,15 +31,15 @@ async function syncSuggestionStatusForLink(args: {
   await db
     .update(documentLinkSuggestions)
     .set({
-      status: args.neuerStatus,
-      decidedAt: args.neuerStatus === "accepted" ? new Date() : null,
+      status: args.newStatus,
+      decidedAt: args.newStatus === "accepted" ? new Date() : null,
     })
     .where(
       and(
         eq(documentLinkSuggestions.documentId, args.documentId),
         eq(documentLinkSuggestions.targetType, args.targetType),
         zielFilter,
-        ne(documentLinkSuggestions.status, args.neuerStatus),
+        ne(documentLinkSuggestions.status, args.newStatus),
       ),
     );
 }
@@ -253,7 +253,7 @@ export async function linkKompetenz(args: {
     documentId: args.documentId,
     targetType: "kompetenz",
     zielId: args.kompetenzId,
-    neuerStatus: "accepted",
+    newStatus: "accepted",
   });
   return true;
 }
@@ -288,7 +288,7 @@ export async function deleteKompetenzLink(args: {
       documentId: args.documentId,
       targetType: "kompetenz",
       zielId: args.kompetenzId,
-      neuerStatus: "open",
+      newStatus: "open",
     });
   }
   return result.length > 0;
@@ -323,7 +323,7 @@ export async function linkAnwendungsbereich(args: {
     documentId: args.documentId,
     targetType: "anwendungsbereich",
     zielId: args.anwendungsbereichId,
-    neuerStatus: "accepted",
+    newStatus: "accepted",
   });
   return true;
 }
@@ -361,7 +361,7 @@ export async function deleteAnwendungsbereichLink(args: {
       documentId: args.documentId,
       targetType: "anwendungsbereich",
       zielId: args.anwendungsbereichId,
-      neuerStatus: "open",
+      newStatus: "open",
     });
   }
   return result.length > 0;

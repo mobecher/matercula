@@ -1,25 +1,26 @@
 /**
- * Liefert eine LLM-taugliche Textfassung des Inhalts einer
- * `documents`-Zeile (Spalte `contentMarkdown`).
+ * Produces an LLM-friendly plain-text rendering of a `documents` row
+ * (column `contentMarkdown`).
  *
- * Die Spalte hält historisch Markdown, seit Einführung des Block-Editors
- * jedoch BlockNote-JSON (vom Editor mit `JSON.stringify(editor.document)`
- * geschrieben; auf der Lade-Seite an einem führenden `[` erkannt –
- * vgl. {@link file://components/workspace/block-editor.tsx}). Wir spiegeln
- * dieselbe Heuristik:
- *   - Beginnt der Text mit `[`, parsen wir BlockNote-Blöcke.
- *   - Andernfalls geben wir den Markdown-Rohtext zurück.
+ * The column historically held Markdown, but since the block editor was
+ * introduced it stores BlockNote JSON (written by the editor via
+ * `JSON.stringify(editor.document)`; detected on load by a leading `[` —
+ * see {@link file://components/workspace/block-editor.tsx}). We mirror the
+ * same heuristic:
+ *   - If the text starts with `[`, parse BlockNote blocks.
+ *   - Otherwise return the raw Markdown unchanged.
  *
- * Für die beiden eigenen Block-Typen wird zusätzlich externer Inhalt
- * eingebettet, damit der LLM beim Tagging mehr Kontext hat als nur die URL:
- *   - `linkCard`  → `fetchPage()` holt OG-Metadaten + plain text der Seite.
- *   - `youtubeEmbed` → `fetchYoutubeMeta()` holt Titel + Kanal via oEmbed.
- *     Transcripte werden bewusst NICHT geholt (siehe lib/web/youtube.ts).
+ * For our two custom block types we additionally inline external content
+ * so the LLM has more context than just the URL when tagging:
+ *   - `linkCard`     → `fetchPage()` fetches OG metadata + plain text.
+ *   - `youtubeEmbed` → `fetchYoutubeMeta()` fetches title + channel via
+ *     oEmbed. Transcripts are intentionally NOT fetched (see
+ *     lib/web/youtube.ts).
  *
- * Externe Fetches laufen parallel, scheitern weich (Timeout, SSRF-Block,
- * Nicht-HTML, …) und werden als kommentierter Hinweis im Text vermerkt,
- * damit der LLM auseinanderhalten kann, was vom Nutzer geschrieben wurde
- * und was aus einer extern eingebetteten Quelle stammt.
+ * External fetches run in parallel, fail soft (timeout, SSRF block,
+ * non-HTML, …), and are recorded as annotated hints in the rendered text
+ * so the LLM can distinguish user-authored content from externally
+ * embedded sources.
  */
 import { fetchPage, htmlToPlainText, WebFetchError } from "@/lib/web/fetch-page";
 import { fetchYoutubeMeta } from "@/lib/web/youtube";
@@ -42,27 +43,27 @@ interface BlockNoteInline {
 const MAX_LINK_CARD_TEXT_CHARS = 1500;
 const MAX_TOTAL_EXTERNAL_CHARS = 8000;
 
-export interface DokumentInhaltOptions {
-  /** Falls `false`, werden keine externen Seiten gefetcht (Tests, Offline). */
+export interface DocumentContentOptions {
+  /** When `false`, no external pages are fetched (tests, offline). */
   fetchExternals?: boolean;
-  /** Injectable für Tests. */
+  /** Injectable for tests. */
   fetchPageImpl?: typeof fetchPage;
   fetchYoutubeMetaImpl?: typeof fetchYoutubeMeta;
 }
 
 /**
- * Wandelt den persistierten Dokumenten-Inhalt in einen für das LLM
- * geeigneten Klartext um. Liefert immer einen String (ggf. leer).
+ * Converts the persisted document content into LLM-friendly plain text.
+ * Always returns a string (possibly empty).
  */
 export async function documentContentForAi(
   rawContent: string | null | undefined,
-  opts: DokumentInhaltOptions = {},
+  opts: DocumentContentOptions = {},
 ): Promise<string> {
   const raw = (rawContent ?? "").trim();
   if (!raw) return "";
 
   if (!raw.startsWith("[")) {
-    // Legacy Markdown-Inhalt – unverändert zurückgeben.
+    // Legacy Markdown content — return unchanged.
     return raw;
   }
 
@@ -72,7 +73,7 @@ export async function documentContentForAi(
     if (!Array.isArray(parsed)) return raw;
     blocks = parsed as BlockNoteBlock[];
   } catch {
-    // Defekte JSON – Rohtext als Fallback (besser als leer).
+    // Broken JSON — fall back to raw text (better than empty).
     return raw;
   }
 
@@ -80,9 +81,9 @@ export async function documentContentForAi(
   const fetchPageFn = opts.fetchPageImpl ?? fetchPage;
   const fetchYoutubeFn = opts.fetchYoutubeMetaImpl ?? fetchYoutubeMeta;
 
-  // Erst alle externen Quellen einsammeln, dann parallel fetchen, danach
-  // den Text linear zusammensetzen. So bleibt die Reihenfolge stabil und
-  // wir vermeiden seriellen Wartepunkten pro Block.
+  // Collect all external sources first, fetch them in parallel, then
+  // assemble the text linearly. This keeps order stable and avoids a
+  // serial wait point per block.
   const linkCards: Array<{ url: string; title: string; description: string }> =
     [];
   const youtubeUrls: string[] = [];
@@ -222,9 +223,13 @@ function renderBlocks(
         const title = meta?.title ?? "";
         const author = meta?.authorName ?? "";
         const headline =
-          title && author ? `${title} – ${author} (${url})` : title ? `${title} (${url})` : url;
+          title && author
+            ? `${title} – ${author} (${url})`
+            : title
+              ? `${title} (${url})`
+              : url;
         lines.push(`[Eingebettetes YouTube-Video: ${headline}]`);
-        // Hinweis: Transkript ist nicht verfügbar (siehe lib/web/youtube.ts).
+        // Note: transcript is not available (see lib/web/youtube.ts).
         lines.push("");
         break;
       }
@@ -249,7 +254,7 @@ function renderInline(content: BlockNoteBlock["content"]): string {
     if (typeof node.text === "string" && node.text.length > 0) {
       parts.push(node.text);
     } else if (Array.isArray(node.content)) {
-      // Verschachtelte Inline-Knoten (z. B. `link` → `text`).
+      // Nested inline nodes (e.g. `link` → `text`).
       const nested = renderInline(node.content);
       if (nested) parts.push(nested);
     }
