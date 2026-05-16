@@ -36,8 +36,8 @@ def test_extract_pdf(client, sample_pdf_bytes):
     for i, chunk in enumerate(body["chunks"]):
         assert chunk["chunkIndex"] == i
         assert chunk["text"]
-        assert chunk["seitenzahl"] is not None
-        assert chunk["seitenzahl"] >= 1
+        assert chunk["page_number"] is not None
+        assert chunk["page_number"] >= 1
 
 
 def test_extract_docx(client, sample_docx_bytes):
@@ -45,12 +45,12 @@ def test_extract_docx(client, sample_docx_bytes):
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["meta"]["mimeType"] == DOCX_MIME
-    # DOCX must report null page count and null seitenzahl per contract.
+    # DOCX must report null page count and null page_number per contract.
     assert body["meta"]["pageCount"] is None
     assert isinstance(body["meta"]["summary"], str)
     assert len(body["chunks"]) >= 1
     for chunk in body["chunks"]:
-        assert chunk["seitenzahl"] is None
+        assert chunk["page_number"] is None
 
 
 def test_extract_plain_text(client):
@@ -68,7 +68,7 @@ def test_extract_plain_text(client):
     assert isinstance(body["meta"]["summary"], str)
     assert len(body["chunks"]) >= 1
     for chunk in body["chunks"]:
-        assert chunk["seitenzahl"] is None
+        assert chunk["page_number"] is None
 
 
 def test_extract_corrupt_pdf(client, corrupt_pdf_bytes):

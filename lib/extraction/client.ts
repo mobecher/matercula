@@ -54,15 +54,14 @@ const SUPPORTED_MIME_TYPES = new Set<string>([
 ]);
 
 // Field names mirror the Python extractor's canonical chunk shape (see
-// CLAUDE.md → "Extractor service"). Do NOT translate `seitenzahl` /
-// `abschnitt` — they are part of the cross-language wire contract. The DB
-// columns on the Node side are English (`page_number`, `section`); the
-// translation happens at the insert site, not here.
+// CLAUDE.md → "Extractor service"). These names are part of the
+// cross-language wire contract — keep them in sync with the Pydantic
+// `ChunkOut` model in `services/extractor/app/main.py`.
 export const extractionChunkSchema = z.object({
   chunkIndex: z.number().int().nonnegative(),
   text: z.string().min(1),
-  seitenzahl: z.number().int().positive().nullable(),
-  abschnitt: z.string().nullable(),
+  pageNumber: z.number().int().positive().nullable(),
+  section: z.string().nullable(),
 });
 
 export const extractionResultSchema = z.object({

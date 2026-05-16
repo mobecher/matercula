@@ -94,10 +94,8 @@ export async function handleTagMaterial(
         materialId: material.id,
         chunkIndex: c.chunkIndex,
         text: c.text,
-        // Wire contract uses German field names (mirrored from Python);
-        // the DB columns are English.
-        pageNumber: c.seitenzahl,
-        section: c.abschnitt,
+        pageNumber: c.pageNumber,
+        section: c.section,
       })),
     );
   }

@@ -42,18 +42,18 @@ in the service's Dockerfile. PDF OCR for scanned PDFs is intentionally
 ```json
 {
   "chunks": [
-    { "chunkIndex": 0, "text": "...", "seitenzahl": 3, "abschnitt": "Einführung" }
+    { "chunkIndex": 0, "text": "...", "pageNumber": 3, "section": "Introduction" }
   ],
   "meta": {
     "pageCount": 12,
     "extractor": "unstructured",
     "mimeType": "application/pdf",
-    "summary": "Kurze Inhaltsvorschau …"
+    "summary": "Short content preview …"
   }
 }
 ```
 
-- `seitenzahl` and `meta.pageCount` are **only** populated for PDFs.
+- `pageNumber` and `meta.pageCount` are **only** populated for PDFs.
   Every other format (DOCX, PPTX, HTML, e-mail, images, …) reports `null`.
 - `meta.summary` is a heuristic content excerpt (first chunks joined and
   truncated). It is **not** an LLM summary; it exists so the UI can show

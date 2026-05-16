@@ -84,14 +84,16 @@ change.
   field descriptions in `lib/curriculum/suggestions.ts` (the model is
   required to answer in German); the `MissingProviderKey` constructor
   message and other error messages surfaced verbatim in the UI; the
-  extractor wire contract fields `seitenzahl`/`abschnitt` and the inline
-  `[Eingebetteter Link: …]` / `[Eingebettetes YouTube-Video: …]` markers
-  injected into LLM input by `document-content.ts`.
+  inline `[Eingebetteter Link: …]` / `[Eingebettetes YouTube-Video: …]`
+  markers injected into LLM input by `document-content.ts`.
+- Extractor wire contract fields renamed: `seitenzahl` → `pageNumber`,
+  `abschnitt` → `section` (TypeScript Zod schema + Pydantic `ChunkOut`).
+  Python internals use `page_number` / `section` (snake_case); helper
+  `_abschnitt_for_chunk` → `_section_for_chunk`. Node insert site
+  (`lib/jobs/tag-material.ts`) and the test fixture
+  (`tests/node/extraction-client.test.ts`) updated. Docs (`CLAUDE.md`,
+  `services/extractor/README.md`) updated.
 
 ## Remaining work
 
-### 1. Out of scope
-
-`services/extractor/` (Python) keeps the contract field names
-`seitenzahl`, `abschnitt`, etc., per `CLAUDE.md` — these are part of the
-extractor↔worker contract, not user-facing JSON.
+_None. Translation complete._

@@ -48,8 +48,8 @@ class ExtractRequest(BaseModel):
 class ChunkOut(BaseModel):
     chunkIndex: int
     text: str
-    seitenzahl: int | None
-    abschnitt: str | None
+    pageNumber: int | None
+    section: str | None
 
 
 class MetaOut(BaseModel):
@@ -138,8 +138,8 @@ def post_extract(payload: ExtractRequest) -> JSONResponse:
             ChunkOut(
                 chunkIndex=c.chunk_index,
                 text=c.text,
-                seitenzahl=c.seitenzahl,
-                abschnitt=c.abschnitt,
+                pageNumber=c.page_number,
+                section=c.section,
             )
             for c in result.chunks
         ],

@@ -3,8 +3,8 @@
 Canonical chunk shape (mirrored on the Node side in `lib/extraction/client.ts`):
     chunkIndex: int           # sequential, 0-based, document reading order
     text: str                 # chunk text (chunk_by_title segments)
-    seitenzahl: int | None    # 1-indexed page; PDF only — null for everything else
-    abschnitt: str | None     # nearest preceding heading/title
+    page_number: int | None    # 1-indexed page; PDF only — null for everything else
+    section: str | None     # nearest preceding heading/title
 
 Strategy choice:
     For PDFs we use `strategy="fast"` (pdfminer-based layout, no OCR).
@@ -16,7 +16,7 @@ Strategy choice:
 Page numbers:
     Only PDF emits real page numbers. Other formats (DOCX, PPTX slides,
     HTML, …) either have no pages or emit values that don't match what a
-    reader would call "page", so we deliberately set `seitenzahl=null` for
+    reader would call "page", so we deliberately set `page_number=null` for
     everything except PDF (and `meta.pageCount=null` accordingly).
 
 Adding a new MIME type:
@@ -105,8 +105,8 @@ class CorruptFileError(Exception):
 class Chunk:
     chunk_index: int
     text: str
-    seitenzahl: int | None
-    abschnitt: str | None
+    page_number: int | None
+    section: str | None
 
 
 @dataclass
@@ -209,23 +209,23 @@ def extract(
         # `chunk_by_title` records the source heading on each emitted chunk
         # via metadata.parent_id / orig_elements; the orig_elements path is
         # the only reliable carrier across unstructured versions.
-        abschnitt = _abschnitt_for_chunk(element)
-        seitenzahl: int | None = None
+        section = _section_for_chunk(element)
+        page_number: int | None = None
         if is_pdf:
             # Prefer the first non-null page of the chunk's source elements.
             orig = getattr(meta, "orig_elements", None) or []
             for src in orig:
-                seitenzahl = _element_page(src)
-                if seitenzahl is not None:
+                page_number = _element_page(src)
+                if page_number is not None:
                     break
-            if seitenzahl is None:
-                seitenzahl = _element_page(element)
+            if page_number is None:
+                page_number = _element_page(element)
         chunks.append(
             Chunk(
                 chunk_index=len(chunks),
                 text=text,
-                seitenzahl=seitenzahl if is_pdf else None,
-                abschnitt=abschnitt,
+                page_number=page_number if is_pdf else None,
+                section=section,
             )
         )
 
@@ -250,7 +250,7 @@ def extract(
     )
 
 
-def _abschnitt_for_chunk(chunk_element: Any) -> str | None:
+def _section_for_chunk(chunk_element: Any) -> str | None:
     """Find the nearest preceding Title in the chunk's source elements."""
     meta = getattr(chunk_element, "metadata", None)
     orig = getattr(meta, "orig_elements", None) if meta else None

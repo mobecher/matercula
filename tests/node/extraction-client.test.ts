@@ -25,7 +25,7 @@ function makeFetch(impl: (req: Request) => Response | Promise<Response>): typeof
 }
 
 const okBody = {
-  chunks: [{ chunkIndex: 0, text: "hello", seitenzahl: 1, abschnitt: "Intro" }],
+  chunks: [{ chunkIndex: 0, text: "hello", pageNumber: 1, section: "Intro" }],
   meta: {
     pageCount: 1,
     extractor: "unstructured",

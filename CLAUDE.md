@@ -70,11 +70,11 @@ payloads, internal docs):
   is network isolation, hence no auth.
 - **Canonical chunk shape** (contract, mirrored in
   `lib/extraction/client.ts`):
-  `chunkIndex`, `text`, `seitenzahl`, `abschnitt` plus `meta.summary`.
+  `chunkIndex`, `text`, `pageNumber`, `section` plus `meta.summary`.
   These field names are mandatory — embedding and tagging downstream depend
   on them. Changing the shape means changing the whole pipeline.
 - **Only PDF emits real page numbers.** For all other formats (DOCX, PPTX,
-  HTML, email, images, …), `seitenzahl` and `meta.pageCount` are `null` by
+  HTML, email, images, …), `pageNumber` and `meta.pageCount` are `null` by
   design. Do not "fix" this.
 - Scanned-PDF OCR is intentionally not supported (`strategy="fast"` for
   PDFs). Image OCR (`.png`/`.jpeg`/…) is enabled — there OCR is the only
