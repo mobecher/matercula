@@ -7,6 +7,7 @@ import {
   ChevronRightIcon,
   Cog6ToothIcon,
   DocumentPlusIcon,
+  EllipsisHorizontalIcon,
   FolderIcon,
   FolderPlusIcon,
   MagnifyingGlassIcon,
@@ -72,8 +73,21 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
   const [filter, setFilter] = useState("");
   const [pdfUploading, setPdfUploading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const rootPdfInputRef = useRef<HTMLInputElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (!userMenuRef.current?.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [userMenuOpen]);
 
   const filtered = filter.trim() ? filterTree(tree, filter.trim().toLowerCase()) : tree;
 
@@ -102,19 +116,61 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-neutral-200 bg-neutral-100">
-      <div className="flex items-center gap-2 px-3 py-3">
-        <div className="flex min-w-0 items-center gap-2">
+      <div className="relative px-4 py-3" ref={userMenuRef}>
+        <button
+          aria-expanded={userMenuOpen}
+          aria-haspopup="menu"
+          className="flex w-full min-w-0 items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-neutral-200"
+          onClick={() => setUserMenuOpen((v) => !v)}
+          type="button"
+        >
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-900 text-xs font-semibold text-white">
             {userName.slice(0, 1).toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{userName}</p>
             <p className="truncate text-xs text-neutral-500">Matercula</p>
           </div>
-        </div>
+          <EllipsisHorizontalIcon
+            aria-hidden
+            className="h-4 w-4 shrink-0 text-neutral-500"
+          />
+        </button>
+        {userMenuOpen && (
+          <div
+            className="absolute left-4 right-4 top-full z-20 mt-1 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-md"
+            role="menu"
+          >
+            <button
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+              onClick={() => {
+                setUserMenuOpen(false);
+                setSettingsOpen(true);
+              }}
+              role="menuitem"
+              type="button"
+            >
+              <Cog6ToothIcon aria-hidden className="h-4 w-4" />
+              <span>Einstellungen</span>
+            </button>
+            <form action="/api/auth/logout" method="post">
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+                role="menuitem"
+                type="submit"
+              >
+                <ArrowLeftStartOnRectangleIcon
+                  aria-hidden
+                  className="h-4 w-4"
+                />
+                <span>Abmelden</span>
+              </button>
+            </form>
+          </div>
+        )}
       </div>
 
-      <div className="px-3 pb-2">
+      <div className="px-4 pb-2">
         <div className="relative">
           <MagnifyingGlassIcon
             aria-hidden
@@ -149,7 +205,9 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           </ul>
 
           {tree.length === 0 && (
-            <p className="px-2 py-4 text-xs text-neutral-500">Noch keine Dokumente vorhanden.</p>
+            <p className="px-2 py-4 text-xs text-neutral-500">
+              Noch keine Dokumente vorhanden.
+            </p>
           )}
         </nav>
       </div>
@@ -197,27 +255,14 @@ export function Sidebar({ userName, lehrplaene }: SidebarProps) {
           type="button"
         >
           <ArrowUpTrayIcon aria-hidden className="h-4 w-4" />
-          <span>{pdfUploading ? "Datei wird hochgeladen…" : "Datei hochladen"}</span>
-        </button>
-        <form action="/api/auth/logout" method="post">
-          <button
-            className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-neutral-600 hover:bg-neutral-200"
-            type="submit"
-          >
-            <ArrowLeftStartOnRectangleIcon aria-hidden className="h-4 w-4" />
-            <span>Abmelden</span>
-          </button>
-        </form>
-        <button
-          className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-neutral-600 hover:bg-neutral-200"
-          onClick={() => setSettingsOpen(true)}
-          type="button"
-        >
-          <Cog6ToothIcon aria-hidden className="h-4 w-4" />
-          <span>Einstellungen</span>
+          <span>
+            {pdfUploading ? "Datei wird hochgeladen…" : "Datei hochladen"}
+          </span>
         </button>
       </div>
-      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsDialog onClose={() => setSettingsOpen(false)} />
+      )}
     </aside>
   );
 }
@@ -568,7 +613,7 @@ function filterTree(nodes: DocumentNode[], needle: string): DocumentNode[] {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+    <div className="px-4 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
       {children}
     </div>
   );
@@ -578,7 +623,9 @@ function CurriculumSection({ lehrplaene }: { lehrplaene: SidebarLehrplan[] }) {
     return (
       <>
         <SectionHeader>Lehrpläne</SectionHeader>
-        <p className="px-3 pb-2 text-xs text-neutral-500">Noch keine Lehrpläne geladen.</p>
+        <p className="px-4 pb-2 text-xs text-neutral-500">
+          Noch keine Lehrpläne geladen.
+        </p>
       </>
     );
   }
